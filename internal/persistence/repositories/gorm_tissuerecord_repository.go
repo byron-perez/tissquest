@@ -86,4 +86,26 @@ func (repo *GormTissueRecordRepository) Retrieve(id uint) tissuerecord.TissueRec
 }
 
 func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueRecord) {
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	slides_models := []SlideModel{}
+	for _, slide := range tr.Slides {
+		new_slide := &SlideModel{
+			Name: slide.Name,
+		}
+		slides_models = append(slides_models, *new_slide)
+	}
+
+	new_tissue_record_model := &TissueRecordModel{
+		ID:             id,
+		Name:           tr.Name,
+		Notes:          tr.Notes,
+		Taxonomicclass: tr.Taxonomicclass,
+		Slides:         slides_models,
+	}
+
+	db.Save(new_tissue_record_model)
 }

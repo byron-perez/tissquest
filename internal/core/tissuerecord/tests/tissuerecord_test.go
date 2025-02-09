@@ -213,35 +213,35 @@ func TestTissueRecordRetrieve(t *testing.T) {
 	}
 }
 
-// func TestTissueRecordUpdate(t *testing.T) {
-// 	// arrange
-// 	tissslide1 := slide.Slide{Name: "img-10x"}
-// 	tissslide2 := slide.Slide{Name: "img-200x"}
-// 	tissrecord := tissuerecord.TissueRecord{
-// 		Name:           "test retrive",
-// 		Notes:          "'y' de un '.'",
-// 		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
-// 		Slides:         []slide.Slide{tissslide1, tissslide2},
-// 	}
-// 	gorm_repository := repositories.NewGormTissueRecordRepository()
-// 	tissrecord.ConfigureTissueRecord(gorm_repository)
-// 	inserted_id := tissrecord.Save()
+func TestTissueRecordUpdate(t *testing.T) {
+	// arrange
+	tissslide1 := slide.Slide{Name: "img-10x"}
+	tissslide2 := slide.Slide{Name: "img-200x"}
+	tissrecord := tissuerecord.TissueRecord{
+		Name:           "original name",
+		Notes:          "'y' de un '.'",
+		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
+		Slides:         []slide.Slide{tissslide1, tissslide2},
+	}
+	gorm_repository := repositories.NewGormTissueRecordRepository()
+	tissrecord.ConfigureTissueRecord(gorm_repository)
+	inserted_id := tissrecord.Save()
 
-// 	tissslide3 := slide.Slide{Name: "img-10x"}
-// 	tissslide4 := slide.Slide{Name: "img-200x"}
-// 	tissrecord_to_update := tissuerecord.TissueRecord{
-// 		Name:           "test retrive",
-// 		Notes:          "'y' de un '.'",
-// 		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
-// 		Slides:         []slide.Slide{tissslide3, tissslide4},
-// 	}
+	tissslide3 := slide.Slide{Name: "img-10x"}
+	tissslide4 := slide.Slide{Name: "img-200x"}
+	tissrecord_to_update := tissuerecord.TissueRecord{
+		Name:           "updated name",
+		Notes:          "'y' de un '.'",
+		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
+		Slides:         []slide.Slide{tissslide3, tissslide4},
+	}
 
-// 	// act
-// 	tissrecord.Update(inserted_id, tissrecord_to_update)
+	// act
+	tissrecord.Update(inserted_id, tissrecord_to_update)
 
-// 	retrieved := tissrecord.GetById(inserted_id)
-// 	// assert
-// 	if reflect.DeepEqual(tissrecord, retrieved) {
-// 		t.Errorf("got: %q, wanted %q", retrieved, tissrecord)
-// 	}
-// }
+	// assert
+	retrieved := tissrecord.GetById(inserted_id)
+	if tissrecord.Name == retrieved.Name {
+		t.Errorf("got: '%+v', wanted '%+v'", tissrecord.Name, tissrecord_to_update.Name)
+	}
+}
