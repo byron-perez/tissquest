@@ -31,7 +31,7 @@ func NewGormTissueRecordRepository() *GormTissueRecordRepository {
 	return &GormTissueRecordRepository{}
 }
 
-func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) bool {
+func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint {
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
@@ -46,24 +46,26 @@ func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) bool
 		slides_models = append(slides_models, *new_slide)
 	}
 
-	db.Create(&TissueRecordModel{
+	new_tissue_record_model := &TissueRecordModel{
 		Name:           tr.Name,
 		Notes:          tr.Notes,
 		Taxonomicclass: tr.Taxonomicclass,
 		Slides:         slides_models,
-	})
-	return true
+	}
+
+	db.Create(new_tissue_record_model)
+	return new_tissue_record_model.ID
 }
 
-func (repo *GormTissueRecordRepository) Delete(id string) {
+func (repo *GormTissueRecordRepository) Delete(id uint) {
 }
 
-func (repo *GormTissueRecordRepository) Retrieve(id string) tissuerecord.TissueRecord {
+func (repo *GormTissueRecordRepository) Retrieve(id uint) tissuerecord.TissueRecord {
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&TissueRecordModel{}, &SlideModel{})
+	// db.AutoMigrate(&TissueRecordModel{}, &SlideModel{})
 	tissuerecord_found := TissueRecordModel{}
 	db.First(&tissuerecord_found, id)
 
@@ -84,5 +86,5 @@ func (repo *GormTissueRecordRepository) Retrieve(id string) tissuerecord.TissueR
 	return mapped_tissue_record
 }
 
-func (repo *GormTissueRecordRepository) Update(id string, tr *tissuerecord.TissueRecord) {
+func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueRecord) {
 }

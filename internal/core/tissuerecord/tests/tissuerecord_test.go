@@ -5,7 +5,7 @@ import (
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/repositories"
-	"strconv"
+	"reflect"
 	"testing"
 )
 
@@ -186,7 +186,28 @@ func TestTissueRecordSave(t *testing.T) {
 	tissrecord.ConfigureTissueRecord(gorm_repository)
 
 	save_return := tissrecord.Save()
-	if save_return != true {
-		t.Errorf("got: %q, wanted %q", strconv.FormatBool(save_return), "true")
+
+	if save_return == 0 {
+		t.Errorf("got: %q, wanted %q", "zero", save_return)
+	}
+}
+
+func TestTissueRecordRetrieve(t *testing.T) {
+	tissslide1 := slide.Slide{Name: "img-10x"}
+	tissslide2 := slide.Slide{Name: "img-200x"}
+	tissrecord := tissuerecord.TissueRecord{
+		Name:           "test retrive",
+		Notes:          "'y' de un '.'",
+		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
+		Slides:         []slide.Slide{tissslide1, tissslide2},
+	}
+	gorm_repository := repositories.NewGormTissueRecordRepository()
+	tissrecord.ConfigureTissueRecord(gorm_repository)
+	inserted_id := tissrecord.Save()
+
+	retrieved := tissrecord.GetById(inserted_id)
+
+	if reflect.DeepEqual(tissrecord, retrieved) {
+		t.Errorf("got: %q, wanted %q", retrieved, tissrecord)
 	}
 }

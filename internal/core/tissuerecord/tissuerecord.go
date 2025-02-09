@@ -16,7 +16,12 @@ func (tr *TissueRecord) ConfigureTissueRecord(repository RepositoryInterface) {
 	tr.repository = repository
 }
 
-func (tr *TissueRecord) Save() bool {
+func (tr *TissueRecord) Save() uint {
 	persistence_response := tr.repository.Save(tr)
+	return persistence_response
+}
+
+func (tr *TissueRecord) GetById(id uint) TissueRecord {
+	persistence_response := tr.repository.Retrieve(id)
 	return persistence_response
 }
