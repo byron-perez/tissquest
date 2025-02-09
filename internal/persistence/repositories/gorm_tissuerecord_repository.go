@@ -12,11 +12,19 @@ import (
 var NOT_FOUND_ERROR int = 0
 var OK_STATUS int = 1
 
+type Tabler interface {
+	TableName() string
+}
+
 type SlideModel struct {
 	gorm.Model
 	ID             uint `gorm:"primaryKey"`
 	Name           string
 	TissueRecordID uint
+}
+
+func (SlideModel) TableName() string {
+	return "slides"
 }
 
 type TissueRecordModel struct {
@@ -26,6 +34,10 @@ type TissueRecordModel struct {
 	Notes          string
 	Taxonomicclass string
 	Slides         []SlideModel `gorm:"foreignKey:TissueRecordID;"`
+}
+
+func (TissueRecordModel) TableName() string {
+	return "tissue_records"
 }
 
 type GormTissueRecordRepository struct {
@@ -66,15 +78,7 @@ func (repo *GormTissueRecordRepository) Delete(id uint) {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	tissuerecord_found := TissueRecordModel{}
-
-	db.First(&tissuerecord_found, id)
-
-	// for _, slide_model := range tissuerecord_found.Slides {
-	// 	db.Delete(&slide.Slide{}, slide_model.ID)
-	// }
-
-	db.Delete(&tissuerecord.TissueRecord{}, id)
+	db.Select("slides").Delete(&TissueRecordModel{ID: id})
 }
 
 func (repo *GormTissueRecordRepository) Retrieve(id uint) (tissuerecord.TissueRecord, int) {
@@ -84,9 +88,9 @@ func (repo *GormTissueRecordRepository) Retrieve(id uint) (tissuerecord.TissueRe
 	}
 	tissuerecord_found := TissueRecordModel{}
 
-	result := db.First(&tissuerecord_found, id)
+	not_found_error := db.First(&tissuerecord_found, id).Error
 
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if errors.Is(not_found_error, gorm.ErrRecordNotFound) {
 		return tissuerecord.TissueRecord{}, NOT_FOUND_ERROR
 	}
 
