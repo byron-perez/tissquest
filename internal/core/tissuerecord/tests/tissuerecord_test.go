@@ -206,10 +206,10 @@ func TestTissueRecordRetrieve(t *testing.T) {
 	inserted_id := tissrecord.Save()
 
 	// act
-	retrieved := tissrecord.GetById(inserted_id)
+	_, status_code := tissrecord.GetById(inserted_id)
 	// assert
-	if tissrecord.Name != retrieved.Name {
-		t.Errorf("got: %+v, wanted %+v", retrieved, tissrecord)
+	if status_code == 0 {
+		t.Errorf("Not found record")
 	}
 }
 
@@ -240,8 +240,32 @@ func TestTissueRecordUpdate(t *testing.T) {
 	tissrecord.Update(inserted_id, tissrecord_to_update)
 
 	// assert
-	retrieved := tissrecord.GetById(inserted_id)
+	retrieved, _ := tissrecord.GetById(inserted_id)
 	if tissrecord.Name == retrieved.Name {
 		t.Errorf("got: '%+v', wanted '%+v'", tissrecord.Name, tissrecord_to_update.Name)
+	}
+}
+
+func TestTissueRecordDelete(t *testing.T) {
+	// arrange
+	tissslide1 := slide.Slide{Name: "img-10x"}
+	tissslide2 := slide.Slide{Name: "img-200x"}
+	tissrecord := tissuerecord.TissueRecord{
+		Name:           "test retrive",
+		Notes:          "'y' de un '.'",
+		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
+		Slides:         []slide.Slide{tissslide1, tissslide2},
+	}
+	gorm_repository := repositories.NewGormTissueRecordRepository()
+	tissrecord.ConfigureTissueRecord(gorm_repository)
+	inserted_id := tissrecord.Save()
+
+	// act
+	tissrecord.Delete(inserted_id)
+
+	// assert
+	_, status_code := tissrecord.GetById(inserted_id)
+	if status_code != 0 {
+		t.Errorf("Not deleted")
 	}
 }

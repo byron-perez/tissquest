@@ -1,12 +1,16 @@
 package repositories
 
 import (
+	"errors"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+var NOT_FOUND_ERROR int = 0
+var OK_STATUS int = 1
 
 type SlideModel struct {
 	gorm.Model
@@ -21,7 +25,7 @@ type TissueRecordModel struct {
 	Name           string
 	Notes          string
 	Taxonomicclass string
-	Slides         []SlideModel `gorm:"foreignKey:TissueRecordID"`
+	Slides         []SlideModel `gorm:"foreignKey:TissueRecordID;"`
 }
 
 type GormTissueRecordRepository struct {
@@ -58,15 +62,33 @@ func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint
 }
 
 func (repo *GormTissueRecordRepository) Delete(id uint) {
-}
-
-func (repo *GormTissueRecordRepository) Retrieve(id uint) tissuerecord.TissueRecord {
 	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 	tissuerecord_found := TissueRecordModel{}
+
 	db.First(&tissuerecord_found, id)
+
+	// for _, slide_model := range tissuerecord_found.Slides {
+	// 	db.Delete(&slide.Slide{}, slide_model.ID)
+	// }
+
+	db.Delete(&tissuerecord.TissueRecord{}, id)
+}
+
+func (repo *GormTissueRecordRepository) Retrieve(id uint) (tissuerecord.TissueRecord, int) {
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+	tissuerecord_found := TissueRecordModel{}
+
+	result := db.First(&tissuerecord_found, id)
+
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return tissuerecord.TissueRecord{}, NOT_FOUND_ERROR
+	}
 
 	slides := []slide.Slide{}
 	for _, slide_model := range tissuerecord_found.Slides {
@@ -82,7 +104,7 @@ func (repo *GormTissueRecordRepository) Retrieve(id uint) tissuerecord.TissueRec
 		Taxonomicclass: tissuerecord_found.Taxonomicclass,
 		Slides:         slides,
 	}
-	return mapped_tissue_record
+	return mapped_tissue_record, OK_STATUS
 }
 
 func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueRecord) {
