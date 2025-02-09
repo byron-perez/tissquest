@@ -206,7 +206,6 @@ func TestTissueRecordRetrieve(t *testing.T) {
 	inserted_id := tissrecord.Save()
 
 	retrieved := tissrecord.GetById(inserted_id)
-
 	if reflect.DeepEqual(tissrecord, retrieved) {
 		t.Errorf("got: %q, wanted %q", retrieved, tissrecord)
 	}
