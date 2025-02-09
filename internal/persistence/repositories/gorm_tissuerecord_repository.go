@@ -65,7 +65,6 @@ func (repo *GormTissueRecordRepository) Retrieve(id uint) tissuerecord.TissueRec
 	if err != nil {
 		panic("failed to connect database")
 	}
-	// db.AutoMigrate(&TissueRecordModel{}, &SlideModel{})
 	tissuerecord_found := TissueRecordModel{}
 	db.First(&tissuerecord_found, id)
 

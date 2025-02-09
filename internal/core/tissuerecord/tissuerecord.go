@@ -25,3 +25,8 @@ func (tr *TissueRecord) GetById(id uint) TissueRecord {
 	persistence_response := tr.repository.Retrieve(id)
 	return persistence_response
 }
+
+func (tr *TissueRecord) Update(id uint, tissuerecord TissueRecord) {
+	// persistence_response := tr.repository.Update(id, tissuerecord)
+	// return persistence_response
+}
