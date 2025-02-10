@@ -207,6 +207,7 @@ func TestTissueRecordRetrieve(t *testing.T) {
 
 	// act
 	_, status_code := tissrecord.GetById(inserted_id)
+
 	// assert
 	if status_code == 0 {
 		t.Errorf("Not found record")
