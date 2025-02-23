@@ -1,6 +1,7 @@
 package main
 
 import (
+	"mcba/tissquest/cmd/api-server-gin/index"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/repositories"
@@ -119,15 +120,17 @@ func deleteTissueRecord(c *gin.Context) {
 
 func setupRouter() *gin.Engine {
 	gin.DisableConsoleColor()
-	r := gin.Default()
+	router := gin.Default()
+	router.LoadHTMLGlob("web/templates/*")
 
-	// Ping test
-	r.GET("/tissue_records/:id", getTissueRecordById)
-	r.POST("/tissue_records", createTissueRecord)
-	r.PUT("/tissue_records/:id", updateTissueRecord)
-	r.DELETE("/tissue_records/:id", deleteTissueRecord)
+	router.GET("/", index.GetIndex)
 
-	return r
+	router.GET("/tissue_records/:id", getTissueRecordById)
+	router.POST("/tissue_records", createTissueRecord)
+	router.PUT("/tissue_records/:id", updateTissueRecord)
+	router.DELETE("/tissue_records/:id", deleteTissueRecord)
+
+	return router
 }
 
 func main() {
