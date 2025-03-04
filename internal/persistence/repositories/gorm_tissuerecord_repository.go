@@ -4,6 +4,8 @@ import (
 	"errors"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
+	"mcba/tissquest/internal/persistence/migration"
+	"os"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -12,57 +14,31 @@ import (
 var NOT_FOUND_ERROR int = 0
 var OK_STATUS int = 1
 
-type Tabler interface {
-	TableName() string
-}
-
-type SlideModel struct {
-	gorm.Model
-	ID             uint `gorm:"primaryKey"`
-	Name           string
-	TissueRecordID uint
-}
-
-func (SlideModel) TableName() string {
-	return "slides"
-}
-
-type TissueRecordModel struct {
-	gorm.Model
-	ID             uint `gorm:"primaryKey"`
-	Name           string
-	Notes          string
-	Taxonomicclass string
-	Slides         []SlideModel `gorm:"foreignKey:TissueRecordID;"`
-}
-
-func (TissueRecordModel) TableName() string {
-	return "tissue_records"
-}
-
 type GormTissueRecordRepository struct {
+	conn string
 }
 
 func NewGormTissueRecordRepository() *GormTissueRecordRepository {
-	return &GormTissueRecordRepository{}
+	connection := os.Getenv("DB_PATH")
+	new_repository := GormTissueRecordRepository{conn: connection}
+	return &new_repository
 }
 
 func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&TissueRecordModel{}, &SlideModel{})
 
-	slides_models := []SlideModel{}
+	slides_models := []migration.SlideModel{}
 	for _, slide := range tr.Slides {
-		new_slide := &SlideModel{
+		new_slide := &migration.SlideModel{
 			Name: slide.Name,
 		}
 		slides_models = append(slides_models, *new_slide)
 	}
 
-	new_tissue_record_model := &TissueRecordModel{
+	new_tissue_record_model := &migration.TissueRecordModel{
 		Name:           tr.Name,
 		Notes:          tr.Notes,
 		Taxonomicclass: tr.Taxonomicclass,
@@ -74,19 +50,19 @@ func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint
 }
 
 func (repo *GormTissueRecordRepository) Delete(id uint) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.Select("slides").Delete(&TissueRecordModel{ID: id})
+	db.Select("slides").Delete(&migration.TissueRecordModel{ID: id})
 }
 
 func (repo *GormTissueRecordRepository) Retrieve(id uint) (tissuerecord.TissueRecord, int) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
-	tissuerecord_found := TissueRecordModel{}
+	tissuerecord_found := migration.TissueRecordModel{}
 
 	not_found_error := db.First(&tissuerecord_found, id).Error
 
@@ -112,20 +88,20 @@ func (repo *GormTissueRecordRepository) Retrieve(id uint) (tissuerecord.TissueRe
 }
 
 func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueRecord) {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 
-	slides_models := []SlideModel{}
+	slides_models := []migration.SlideModel{}
 	for _, slide := range tr.Slides {
-		new_slide := &SlideModel{
+		new_slide := &migration.SlideModel{
 			Name: slide.Name,
 		}
 		slides_models = append(slides_models, *new_slide)
 	}
 
-	new_tissue_record_model := &TissueRecordModel{
+	new_tissue_record_model := &migration.TissueRecordModel{
 		ID:             id,
 		Name:           tr.Name,
 		Notes:          tr.Notes,

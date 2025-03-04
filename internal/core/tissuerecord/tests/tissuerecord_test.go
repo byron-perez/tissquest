@@ -2,11 +2,28 @@ package tests
 
 import (
 	"fmt"
+	"log"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
+	"mcba/tissquest/internal/persistence/migration"
 	"mcba/tissquest/internal/persistence/repositories"
 	"testing"
+
+	"github.com/joho/godotenv"
 )
+
+func TestMain(m *testing.M) {
+	// load .env
+	err := godotenv.Load("../../../../.env")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	// run migrations
+	migration.RunMigration()
+
+	// run tests
+	m.Run()
+}
 
 func TestTissueRecord(t *testing.T) {
 	tissslide1 := slide.Slide{Name: "img-40x"}

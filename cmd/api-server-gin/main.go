@@ -1,14 +1,17 @@
 package main
 
 import (
+	"log"
 	"mcba/tissquest/cmd/api-server-gin/index"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
+	"mcba/tissquest/internal/persistence/migration"
 	"mcba/tissquest/internal/persistence/repositories"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 type TissueRecordBody struct {
@@ -134,6 +137,15 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	// load .env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// setup database
+	migration.RunMigration()
+
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8000")
