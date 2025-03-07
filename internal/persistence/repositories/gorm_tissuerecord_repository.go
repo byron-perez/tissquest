@@ -32,8 +32,15 @@ func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint
 
 	slides_models := []migration.SlideModel{}
 	for _, slide := range tr.Slides {
+		// create a staining object
+		staining := &migration.StainingModel{
+			Name: slide.Staining.Name,
+		}
+
 		new_slide := &migration.SlideModel{
-			Name: slide.Name,
+			Name:     slide.Name,
+			Url:      slide.Img.Url,
+			Staining: *staining,
 		}
 		slides_models = append(slides_models, *new_slide)
 	}
