@@ -29,6 +29,8 @@ WORKDIR /
 
 # Copy our static executable.
 COPY --from=builder /go/main /go/main
+
+# Copy assets
 COPY web /go/web
 
 ENV PORT=8080
