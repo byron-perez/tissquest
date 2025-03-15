@@ -13,6 +13,8 @@ import (
 func setupRouter() *gin.Engine {
 	gin.DisableConsoleColor()
 	router := gin.Default()
+
+	router.Static("/static", "web/static")
 	router.LoadHTMLGlob("web/templates/*")
 
 	router.GET("/", index.GetIndex)
@@ -21,9 +23,6 @@ func setupRouter() *gin.Engine {
 	router.POST("/tissue_records", tissuerecords.CreateTissueRecord)
 	router.PUT("/tissue_records/:id", tissuerecords.UpdateTissueRecord)
 	router.DELETE("/tissue_records/:id", tissuerecords.DeleteTissueRecord)
-
-	// include static folder
-	router.Static("/static", "web/static")
 
 	return router
 }
@@ -40,5 +39,5 @@ func main() {
 
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
-	r.Run("localhost:8000")
+	r.Run(":8080")
 }

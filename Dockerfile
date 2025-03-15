@@ -29,14 +29,14 @@ WORKDIR /
 
 # Copy our static executable.
 COPY --from=builder /go/main /go/main
-# COPY public /go/public
+COPY web /go/web
 
 ENV PORT=8080
-ENV GIN_MODE=release
-EXPOSE 8080
+ENV GIN_MODE=debug
 
 WORKDIR /go
 COPY .env.example .env
 
+EXPOSE 8080
 # Run the Go Gin binary.
 ENTRYPOINT ["/go/main"]
