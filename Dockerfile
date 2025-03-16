@@ -34,12 +34,10 @@ COPY --from=builder /go/main /go/main
 
 # Copy assets
 COPY web /go/web
+COPY .env.example /go/.env
 
 ENV PORT=8080
 ENV GIN_MODE=debug
-
-WORKDIR /go
-COPY .env.example .env
 
 EXPOSE 8080
 # Run the Go Gin binary.
