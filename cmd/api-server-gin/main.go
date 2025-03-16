@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"mcba/tissquest/cmd/api-server-gin/index"
 	tissuerecords "mcba/tissquest/cmd/api-server-gin/tissue_records"
 	"mcba/tissquest/internal/persistence/migration"
+	"os"
+	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -28,8 +31,21 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Walk(ex, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			fmt.Println(err)
+			return err
+		}
+		fmt.Printf("dir: %v: name: %s\n", info.IsDir(), path)
+		return nil
+	})
+	fmt.Println(exPath)
 	// load .env
-	err := godotenv.Load()
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
