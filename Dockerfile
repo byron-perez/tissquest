@@ -4,7 +4,9 @@
 FROM golang:alpine AS builder
 # Install git.
 # Git is required for fetching the dependencies.
-RUN apk update && apk add --no-cache 'git=~2'
+# RUN apk update && apk add --no-cache 'git=~2'
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh
 # add c compiler kit
 RUN apk add build-base
 
