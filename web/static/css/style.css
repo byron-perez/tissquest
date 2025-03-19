@@ -48,7 +48,7 @@
 }
 .responsive {
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 
 @media (min-width: 500px) {
@@ -77,7 +77,9 @@
   .intro-imgs-listing {
     list-style: none;
     display: grid;
-    grid-gap: 20px;
+    grid-gap: 5px;
+    grid-auto-rows: 200px;
+    grid-auto-flow: dense;
     grid-template-columns: 1fr 1fr 1fr;
   }
   .tall-portrait-img {
