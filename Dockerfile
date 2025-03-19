@@ -38,7 +38,7 @@ COPY --from=builder /app/web/ ./web/
 COPY --from=builder /app/.env.example ./.env
 
 ENV PORT=8080
-ENV GIN_MODE=debug
+ENV GIN_MODE=release
 
 EXPOSE 8080
 # Run the Go Gin binary.
