@@ -6,78 +6,56 @@
   border-radius: 5px;
   padding: 10px;
 }
-
 .main-head {
   grid-area: header;
+  text-align: center;
+}
+.home-title {
+
 }
 .intro-imgs-listing {
-  grid-area: tisssamples
+  grid-area: tisssamples;
+  border: 0px;
 }
-.content {
-  grid-area: content;
+.home-available-atlas-listing {
+  grid-area: atlasmenu
 }
 .main-footer {
   grid-area: footer;
 }
-
 .wrapper {
   display: grid;
   grid-gap: 20px;
   grid-template-areas:
     "header"
-    "nav"
-    "content"
-    "sidebar"
-    "ad"
+    "tisssamples"
+    "atlasmenu"
     "footer";
 }
 
 .intro-imgs-listing li {
-  border: 1px solid #ffe066;
   border-radius: 5px;
   display: grid;
 }
-.intro-imgs-listing .cta {
-  margin-top: auto;
-  border-top: 1px solid #ffe066;
-  padding: 10px;
-  text-align: center;
-}
-.intro-imgs-listing .body {
-  padding: 10px;
-}
-.responsive {
+
+.responsive-img {
   width: 100%;
   height: 100%;
 }
 
 @media (min-width: 500px) {
   .wrapper {
-    grid-template-columns: 1fr 3fr;
-    grid-template-areas:
-      "header"
-      "content"
-      "footer";
-  }
-  nav ul {
-    display: flex;
-    justify-content: space-between;
-  }
-}
-
-@media (min-width: 700px) {
-  .wrapper {
     grid-template-columns: 1fr;
     grid-template-areas:
       "header"
       "tisssamples"
-      "content"
+      "atlasmenu"
       "footer";
   }
   .intro-imgs-listing {
     list-style: none;
     display: grid;
-    grid-gap: 5px;
+    grid-gap: 1px;
     grid-auto-rows: 200px;
     grid-auto-flow: dense;
     grid-template-columns: 1fr 1fr 1fr;
@@ -90,5 +68,52 @@
   }
   .wide-portrait-img {
     grid-column-end: span 1;
+  }
+}
+
+@media (min-width: 700px) {
+  .wrapper {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "tisssamples"
+      "atlasmenu"
+      "footer";
+  }
+  .intro-imgs-listing {
+    list-style: none;
+    display: grid;
+    grid-gap: 0px;
+    grid-auto-rows: 200px;
+    grid-auto-flow: dense;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .tall-portrait-img {
+    grid-row-end: span 2;
+  }
+  .short-portrait-img {
+    grid-row-end: span 1;
+  }
+  .wide-portrait-img {
+    grid-column-end: span 1;
+  }
+  /* menu de atlases */
+  .home-available-atlas-listing {
+    list-style: none;
+    display: grid;
+    grid-gap: 5px;
+    grid-auto-flow: dense;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .box-title {
+    grid-column-end: span 3;
+  }
+
+  /* cards */
+  .card-1 {
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); /* this adds the "card" effect */
+    padding: 16px;
+    text-align: center;
+    background-color: #f1f1f1;
   }
 }
