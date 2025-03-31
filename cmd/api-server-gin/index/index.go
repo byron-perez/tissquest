@@ -7,7 +7,13 @@ import (
 )
 
 func GetIndex(c *gin.Context) {
-	c.HTML(http.StatusOK, "index.tmpl", gin.H{
+	c.HTML(http.StatusOK, "index.html", gin.H{
 		"title": "Tissquest",
+	})
+}
+
+func GetMainMenu(c *gin.Context) {
+	c.HTML(http.StatusOK, "main-menu.html", gin.H{
+		"title": "Menu",
 	})
 }
