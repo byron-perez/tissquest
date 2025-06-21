@@ -10,26 +10,13 @@
 
     <ul class="home-available-atlas-listing">
         <h1 class="box-title">Atlas disponibles:</h1>
-        <a class="menu-item_link card-1" href="#">
+        {{ range .Atlases }}
+        <a class="menu-item_link card-1" href="/atlas/{{ .ID }}">
             <li class="short-portrait-img">
-                <p>Atlas de Anatomía Vegetal</p>
+                <p>{{ .Name }}</p>
             </li>
         </a>
-        <a class="menu-item_link card-1" href="#">
-            <li class="short-portrait-img">
-                <p>Atlas de Histología Animal</p>
-            </li>
-        </a>
-        <a class="menu-item_link card-1" href="#">
-            <li class="wide">
-                <p>Atlas de Tejidos Fúngicos</p>
-            </li>
-        </a>
-        <li class="wide-portrait-img card-1">
-            <a class="menu-item_link" href="#">
-                <p>Atlas de XYZ</p>
-            </a>
-        </li>
+        {{ end }}
     </ul>
     <footer class="main-footer">Desarrollado por S3E & Universidad XYZ</footer>
 </div>

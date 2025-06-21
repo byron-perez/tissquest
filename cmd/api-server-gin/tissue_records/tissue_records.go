@@ -1,4 +1,4 @@
-package tissuerecords
+package tissue_records
 
 import (
 	"mcba/tissquest/internal/core/slide"
@@ -115,4 +115,38 @@ func DeleteTissueRecord(c *gin.Context) {
 	tissrecord.Delete(parsedId)
 
 	c.IndentedJSON(http.StatusOK, tissrecord)
+}
+
+func ListTissueRecords(c *gin.Context) {
+	// Create and configure the repository
+	gorm_repository := repositories.NewGormTissueRecordRepository()
+
+	// Parse pagination parameters
+	limit := 10
+	page := 1
+
+	if limitParam := c.Query("limit"); limitParam != "" {
+		if parsedLimit, err := strconv.Atoi(limitParam); err == nil {
+			limit = parsedLimit
+		}
+	}
+	if pageParam := c.Query("page"); pageParam != "" {
+		if parsedPage, err := strconv.Atoi(pageParam); err == nil {
+			page = parsedPage
+		}
+	}
+
+	// Use the repository to fetch the records
+	tissueRecords, total, err := gorm_repository.List(page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tissue records"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":  tissueRecords,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	})
 }

@@ -118,3 +118,46 @@ func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueR
 
 	db.Save(new_tissue_record_model)
 }
+
+func (repo *GormTissueRecordRepository) List(page, limit int) ([]tissuerecord.TissueRecord, int64, error) {
+	var tissueRecords []tissuerecord.TissueRecord
+	var total int64
+
+	offset := (page - 1) * limit
+
+	// Get total count
+	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if err := db.Model(&migration.TissueRecordModel{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated records
+	var tissueRecordModels []migration.TissueRecordModel
+	if err := db.Offset(offset).Limit(limit).Find(&tissueRecordModels).Error; err != nil {
+		return nil, 0, err
+	}
+
+	for _, model := range tissueRecordModels {
+		slides := []slide.Slide{}
+		for _, slideModel := range model.Slides {
+			newSlide := slide.Slide{
+				Name: slideModel.Name,
+			}
+			slides = append(slides, newSlide)
+		}
+
+		tissueRecord := tissuerecord.TissueRecord{
+			Name:           model.Name,
+			Notes:          model.Notes,
+			Taxonomicclass: model.Taxonomicclass,
+			Slides:         slides,
+		}
+		tissueRecords = append(tissueRecords, tissueRecord)
+	}
+
+	return tissueRecords, total, nil
+}
