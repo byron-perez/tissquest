@@ -1,23 +1,12 @@
-{{ define "title"}}Tissquest{{ end }}
-{{ define "scripts"}}{{ end }}
-{{ define "body"}}
-<div class="wrapper">
-    <header class="main-head">
-        <div class="home-title">
-            MENU
-        </div>
-    </header>
-
-    <ul class="home-available-atlas-listing">
-        <h1 class="box-title">Atlas disponibles:</h1>
+<section class="atlas-section">
+    <h2 class="section-title">Grupos disponibles</h2>
+    <ul class="atlas-grid">
         {{ range .Atlases }}
-        <a class="menu-item_link card-1" href="/atlas/{{ .ID }}">
-            <li class="short-portrait-img">
-                <p>{{ .Name }}</p>
-            </li>
-        </a>
+        <li class="atlas-card card-1">
+            <h3 class="atlas-title">{{ .Name }}</h3>
+            <p class="atlas-description">{{ .Description }}</p>
+            <a href="/atlas/{{ .ID }}" class="atlas-link">Ver Atlas</a>
+        </li>
         {{ end }}
     </ul>
-    <footer class="main-footer">Desarrollado por S3E & Universidad XYZ</footer>
-</div>
-{{ end }}
+</section>

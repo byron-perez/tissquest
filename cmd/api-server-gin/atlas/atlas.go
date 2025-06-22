@@ -1,25 +1,27 @@
 package atlas
 
 import (
+	"log"
 	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/persistence/repositories"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 func ListAtlases(c *gin.Context) {
-	repo := repositories.NewGormAtlasRepository(c.MustGet("db").(*gorm.DB))
+	repo := repositories.NewGormAtlasRepository()
 	atlases, err := repo.List()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.HTML(http.StatusOK, "main-menu.html", gin.H{
-		"title":   "Atlas List",
-		"Atlases": atlases,
+	log.Printf("Atlases: %+v", atlases)
+	
+	// Return JSON instead of rendering HTML
+	c.JSON(http.StatusOK, gin.H{
+		"atlases": atlases,
 	})
 }
 
@@ -30,7 +32,7 @@ func CreateAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewGormAtlasRepository(c.MustGet("db").(*gorm.DB))
+	repo := repositories.NewGormAtlasRepository()
 	id := repo.Save(&newAtlas)
 
 	c.JSON(http.StatusCreated, gin.H{"id": id})
@@ -43,7 +45,7 @@ func GetAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewGormAtlasRepository(c.MustGet("db").(*gorm.DB))
+	repo := repositories.NewGormAtlasRepository()
 	atlas, err := repo.Retrieve(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Atlas not found"})
@@ -66,7 +68,7 @@ func UpdateAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewGormAtlasRepository(c.MustGet("db").(*gorm.DB))
+	repo := repositories.NewGormAtlasRepository()
 	err = repo.Update(uint(id), &updatedAtlas)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -83,7 +85,7 @@ func DeleteAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewGormAtlasRepository(c.MustGet("db").(*gorm.DB))
+	repo := repositories.NewGormAtlasRepository()
 	err = repo.Delete(uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

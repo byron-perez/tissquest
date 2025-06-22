@@ -1,87 +1,99 @@
 package main
 
 import (
+	"fmt"
+	"html/template"
 	"log"
 	"mcba/tissquest/cmd/api-server-gin/atlas"
 	"mcba/tissquest/cmd/api-server-gin/index"
 	"mcba/tissquest/cmd/api-server-gin/tissue_records"
 	"mcba/tissquest/internal/persistence/migration"
+	"os"
 	"path/filepath"
 
-	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
-type TemplateConfig struct {
-	TemplateLayoutPath  string
-	TemplateIncludePath string
+func loadTemplates(templatesDir string) (*template.Template, error) {
+	// First, load the base template
+	baseTemplate := filepath.Join(templatesDir, "layouts", "base.html")
+	templ, err := template.New("base.html").ParseFiles(baseTemplate)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing base template: %v", err)
+	}
+
+	// Then, walk through the templates directory and parse all other templates
+	err = filepath.Walk(templatesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".html" && path != baseTemplate {
+			// Get the relative path from the templatesDir
+			relPath, err := filepath.Rel(templatesDir, path)
+			if err != nil {
+				return err
+			}
+			// Use the relative path as the template name
+			_, err = templ.New(filepath.ToSlash(relPath)).ParseFiles(path)
+			if err != nil {
+				log.Printf("Error parsing template %s: %v", path, err)
+				return err
+			}
+			log.Printf("Loaded template: %s", relPath)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return templ, nil
 }
 
-func loadTemplates(templatesDir string) multitemplate.Renderer {
-	r := multitemplate.NewRenderer()
-
-	layouts, err := filepath.Glob(templatesDir + "/layouts/*.html")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	includes, err := filepath.Glob(templatesDir + "/includes/*.html")
-	if err != nil {
-		panic(err.Error())
-	}
-
-	// Generate our templates map from our layouts/ and includes/ directories
-	for _, include := range includes {
-		layoutCopy := make([]string, len(layouts))
-		copy(layoutCopy, layouts)
-		files := append(layoutCopy, include)
-		r.AddFromFiles(filepath.Base(include), files...)
-	}
-	return r
-}
-
-func setupRouter() *gin.Engine {
+func setupRouter() (*gin.Engine, error) {
 	r := gin.Default()
 
-	// Set up HTML rendering using loadTemplates
-	r.HTMLRender = loadTemplates("web/templates")
-
+	// Load HTML templates
+	templatesDir := "./web/templates"
+	templ, err := loadTemplates(templatesDir)
+	if err != nil {
+		return nil, err
+	}
 	// Serve static files
 	r.Static("/static", "./web/static")
+	r.SetHTMLTemplate(templ)
 
-	// Routes
+	// Setup routes
 	r.GET("/", index.GetIndex)
-	r.GET("/menu", index.GetMainMenu)
-
-	// TissueRecord routes
 	r.GET("/tissue_records", tissue_records.ListTissueRecords)
 	r.POST("/tissue_records", tissue_records.CreateTissueRecord)
-	r.GET("/tissue_records/:id", tissue_records.GetTissueRecordById)
-	r.PUT("/tissue_records/:id", tissue_records.UpdateTissueRecord)
-	r.DELETE("/tissue_records/:id", tissue_records.DeleteTissueRecord)
-
-	// Atlas routes
 	r.GET("/atlases", atlas.ListAtlases)
-	r.POST("/atlases", atlas.CreateAtlas)
-	r.GET("/atlases/:id", atlas.GetAtlas)
-	r.PUT("/atlases/:id", atlas.UpdateAtlas)
-	r.DELETE("/atlases/:id", atlas.DeleteAtlas)
 
-	return r
+	return r, nil
 }
 
 func main() {
-	// load .env
+	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// setup database
+	// Print current working directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error getting current working directory: %v", err)
+	} else {
+		log.Printf("Current working directory: %s", cwd)
+	}
+
+	// Run migrations
 	migration.RunMigration()
 
-	r := setupRouter()
-	// Listen and Server in 0.0.0.0:8080
+	// Setup and run the server
+	r, err := setupRouter()
+	if err != nil {
+		log.Fatalf("Failed to set up router: %v", err)
+	}
 	r.Run(":8080")
 }
