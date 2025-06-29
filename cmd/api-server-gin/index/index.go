@@ -30,6 +30,8 @@ func GetIndex(c *gin.Context) {
 }
 
 func fetchAtlases() ([]atlas.Atlas, error) {
-	repo := repositories.NewGormAtlasRepository()
+	repo := repositories.NewPostgresAtlasRepository()
+	atlas := atlas.Atlas{}
+	atlas.ConfigureAtlas(repo)
 	return repo.List()
 }

@@ -10,6 +10,7 @@ type SlideModel struct {
 	TissueRecordID uint
 	StainingID     uint
 	Staining       StainingModel
+	Magnification  int
 }
 
 func (SlideModel) TableName() string {
