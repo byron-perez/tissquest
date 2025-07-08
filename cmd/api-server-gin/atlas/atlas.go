@@ -3,6 +3,7 @@ package atlas
 import (
 	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/persistence/repositories"
+	"mcba/tissquest/internal/services"
 	"net/http"
 	"strconv"
 
@@ -11,13 +12,13 @@ import (
 
 func ListAtlases(c *gin.Context) {
 	repo := repositories.NewPostgresAtlasRepository()
-	atlases, err := repo.List()
+	service := services.NewAtlasService(repo)
+	atlases, err := service.ListAtlases()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Return JSON instead of rendering HTML
 	c.JSON(http.StatusOK, gin.H{
 		"atlases": atlases,
 	})
@@ -31,7 +32,12 @@ func CreateAtlas(c *gin.Context) {
 	}
 
 	repo := repositories.NewPostgresAtlasRepository()
-	id := repo.Save(&newAtlas)
+	service := services.NewAtlasService(repo)
+	id, err := service.CreateAtlas(&newAtlas)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
@@ -44,7 +50,8 @@ func GetAtlas(c *gin.Context) {
 	}
 
 	repo := repositories.NewPostgresAtlasRepository()
-	atlas, err := repo.Retrieve(uint(id))
+	service := services.NewAtlasService(repo)
+	atlas, err := service.GetAtlas(uint(id))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Atlas not found"})
 		return
@@ -67,7 +74,8 @@ func UpdateAtlas(c *gin.Context) {
 	}
 
 	repo := repositories.NewPostgresAtlasRepository()
-	err = repo.Update(uint(id), &updatedAtlas)
+	service := services.NewAtlasService(repo)
+	err = service.UpdateAtlas(uint(id), &updatedAtlas)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -84,7 +92,8 @@ func DeleteAtlas(c *gin.Context) {
 	}
 
 	repo := repositories.NewPostgresAtlasRepository()
-	err = repo.Delete(uint(id))
+	service := services.NewAtlasService(repo)
+	err = service.DeleteAtlas(uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

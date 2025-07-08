@@ -55,18 +55,18 @@ func (repo *PostgresAtlasRepository) Save(a *atlas.Atlas) uint {
 	return atlasModel.ID
 }
 
-func (repo *PostgresAtlasRepository) Retrieve(id uint) (atlas.Atlas, error) {
+func (repo *PostgresAtlasRepository) Retrieve(id uint) (*atlas.Atlas, error) {
 	db, err := repo.getDB()
 	if err != nil {
-		return atlas.Atlas{}, err
+		return nil, err
 	}
 
 	var atlasModel migration.AtlasModel
 	result := db.First(&atlasModel, id)
 	if result.Error != nil {
-		return atlas.Atlas{}, result.Error
+		return nil, result.Error
 	}
-	return atlas.Atlas{
+	return &atlas.Atlas{
 		ID:          atlasModel.ID,
 		Name:        atlasModel.Name,
 		Description: atlasModel.Description,
@@ -200,27 +200,4 @@ func (repo *PostgresAtlasRepository) ListWithPagination(page, pageSize int) ([]a
 		}
 	}
 	return atlases, count, nil
-}
-
-// Helper function to convert from AtlasModel to Atlas domain entity
-func convertToAtlas(model migration.AtlasModel) atlas.Atlas {
-	return atlas.Atlas{
-		ID:          model.ID,
-		Name:        model.Name,
-		Description: model.Description,
-		Category:    model.Category,
-		// Note: TissueRecords would need to be loaded separately
-		// as they're likely in a separate table
-	}
-}
-
-// Helper function to convert from Atlas domain entity to AtlasModel
-func convertToAtlasModel(a *atlas.Atlas) migration.AtlasModel {
-	return migration.AtlasModel{
-		ID:          a.ID,
-		Name:        a.Name,
-		Description: a.Description,
-		Category:    a.Category,
-		// Note: TissueRecords would need to be handled separately
-	}
 }
