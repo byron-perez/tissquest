@@ -4,6 +4,7 @@ import (
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/repositories"
+	"mcba/tissquest/internal/services"
 	"net/http"
 	"strconv"
 
@@ -22,129 +23,97 @@ type TissueRecordBodyUpdate struct {
 	Taxonomicclass string `json:"taxonomic_class" binding:"required"`
 }
 
+func newService() *services.TissueRecordService {
+	return services.NewTissueRecordService(repositories.NewGormTissueRecordRepository())
+}
+
 func GetTissueRecordById(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	parsedId := uint(id)
-
 	if err != nil {
-		// ... handle error TODO
-		panic(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
 	}
 
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord := &tissuerecord.TissueRecord{}
-	tissrecord.ConfigureTissueRecord(gorm_repository)
-
-	foundTissueRecord, status_code := tissrecord.GetById(parsedId)
-
-	if status_code == 0 {
-		panic("Not found record")
+	record, status := newService().GetByID(uint(id))
+	if status == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+		return
 	}
 
-	c.IndentedJSON(http.StatusOK, foundTissueRecord)
+	c.IndentedJSON(http.StatusOK, record)
 }
 
 func CreateTissueRecord(c *gin.Context) {
 	var body TissueRecordBody
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.Error(err)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	tissrecord := tissuerecord.TissueRecord{
+	tr := tissuerecord.TissueRecord{
 		Name:           body.Name,
 		Notes:          body.Notes,
 		Taxonomicclass: body.Taxonomicclass,
 		Slides:         []slide.Slide{},
 	}
 
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord.ConfigureTissueRecord(gorm_repository)
-
-	newRecordId := tissrecord.Save()
-
-	c.IndentedJSON(http.StatusOK, newRecordId)
+	newID := newService().Create(&tr)
+	c.IndentedJSON(http.StatusOK, newID)
 }
 
 func UpdateTissueRecord(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	parsedId := uint(id)
-
 	if err != nil {
-		// ... handle error TODO
-		panic(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
 	}
+
 	var body TissueRecordBody
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.Error(err)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 
-	// map fields
-	tissrecordForUpdate := tissuerecord.TissueRecord{
+	tr := tissuerecord.TissueRecord{
 		Name:           body.Name,
 		Notes:          body.Notes,
 		Taxonomicclass: body.Taxonomicclass,
 		Slides:         []slide.Slide{},
 	}
 
-	tissrecord := tissuerecord.TissueRecord{}
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord.ConfigureTissueRecord(gorm_repository)
-
-	tissrecord.Update(parsedId, tissrecordForUpdate)
-
-	c.IndentedJSON(http.StatusOK, tissrecordForUpdate)
+	newService().Update(uint(id), &tr)
+	c.IndentedJSON(http.StatusOK, tr)
 }
 
 func DeleteTissueRecord(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	parsedId := uint(id)
-
 	if err != nil {
-		// ... handle error TODO
-		panic(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
 	}
 
-	tissrecord := tissuerecord.TissueRecord{}
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord.ConfigureTissueRecord(gorm_repository)
-
-	tissrecord.Delete(parsedId)
-
-	c.IndentedJSON(http.StatusOK, tissrecord)
+	newService().Delete(uint(id))
+	c.Status(http.StatusNoContent)
 }
 
 func ListTissueRecords(c *gin.Context) {
-	// Create and configure the repository
-	gorm_repository := repositories.NewGormTissueRecordRepository()
+	limit, page := 10, 1
 
-	// Parse pagination parameters
-	limit := 10
-	page := 1
-
-	if limitParam := c.Query("limit"); limitParam != "" {
-		if parsedLimit, err := strconv.Atoi(limitParam); err == nil {
-			limit = parsedLimit
-		}
+	if v, err := strconv.Atoi(c.Query("limit")); err == nil {
+		limit = v
 	}
-	if pageParam := c.Query("page"); pageParam != "" {
-		if parsedPage, err := strconv.Atoi(pageParam); err == nil {
-			page = parsedPage
-		}
+	if v, err := strconv.Atoi(c.Query("page")); err == nil {
+		page = v
 	}
 
-	// Use the repository to fetch the records
-	tissueRecords, total, err := gorm_repository.List(page, limit)
+	records, total, err := newService().List(page, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve tissue records"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve tissue records"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"data":  tissueRecords,
+		"data":  records,
 		"total": total,
 		"page":  page,
 		"limit": limit,

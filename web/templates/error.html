@@ -1,0 +1,28 @@
+{{template "base.html" .}}
+
+{{define "content"}}
+<div class="error-container">
+    <h1>Error</h1>
+    <p>{{.error}}</p>
+    <a href="/">Go back to home</a>
+</div>
+{{end}}
+
+{{define "head"}}
+<style>
+.error-container { 
+    max-width: 600px; 
+    margin: 50px auto; 
+    padding: 20px; 
+    text-align: center; 
+}
+.error-container h1 { 
+    color: #e74c3c; 
+    margin-bottom: 20px; 
+}
+.error-container a { 
+    color: #3498db; 
+    text-decoration: none; 
+}
+</style>
+{{end}}

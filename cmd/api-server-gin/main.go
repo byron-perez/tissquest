@@ -68,6 +68,7 @@ func setupRouter() (*gin.Engine, error) {
 	r.GET("/tissue_records", tissue_records.ListTissueRecords)
 	r.POST("/tissue_records", tissue_records.CreateTissueRecord)
 	r.GET("/atlases", atlas.ListAtlases)
+	r.GET("/atlas/:id", atlas.ViewAtlas)
 
 	return r, nil
 }
