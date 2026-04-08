@@ -1,7 +1,6 @@
 package index
 
 import (
-	"fmt"
 	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/persistence/repositories"
 	"mcba/tissquest/internal/services"
@@ -16,22 +15,21 @@ func GetIndex(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch atlases"})
 		return
 	}
-	//print atlases for debugging purposes
-	fmt.Println(atlases)
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch atlases"})
-		return
+	var featured *atlas.Atlas
+	if len(atlases) > 0 {
+		featured = &atlases[0]
 	}
 
 	c.HTML(http.StatusOK, "base.html", gin.H{
-		"title":   "Tissquest",
-		"Atlases": atlases,
+		"title":         "Tissquest",
+		"Atlases":       atlases,
+		"FeaturedAtlas": featured,
 	})
 }
 
 func fetchAtlases() ([]atlas.Atlas, error) {
-	repo := repositories.NewPostgresAtlasRepository()
+	repo := repositories.NewGormAtlasRepository()
 	service := services.NewAtlasService(repo)
 	return service.ListAtlases()
 }

@@ -1,12 +1,9 @@
-<section class="atlas-section">
-    <h2 class="section-title">Grupos disponibles</h2>
-    <ul class="atlas-grid">
-        {{ range .Atlases }}
-        <li class="atlas-card card-1">
-            <h3 class="atlas-title">{{ .Name }}</h3>
-            <p class="atlas-description">{{ .Description }}</p>
-            <a href="/atlas/{{ .ID }}" class="atlas-link">Ver Atlas</a>
-        </li>
-        {{ end }}
-    </ul>
-</section>
+<ul class="atlas-grid">
+    {{ range .Atlases }}
+    <li class="atlas-card">
+        <h3 class="atlas-title">{{ .Name }}</h3>
+        <p class="atlas-description">{{ .Description }}</p>
+        <a href="/atlas/{{ .ID }}" class="atlas-link">View atlas</a>
+    </li>
+    {{ end }}
+</ul>

@@ -1,37 +1,72 @@
 {{ define "title"}}Tissquest{{ end }}
 {{ define "scripts"}}{{ end }}
 {{ define "content"}}
-<div class="wrapper">
-    <header>
-        <h1 class="home-title">{{.title}}</h1>
-    </header>
-    
-    <ul class="intro-imgs-listing">
-        <li class="tall-portrait-img">
-            <img src="https://botweb.uwsp.edu/Anatomy/images/monocotleaves/images_c/anat1234.jpg" alt="vegetal"
-                class="responsive-img">
-        </li>
-        <li class="short-portrait-img">
-            <img src="https://teachyourselfenvironmentalhomeinspecting.com/pix/alternaria.jpg" alt="fungus"
-                class="responsive-img">
-        </li>
-        <li class="wide">
-            <img src="https://www.microscopemaster.com/images/Protozoa1stpic.jpg" alt="protozoa" class="responsive-img">
-        </li>
-        <li class="wide-portrait-img">
-            <img src="https://histologyguide.com/imgs/striate-duct-parotid.jpg" alt="animal"
-                class="responsive-img">
-        </li>
-        <li>
-            <img src="https://as2.ftcdn.net/v2/jpg/05/33/25/55/1000_F_533255532_AA98DXxz3DRduQ3FCwIobLDbZP4qSpjn.jpg" alt="vegetal"
-                class="responsive-img">
-        </li>
-    </ul>
+<section class="page-hero">
+    <div class="hero-copy">
+        <p class="eyebrow">Plant Anatomy Quest</p>
+        <h1 class="hero-title">Discover plant tissues through microscopy and clear learning paths.</h1>
+        <p class="hero-text">Tissquest turns plant anatomy into a focused exploration: browse curated atlases, inspect tissue records, and learn what each slide reveals.</p>
+        <div class="hero-actions">
+            <a href="#featured" class="button primary">Start with Plant Anatomy</a>
+            <a href="#how-it-works" class="button secondary">How it works</a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="hero-card">
+            <span class="hero-card-label">Your next learning journey</span>
+            <p>Track plants, tissues, and microscope slides in a clean learning-first interface.</p>
+        </div>
+    </div>
+</section>
 
+<section class="page-search section">
+    <label for="atlas-search" class="search-label">Search atlases</label>
+    <input id="atlas-search" type="search" placeholder="Search by atlas, tissue type, or category" />
+</section>
+
+<section id="featured" class="featured-atlas section">
+    <h2 class="section-title">Featured atlas</h2>
+    {{ if .FeaturedAtlas }}
+    <div class="featured-card">
+        <div>
+            <span class="pill">{{.FeaturedAtlas.Category}}</span>
+            <h3>{{.FeaturedAtlas.Name}}</h3>
+            <p>{{.FeaturedAtlas.Description}}</p>
+        </div>
+        <a href="/atlas/{{.FeaturedAtlas.ID}}" class="button tertiary">View this atlas</a>
+    </div>
+    {{ else }}
+    <p>No atlases are available yet. Add one to begin the quest.</p>
+    {{ end }}
+</section>
+
+<section id="how-it-works" class="how-it-works section">
+    <h2 class="section-title">How the quest works</h2>
+    <div class="steps-grid">
+        <article class="step-card">
+            <span class="step-number">1</span>
+            <h3>Browse the atlas list</h3>
+            <p>Choose a plant atlas and discover how tissues are grouped for learning.</p>
+        </article>
+        <article class="step-card">
+            <span class="step-number">2</span>
+            <h3>Open tissue records</h3>
+            <p>Study each sample’s notes, taxonomy, and microscopy slide details.</p>
+        </article>
+        <article class="step-card">
+            <span class="step-number">3</span>
+            <h3>Learn step by step</h3>
+            <p>Use the atlas structure to explore plant anatomy in a simple, progressive way.</p>
+        </article>
+    </div>
+</section>
+
+<section class="atlas-section section">
+    <h2 class="section-title">Available atlases</h2>
     {{ template "main-menu.html" . }}
+</section>
 
-    <footer>
-        Desarrollado por xyz
-    </footer>
-</div>
+<footer class="page-footer">
+    <p>Simple design, purposeful learning. Tissquest helps you explore plant anatomy without distractions.</p>
+</footer>
 {{end }}
