@@ -48,6 +48,7 @@ Each domain package defines a `RepositoryInterface` for dependency inversion.
 
 ## Links
 - [Requirements](REQUIREMENTS.md) - High-level requirements and use cases
+- [Requirements Glossary](REQUIREMENTS-GLOSSARY.md) - Definitions of key terms
 - [README.md](README.md) - Project overview
 - [CHANGELOG.md](CHANGELOG.md) - Version history</content>
 <parameter name="filePath">/workspaces/tissquest/.github/copilot-instructions.md

@@ -9,6 +9,8 @@ Tissquest is a personal project aimed at creating an educational platform for st
 - [Requirements Engineering University](https://requirements.university/) - For learning requirements engineering principles
 - [High-Level Requirements by Leslie Lamport](https://lamport.azurewebsites.net/pubs/high-level.pdf) - Focus on high-level, abstract requirements rather than implementation details
 
+**Terminology**: See [Requirements Glossary](REQUIREMENTS-GLOSSARY.md) for definitions of key terms used in this specification.
+
 ## High-Level Requirements (Following Lamport's Approach)
 
 ### Goal
