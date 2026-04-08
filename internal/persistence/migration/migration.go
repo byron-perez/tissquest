@@ -57,7 +57,7 @@ func RunMigration() {
     }
 
     // Run migrations for all models
-    err = db.AutoMigrate(
+    if err = db.AutoMigrate(
         &CategoryModel{},
         &AtlasModel{},
         &TissueRecordModel{},
@@ -73,6 +73,10 @@ func RunMigration() {
 
     if err := seedSampleTissueRecords(db); err != nil {
         panic(fmt.Sprintf("failed to seed tissue records: %v", err))
+    }
+
+    if err := ensureAssociations(db); err != nil {
+        panic(fmt.Sprintf("failed to ensure associations: %v", err))
     }
 
     fmt.Println("Database migration completed successfully")
@@ -122,8 +126,8 @@ func seedSampleTissueRecords(db *gorm.DB) error {
         Notes:          "Corte longitudinal y transversal de un helecho (Pteridium sp.), preparado para mostrar la anatomía de la fronda y los tejidos internos.",
         Taxonomicclass: "K:Plantae,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
         Slides: []SlideModel{
-            {Name: "Corte longitudinal", Url: "https://botweb.uwsp.edu/Anatomy/images/dicotwood/images_c/Anat0343.jpg", Staining: StainingModel{Name: "H&E"}, Magnification: 40},
-            {Name: "Corte transversal", Url: "https://botweb.uwsp.edu/Anatomy/images/primaryxylem/images_c/Anat0144.jpg", Staining: StainingModel{Name: "Azul de metileno"}, Magnification: 100},
+            {Name: "Corte longitudinal", Url: "https://botweb.uwsp.edu/Anatomy/images/dicotwood/images_c/Anat0343.jpg", Magnification: 40},
+            {Name: "Corte transversal", Url: "https://botweb.uwsp.edu/Anatomy/images/primaryxylem/images_c/Anat0144.jpg", Magnification: 100},
         },
     }
 
@@ -132,7 +136,7 @@ func seedSampleTissueRecords(db *gorm.DB) error {
         Notes:          "Sección transversal de tallo vascular mostrando xilema y floema, útil para entender conducción y organización de tejidos.",
         Taxonomicclass: "K:Plantae,Cld:Tracheophytes,D:Magnoliophyta,Cls:Magnoliopsida",
         Slides: []SlideModel{
-            {Name: "Tallo transversal", Url: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Stem_cross_section.png", Staining: StainingModel{Name: "PAS"}, Magnification: 80},
+            {Name: "Tallo transversal", Url: "https://upload.wikimedia.org/wikipedia/commons/5/5d/Stem_cross_section.png", Magnification: 80},
         },
     }
 
@@ -164,6 +168,118 @@ func seedSampleTissueRecords(db *gorm.DB) error {
     }
 
     return nil
+}
+
+func ensureAssociations(db *gorm.DB) error {
+    fmt.Println("Starting ensureAssociations...")
+    
+    // Get all tissue records
+    var tissueRecords []TissueRecordModel
+    if err := db.Find(&tissueRecords).Error; err != nil {
+        return err
+    }
+    fmt.Printf("Found %d tissue records\n", len(tissueRecords))
+
+    // Get all categories
+    var allCategories []CategoryModel
+    if err := db.Find(&allCategories).Error; err != nil {
+        return err
+    }
+    fmt.Printf("Found %d categories\n", len(allCategories))
+
+    // Build category map by name for easy lookup
+    categoryMap := make(map[string]*CategoryModel)
+    for i := range allCategories {
+        categoryMap[allCategories[i].Name] = &allCategories[i]
+    }
+
+    // Get all atlases
+    var allAtlases []AtlasModel
+    if err := db.Find(&allAtlases).Error; err != nil {
+        return err
+    }
+    fmt.Printf("Found %d atlases\n", len(allAtlases))
+
+    // Find the basic atlas
+    var basicAtlas *AtlasModel
+    for i := range allAtlases {
+        if allAtlases[i].Name == "Atlas básico de anatomía vegetal" {
+            basicAtlas = &allAtlases[i]
+            break
+        }
+    }
+
+    // Ensure associations for each tissue record
+    for i := range tissueRecords {
+        record := &tissueRecords[i]
+        fmt.Printf("Processing tissue record: %s (ID: %d)\n", record.Name, record.ID)
+
+        // Clear existing associations first
+        if err := db.Model(record).Association("Categories").Clear(); err != nil {
+            fmt.Printf("Warning: Could not clear categories for %s: %v\n", record.Name, err)
+        }
+
+        // Check the tissue record name and add appropriate categories
+        switch record.Name {
+        case "Fronda de helecho":
+            categories := []*CategoryModel{
+                categoryMap["Hoja"],
+                categoryMap["Parénquima"],
+                categoryMap["H&E"],
+                categoryMap["Plantae"],
+            }
+            filtered := filterNilCategories(categories)
+            fmt.Printf("  Adding %d categories to fern record\n", len(filtered))
+            if err := db.Model(record).Association("Categories").Append(filtered...); err != nil {
+                return fmt.Errorf("failed to associate categories to fern record: %v", err)
+            }
+
+        case "Corte de tallo":
+            categories := []*CategoryModel{
+                categoryMap["Xilema"],
+                categoryMap["Plantae"],
+                categoryMap["Magnoliophyta"],
+                categoryMap["Azul de metileno"],
+            }
+            filtered := filterNilCategories(categories)
+            fmt.Printf("  Adding %d categories to stem record\n", len(filtered))
+            if err := db.Model(record).Association("Categories").Append(filtered...); err != nil {
+                return fmt.Errorf("failed to associate categories to stem record: %v", err)
+            }
+        }
+    }
+
+    // Ensure atlas associations
+    if basicAtlas != nil {
+        fmt.Printf("Linking tissue records to atlas (ID: %d)\n", basicAtlas.ID)
+        
+        // Clear existing associations first
+        if err := db.Model(basicAtlas).Association("TissueRecords").Clear(); err != nil {
+            fmt.Printf("Warning: Could not clear tissue records for atlas: %v\n", err)
+        }
+        
+        for i := range tissueRecords {
+            if err := db.Model(basicAtlas).Association("TissueRecords").Append(&tissueRecords[i]); err != nil {
+                return fmt.Errorf("failed to associate tissue records to atlas: %v", err)
+            }
+        }
+        fmt.Printf("Successfully linked %d tissue records to atlas\n", len(tissueRecords))
+    } else {
+        fmt.Println("Warning: Atlas 'Atlas básico de anatomía vegetal' not found")
+    }
+
+    fmt.Println("ensureAssociations completed successfully")
+    return nil
+}
+
+func filterNilCategories(categories []*CategoryModel) []interface{} {
+    var result []interface{}
+    for _, cat := range categories {
+        if cat != nil {
+            result = append(result, cat)
+        }
+    }
+    return result
 }
 
 func seedDefaultCategories(db *gorm.DB) error {

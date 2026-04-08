@@ -60,15 +60,22 @@ func (repo *PostgresAtlasRepository) Retrieve(id uint) (*atlas.Atlas, error) {
 	}
 
 	var atlasModel migration.AtlasModel
-	result := db.First(&atlasModel, id)
+	result := db.Preload("TissueRecords").First(&atlasModel, id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
+	tissueRecordIDs := make([]uint, len(atlasModel.TissueRecords))
+	for i, record := range atlasModel.TissueRecords {
+		tissueRecordIDs[i] = record.ID
+	}
+
 	return &atlas.Atlas{
-		ID:          atlasModel.ID,
-		Name:        atlasModel.Name,
-		Description: atlasModel.Description,
-		Category:    atlasModel.Category,
+		ID:            atlasModel.ID,
+		Name:          atlasModel.Name,
+		Description:   atlasModel.Description,
+		Category:      atlasModel.Category,
+		TissueRecords: tissueRecordIDs,
 	}, nil
 }
 

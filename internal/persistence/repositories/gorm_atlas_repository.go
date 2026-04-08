@@ -48,14 +48,21 @@ func (repo *GormAtlasRepository) Retrieve(id uint) (*atlas.Atlas, error) {
 	}
 
 	var atlasModel migration.AtlasModel
-	if err := db.First(&atlasModel, id).Error; err != nil {
+	if err := db.Preload("TissueRecords").First(&atlasModel, id).Error; err != nil {
 		return nil, err
 	}
+
+	tissueRecordIDs := make([]uint, len(atlasModel.TissueRecords))
+	for i, record := range atlasModel.TissueRecords {
+		tissueRecordIDs[i] = record.ID
+	}
+
 	return &atlas.Atlas{
-		ID:          atlasModel.ID,
-		Name:        atlasModel.Name,
-		Description: atlasModel.Description,
-		Category:    atlasModel.Category,
+		ID:            atlasModel.ID,
+		Name:          atlasModel.Name,
+		Description:   atlasModel.Description,
+		Category:      atlasModel.Category,
+		TissueRecords: tissueRecordIDs,
 	}, nil
 }
 

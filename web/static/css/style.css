@@ -309,55 +309,215 @@ input[type="submit"] {
   }
 }
 
-
 .atlas-grid {
-    list-style: none;
-    display: grid;
-    grid-gap: 20px;
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 1200px;
-    margin: 0 auto;
-    
+  list-style: none;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .atlas-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-    transition: transform 0.3s ease-in-out;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.04);
+  display: grid;
+  gap: 14px;
 }
 
 .atlas-card:hover {
-    transform: translateY(-5px);
+  transform: translateY(-2px);
+  transition: transform 180ms ease;
 }
 
 .atlas-title {
-    font-size: 18px;
-    margin-bottom: 10px;
+  margin: 0;
+  font-size: 1.25rem;
+  color: #111827;
 }
 
 .atlas-description {
-    font-size: 14px;
-    margin-bottom: 10px;
-    flex-grow: 1;
-}
-
-.atlas-category {
-    font-size: 12px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-bottom: 10px;
+  margin: 0;
+  line-height: 1.7;
+  color: #475569;
 }
 
 .atlas-link {
-    display: inline-block;
-    padding: 8px 16px;
-        background-color: #14b8a6;
-/* Responsive adjustments */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #14b8a6;
+  color: #ffffff;
+  font-weight: 700;
+}
+
 @media (max-width: 1200px) {
-    .atlas-grid {
-        grid-template-columns: repeat(2, 1fr);
+  .atlas-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .atlas-grid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .atlas-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Atlas page specific styles */
+.container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 18px 16px;
+}
+
+.breadcrumb {
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.breadcrumb a {
+  color: #0d9488;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.atlas-header {
+  margin-bottom: 20px;
+}
+
+.atlas-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .atlas-header-main {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.atlas-header h1 {
+  color: #0f172a;
+  margin-bottom: 10px;
+  font-size: clamp(2rem, 2.5vw, 3rem);
+}
+
+.description {
+  color: #475569;
+  margin-bottom: 14px;
+  max-width: 780px;
+}
+
+.category-badge {
+  background: #d1fae5;
+  color: #0f766e;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.9em;
+  font-weight: 700;
+}
+
+.category-section {
+  margin-bottom: 32px;
+}
+
+.category-title {
+  color: #0f766e;
+  border-bottom: 2px solid #d9f7ef;
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+
+.category-group {
+  margin-bottom: 22px;
+  padding: 20px;
+  background: #f0fdfa;
+  border-radius: 18px;
+  border: 1px solid #d1e7dd;
+}
+
+.category-name {
+  margin-bottom: 8px;
+  color: #0f766e;
+}
+
+.category-description {
+  margin-bottom: 16px;
+  color: #475569;
+}
+
+.tissue-records-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.tissue-record-card {
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  border-left: 5px solid #14b8a6;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.tissue-record-card h4 {
+  margin: 0 0 10px 0;
+  color: #111827;
+}
+
+.taxonomic-class {
+  font-weight: 700;
+  color: #0f766e;
+  margin: 6px 0;
+}
+
+.notes {
+  color: #475569;
+  font-size: 0.95em;
+  margin: 10px 0;
+  line-height: 1.7;
+}
+
+.slides-count {
+  background: #d1fae5;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8em;
+  color: #0f766e;
+  display: inline-flex;
+}
+
+.no-records {
+  color: #64748b;
+  font-style: italic;
+}
         max-width: 800px;
     }
 }
@@ -373,4 +533,147 @@ input[type="submit"] {
     .atlas-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Atlas page specific styles */
+.container {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 18px 16px;
+}
+
+.breadcrumb {
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.breadcrumb a {
+  color: #0d9488;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.atlas-header {
+  margin-bottom: 20px;
+}
+
+.atlas-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 760px) {
+  .atlas-header-main {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.atlas-header h1 {
+  color: #0f172a;
+  margin-bottom: 10px;
+  font-size: clamp(2rem, 2.5vw, 3rem);
+}
+
+.description {
+  color: #475569;
+  margin-bottom: 14px;
+  max-width: 780px;
+}
+
+.category-badge {
+  background: #d1fae5;
+  color: #0f766e;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.9em;
+  font-weight: 700;
+}
+
+.category-section {
+  margin-bottom: 32px;
+}
+
+.category-title {
+  color: #0f766e;
+  border-bottom: 2px solid #d9f7ef;
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+
+.category-group {
+  margin-bottom: 22px;
+  padding: 20px;
+  background: #f0fdfa;
+  border-radius: 18px;
+  border: 1px solid #d1e7dd;
+}
+
+.category-name {
+  margin-bottom: 8px;
+  color: #0f766e;
+}
+
+.category-description {
+  margin-bottom: 16px;
+  color: #475569;
+}
+
+.tissue-records-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.tissue-record-card {
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  border-left: 5px solid #14b8a6;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.thumbnail {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.tissue-record-card h4 {
+  margin: 0 0 10px 0;
+  color: #111827;
+}
+
+.taxonomic-class {
+  font-weight: 700;
+  color: #0f766e;
+  margin: 6px 0;
+}
+
+.notes {
+  color: #475569;
+  font-size: 0.95em;
+  margin: 10px 0;
+  line-height: 1.7;
+}
+
+.slides-count {
+  background: #d1fae5;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.8em;
+  color: #0f766e;
+  display: inline-flex;
+}
+
+.no-records {
+  color: #64748b;
+  font-style: italic;
 }

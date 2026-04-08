@@ -1,6 +1,7 @@
 package atlas
 
 import (
+	"html/template"
 	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/core/category"
 	"mcba/tissquest/internal/core/tissuerecord"
@@ -22,17 +23,29 @@ type CategoryWithRecords struct {
 	TissueRecords []tissuerecord.TissueRecord
 }
 
+func renderError(c *gin.Context, status int, message string) {
+	tmpl := template.Must(template.ParseFiles(
+		"web/templates/layouts/base.html",
+		"web/templates/error.html",
+	))
+	c.Header("Content-Type", "text/html")
+	c.Writer.WriteHeader(status)
+	if err := tmpl.ExecuteTemplate(c.Writer, "error", gin.H{"error": message}); err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+	}
+}
+
 func ViewAtlas(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		c.HTML(http.StatusBadRequest, "error.html", gin.H{"error": "Invalid atlas ID"})
+		renderError(c, http.StatusBadRequest, "Invalid atlas ID")
 		return
 	}
 
 	atlasService := services.NewAtlasService(repositories.NewAtlasRepository())
 	atlasData, err := atlasService.GetAtlas(uint(id))
 	if err != nil {
-		c.HTML(http.StatusNotFound, "error.html", gin.H{"error": "Atlas not found"})
+		renderError(c, http.StatusNotFound, "Atlas not found")
 		return
 	}
 
@@ -64,11 +77,20 @@ func ViewAtlas(c *gin.Context) {
 		}
 	}
 
-	c.HTML(http.StatusOK, "includes/atlas_view.html", gin.H{
-		"title": atlasData.Name,
+	data := gin.H{
+		"Title": atlasData.Name,
 		"data": AtlasViewData{
 			Atlas:      *atlasData,
 			Categories: categorizedData,
 		},
-	})
+	}
+
+	tmpl := template.Must(template.ParseFiles(
+		"web/templates/layouts/base.html",
+		"web/templates/pages/atlas_view.html",
+	))
+	c.Header("Content-Type", "text/html")
+	if err := tmpl.ExecuteTemplate(c.Writer, "base", data); err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+	}
 }

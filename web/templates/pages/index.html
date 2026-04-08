@@ -1,6 +1,4 @@
-{{ define "title"}}Tissquest{{ end }}
-{{ define "scripts"}}{{ end }}
-{{ define "content"}}
+{{define "content"}}
 <section class="page-hero">
     <div class="hero-copy">
         <p class="eyebrow">Búsqueda de Anatomía Vegetal</p>
@@ -63,10 +61,14 @@
 
 <section class="atlas-section section">
     <h2 class="section-title">Atlas disponibles</h2>
-    {{ template "main-menu.html" . }}
+    {{ template "main-menu" . }}
 </section>
 
 <footer class="page-footer">
     <p>Simple design, purposeful learning. Tissquest helps you explore plant anatomy without distractions.</p>
 </footer>
-{{end }}
+{{end}}
+
+{{define "index"}}
+{{template "base" .}}
+{{end}}
