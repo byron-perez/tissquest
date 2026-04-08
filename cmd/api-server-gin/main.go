@@ -73,28 +73,51 @@ func setupRouter() (*gin.Engine, error) {
 	return r, nil
 }
 
+const port = ":8080"
+
+func logStartupInfo() {
+	cwd, _ := os.Getwd()
+
+	dbType := os.Getenv("DB_TYPE")
+	dbInfo := os.Getenv("DB_PATH")
+	if dbType == "postgres" {
+		dbInfo = fmt.Sprintf("%s@%s:%s/%s",
+			os.Getenv("DATABASE_USER"),
+			os.Getenv("DATABASE_HOST"),
+			os.Getenv("DATABASE_PORT"),
+			os.Getenv("DATABASE_NAME"),
+		)
+	}
+
+	log.Println("---------------------------------------")
+	log.Println("  TissQuest API Server")
+	log.Println("---------------------------------------")
+	log.Printf("  Port     : %s", port)
+	log.Printf("  Mode     : %s", gin.Mode())
+	log.Printf("  DB type  : %s", dbType)
+	log.Printf("  DB       : %s", dbInfo)
+	log.Printf("  Workdir  : %s", cwd)
+	log.Println("  Routes   :")
+	log.Println("    GET  /")
+	log.Println("    GET  /tissue_records")
+	log.Println("    POST /tissue_records")
+	log.Println("    GET  /atlases")
+	log.Println("    GET  /atlas/:id")
+	log.Println("---------------------------------------")
+}
+
 func main() {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
+	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Print current working directory
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Printf("Error getting current working directory: %v", err)
-	} else {
-		log.Printf("Current working directory: %s", cwd)
-	}
-
-	// Run migrations
 	migration.RunMigration()
 
-	// Setup and run the server
 	r, err := setupRouter()
 	if err != nil {
 		log.Fatalf("Failed to set up router: %v", err)
 	}
-	r.Run(":8080")
+
+	logStartupInfo()
+	r.Run(port)
 }

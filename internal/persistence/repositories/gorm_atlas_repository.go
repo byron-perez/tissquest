@@ -41,18 +41,17 @@ func (repo *GormAtlasRepository) Save(a *atlas.Atlas) uint {
 	return atlasModel.ID
 }
 
-func (repo *GormAtlasRepository) Retrieve(id uint) (atlas.Atlas, error) {
+func (repo *GormAtlasRepository) Retrieve(id uint) (*atlas.Atlas, error) {
 	db, err := repo.getDB()
 	if err != nil {
-		return atlas.Atlas{}, err
+		return nil, err
 	}
 
 	var atlasModel migration.AtlasModel
-	result := db.First(&atlasModel, id)
-	if result.Error != nil {
-		return atlas.Atlas{}, result.Error
+	if err := db.First(&atlasModel, id).Error; err != nil {
+		return nil, err
 	}
-	return atlas.Atlas{
+	return &atlas.Atlas{
 		ID:          atlasModel.ID,
 		Name:        atlasModel.Name,
 		Description: atlasModel.Description,
@@ -82,6 +81,58 @@ func (repo *GormAtlasRepository) Delete(id uint) error {
 
 	result := db.Delete(&migration.AtlasModel{}, id)
 	return result.Error
+}
+
+func (repo *GormAtlasRepository) FindByName(name string) ([]atlas.Atlas, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, err
+	}
+
+	var atlasModels []migration.AtlasModel
+	if err := db.Where("name LIKE ?", "%"+name+"%").Find(&atlasModels).Error; err != nil {
+		return nil, err
+	}
+
+	atlases := make([]atlas.Atlas, len(atlasModels))
+	for i, model := range atlasModels {
+		atlases[i] = atlas.Atlas{
+			ID:          model.ID,
+			Name:        model.Name,
+			Description: model.Description,
+			Category:    model.Category,
+		}
+	}
+	return atlases, nil
+}
+
+func (repo *GormAtlasRepository) ListWithPagination(page, pageSize int) ([]atlas.Atlas, int64, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var total int64
+	if err := db.Model(&migration.AtlasModel{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var atlasModels []migration.AtlasModel
+	offset := (page - 1) * pageSize
+	if err := db.Offset(offset).Limit(pageSize).Find(&atlasModels).Error; err != nil {
+		return nil, 0, err
+	}
+
+	atlases := make([]atlas.Atlas, len(atlasModels))
+	for i, model := range atlasModels {
+		atlases[i] = atlas.Atlas{
+			ID:          model.ID,
+			Name:        model.Name,
+			Description: model.Description,
+			Category:    model.Category,
+		}
+	}
+	return atlases, total, nil
 }
 
 func (repo *GormAtlasRepository) List() ([]atlas.Atlas, error) {
