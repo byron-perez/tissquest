@@ -29,7 +29,7 @@ func ViewAtlas(c *gin.Context) {
 		return
 	}
 
-	atlasService := services.NewAtlasService(repositories.NewPostgresAtlasRepository())
+	atlasService := services.NewAtlasService(repositories.NewGormAtlasRepository()) // Use GORM for consistency
 	atlasData, err := atlasService.GetAtlas(uint(id))
 	if err != nil {
 		c.HTML(http.StatusNotFound, "error.html", gin.H{"error": "Atlas not found"})
@@ -40,18 +40,28 @@ func ViewAtlas(c *gin.Context) {
 	categories, _ := repositories.NewMemoryCategoryRepository().List()
 	categorizedData := make(map[string][]CategoryWithRecords)
 
+	// Create a set of tissue record IDs in this atlas for quick lookup
+	atlasRecordIDs := make(map[uint]bool)
+	for _, recordID := range atlasData.TissueRecords {
+		atlasRecordIDs[recordID] = true
+	}
+
 	for _, cat := range categories {
 		var tissueRecords []tissuerecord.TissueRecord
 		for _, recordID := range cat.TissueRecordIDs {
-			if record, status := trService.GetByID(recordID); status != 0 {
-				tissueRecords = append(tissueRecords, record)
+			if atlasRecordIDs[recordID] { // Only include records that belong to this atlas
+				if record, status := trService.GetByID(recordID); status != 0 {
+					tissueRecords = append(tissueRecords, record)
+				}
 			}
 		}
-		categoryType := string(cat.Type)
-		categorizedData[categoryType] = append(categorizedData[categoryType], CategoryWithRecords{
-			Category:      cat,
-			TissueRecords: tissueRecords,
-		})
+		if len(tissueRecords) > 0 { // Only add categories that have records in this atlas
+			categoryType := string(cat.Type)
+			categorizedData[categoryType] = append(categorizedData[categoryType], CategoryWithRecords{
+				Category:      cat,
+				TissueRecords: tissueRecords,
+			})
+		}
 	}
 
 	c.HTML(http.StatusOK, "base.html", gin.H{

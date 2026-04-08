@@ -27,7 +27,11 @@ Provide an accessible, web-based platform for students and enthusiasts to study 
 1. **Atlas Management**
    - Create and organize collections of plant tissue samples
    - Categorize atlases by plant type, tissue type, or educational level
-   - View atlas metadata (name, description, category)
+   - View atlas details including:
+     - Atlas metadata (name, description, category, creation date)
+     - List of associated tissue records organized by taxonomic categories
+     - Thumbnail images or preview of key slides
+     - Navigation to individual tissue record pages
 
 2. **Tissue Record Management**
    - Store individual tissue samples with:
@@ -49,6 +53,13 @@ Provide an accessible, web-based platform for students and enthusiasts to study 
    - Responsive design for different screen sizes
    - Image gallery views
    - Search and filtering capabilities
+   - **Atlas Detail Page**:
+     - Header with atlas title, description, and category
+     - Organized display of tissue records by taxonomic hierarchy (Species → Organ → Tissue Type)
+     - Thumbnail images for each tissue record
+     - Clickable links to detailed tissue record views
+     - Breadcrumb navigation (Home > Atlases > [Atlas Name])
+     - Educational notes and context for the atlas
 
 ### API Requirements
 - RESTful API for data operations
@@ -83,6 +94,7 @@ Provide an accessible, web-based platform for students and enthusiasts to study 
    - View detailed microscopy images
    - Read educational notes and classifications
    - Compare different tissue types
+   - **Navigate atlas structure**: Explore tissue records organized by taxonomic categories within an atlas
 
 2. **Content Management**
    - Add new tissue samples and images

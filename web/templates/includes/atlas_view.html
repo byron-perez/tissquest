@@ -1,5 +1,9 @@
 {{define "content"}}
 <div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> &gt; <a href="/atlases">Atlases</a> &gt; <span>{{.data.Atlas.Name}}</span>
+    </nav>
+    
     <header class="atlas-header">
         <h1>{{.data.Atlas.Name}}</h1>
         <p class="description">{{.data.Atlas.Description}}</p>
@@ -21,6 +25,9 @@
                 <div class="tissue-records-grid">
                     {{range .TissueRecords}}
                     <div class="tissue-record-card">
+                        {{if .Slides}}
+                        <img src="{{index .Slides 0}}" alt="Tissue sample" class="thumbnail">
+                        {{end}}
                         <h4>{{.Name}}</h4>
                         <p class="taxonomic-class">{{.Taxonomicclass}}</p>
                         <p class="notes">{{.Notes}}</p>
@@ -45,6 +52,9 @@
 {{define "head"}}
 <style>
 .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.breadcrumb { margin-bottom: 20px; font-size: 0.9em; }
+.breadcrumb a { color: #3498db; text-decoration: none; }
+.breadcrumb a:hover { text-decoration: underline; }
 .atlas-header { margin-bottom: 30px; }
 .atlas-header h1 { color: #2c3e50; margin-bottom: 10px; }
 .description { color: #7f8c8d; margin-bottom: 10px; }
@@ -55,7 +65,8 @@
 .category-name { color: #2980b9; margin-bottom: 5px; }
 .category-description { color: #7f8c8d; margin-bottom: 15px; }
 .tissue-records-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
-.tissue-record-card { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3498db; }
+.tissue-record-card { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.thumbnail { width: 100%; height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
 .tissue-record-card h4 { margin: 0 0 8px 0; color: #2c3e50; }
 .taxonomic-class { font-weight: bold; color: #27ae60; margin: 5px 0; }
 .notes { color: #7f8c8d; font-size: 0.9em; margin: 8px 0; }

@@ -1,0 +1,8 @@
+{
+  "description": "Pre-commit hook to run tests and vetting before commits",
+  "triggers": ["PreCommit"],
+  "commands": [
+    "go test ./...",
+    "go vet ./..."
+  ]
+}
