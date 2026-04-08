@@ -24,7 +24,7 @@ type TissueRecordBodyUpdate struct {
 }
 
 func newService() *services.TissueRecordService {
-	return services.NewTissueRecordService(repositories.NewGormTissueRecordRepository())
+	return services.NewTissueRecordService(repositories.NewTissueRecordRepository())
 }
 
 func GetTissueRecordById(c *gin.Context) {

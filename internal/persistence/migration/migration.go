@@ -58,9 +58,10 @@ func RunMigration() {
 
     // Run migrations for all models
     err = db.AutoMigrate(
+        &AtlasModel{},
         &TissueRecordModel{},
         &SlideModel{},
-        // Add any other models that need migration here
+        &StainingModel{},
     )
     if err != nil {
         panic(fmt.Sprintf("database migration failed: %v", err))

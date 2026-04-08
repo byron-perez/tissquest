@@ -20,8 +20,10 @@ type GormTissueRecordRepository struct {
 
 func NewGormTissueRecordRepository() *GormTissueRecordRepository {
 	connection := os.Getenv("DB_PATH")
-	new_repository := GormTissueRecordRepository{conn: connection}
-	return &new_repository
+	if connection == "" {
+		connection = "tissquest.db"
+	}
+	return &GormTissueRecordRepository{conn: connection}
 }
 
 func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint {

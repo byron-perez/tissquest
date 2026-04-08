@@ -11,7 +11,7 @@ import (
 )
 
 func ListAtlases(c *gin.Context) {
-	repo := repositories.NewPostgresAtlasRepository()
+	repo := repositories.NewAtlasRepository()
 	service := services.NewAtlasService(repo)
 	atlases, err := service.ListAtlases()
 	if err != nil {
@@ -31,7 +31,7 @@ func CreateAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewPostgresAtlasRepository()
+	repo := repositories.NewAtlasRepository()
 	service := services.NewAtlasService(repo)
 	id, err := service.CreateAtlas(&newAtlas)
 	if err != nil {
@@ -49,7 +49,7 @@ func GetAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewPostgresAtlasRepository()
+	repo := repositories.NewAtlasRepository()
 	service := services.NewAtlasService(repo)
 	atlas, err := service.GetAtlas(uint(id))
 	if err != nil {
@@ -73,7 +73,7 @@ func UpdateAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewPostgresAtlasRepository()
+	repo := repositories.NewAtlasRepository()
 	service := services.NewAtlasService(repo)
 	err = service.UpdateAtlas(uint(id), &updatedAtlas)
 	if err != nil {
@@ -91,7 +91,7 @@ func DeleteAtlas(c *gin.Context) {
 		return
 	}
 
-	repo := repositories.NewPostgresAtlasRepository()
+	repo := repositories.NewAtlasRepository()
 	service := services.NewAtlasService(repo)
 	err = service.DeleteAtlas(uint(id))
 	if err != nil {

@@ -23,15 +23,14 @@ func NewPostgresAtlasRepository() *PostgresAtlasRepository {
 	sslmode := os.Getenv("DATABASE_SSLMODE")
 
 	if sslmode == "" {
-		sslmode = "require" // Default to disable if not specified
+		sslmode = "require"
 	}
 
 	// Construct the DSN string
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		host, port, user, password, dbname, sslmode)
 
-	fmt.Println(dsn)
-	new_repository := PostgresAtlasRepository{dsn: dsn}
+	return &PostgresAtlasRepository{dsn: dsn}
 	return &new_repository
 }
 

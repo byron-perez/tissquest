@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"fmt"
 	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/persistence/migration"
 	"os"
@@ -16,9 +15,10 @@ type GormAtlasRepository struct {
 
 func NewGormAtlasRepository() *GormAtlasRepository {
 	connection := os.Getenv("DB_PATH")
-	fmt.Println(connection)
-	new_repository := GormAtlasRepository{conn: connection}
-	return &new_repository
+	if connection == "" {
+		connection = "tissquest.db"
+	}
+	return &GormAtlasRepository{conn: connection}
 }
 
 func (repo *GormAtlasRepository) getDB() (*gorm.DB, error) {

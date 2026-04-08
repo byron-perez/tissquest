@@ -29,14 +29,14 @@ func ViewAtlas(c *gin.Context) {
 		return
 	}
 
-	atlasService := services.NewAtlasService(repositories.NewGormAtlasRepository()) // Use GORM for consistency
+	atlasService := services.NewAtlasService(repositories.NewAtlasRepository())
 	atlasData, err := atlasService.GetAtlas(uint(id))
 	if err != nil {
 		c.HTML(http.StatusNotFound, "error.html", gin.H{"error": "Atlas not found"})
 		return
 	}
 
-	trService := services.NewTissueRecordService(repositories.NewGormTissueRecordRepository())
+	trService := services.NewTissueRecordService(repositories.NewTissueRecordRepository())
 	categories, _ := repositories.NewMemoryCategoryRepository().List()
 	categorizedData := make(map[string][]CategoryWithRecords)
 
