@@ -21,7 +21,7 @@ func GetIndex(c *gin.Context) {
 		featured = &atlases[0]
 	}
 
-	c.HTML(http.StatusOK, "base.html", gin.H{
+	c.HTML(http.StatusOK, "includes/index.html", gin.H{
 		"title":         "Tissquest",
 		"Atlases":       atlases,
 		"FeaturedAtlas": featured,

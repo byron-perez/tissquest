@@ -64,7 +64,7 @@ func ViewAtlas(c *gin.Context) {
 		}
 	}
 
-	c.HTML(http.StatusOK, "base.html", gin.H{
+	c.HTML(http.StatusOK, "includes/atlas_view.html", gin.H{
 		"title": atlasData.Name,
 		"data": AtlasViewData{
 			Atlas:      *atlasData,

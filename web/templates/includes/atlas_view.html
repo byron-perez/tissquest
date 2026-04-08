@@ -1,12 +1,17 @@
 {{define "content"}}
 <div class="container">
     <nav class="breadcrumb">
-        <a href="/">Home</a> &gt; <a href="/atlases">Atlases</a> &gt; <span>{{.data.Atlas.Name}}</span>
+        <a href="/" class="button tertiary">Inicio</a> &gt; <a href="/atlases">Atlas</a> &gt; <span>{{.data.Atlas.Name}}</span>
     </nav>
     
     <header class="atlas-header">
-        <h1>{{.data.Atlas.Name}}</h1>
-        <p class="description">{{.data.Atlas.Description}}</p>
+        <div class="atlas-header-main">
+            <div>
+                <h1>{{.data.Atlas.Name}}</h1>
+                <p class="description">{{.data.Atlas.Description}}</p>
+            </div>
+            <a href="/atlases" class="button tertiary">Volver a la lista de atlas</a>
+        </div>
         <span class="category-badge">{{.data.Atlas.Category}}</span>
     </header>
 
@@ -38,7 +43,7 @@
                     {{end}}
                 </div>
                 {{else}}
-                <p class="no-records">No tissue records in this category</p>
+                <p class="no-records">No hay registros de tejidos en esta categoría</p>
                 {{end}}
             </div>
             {{end}}
@@ -51,26 +56,31 @@
 
 {{define "head"}}
 <style>
-.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-.breadcrumb { margin-bottom: 20px; font-size: 0.9em; }
-.breadcrumb a { color: #3498db; text-decoration: none; }
+.container { max-width: 1040px; margin: 0 auto; padding: 18px 16px; }
+.breadcrumb { margin-bottom: 16px; font-size: 0.95rem; }
+.breadcrumb a { color: #0d9488; text-decoration: none; }
 .breadcrumb a:hover { text-decoration: underline; }
-.atlas-header { margin-bottom: 30px; }
-.atlas-header h1 { color: #2c3e50; margin-bottom: 10px; }
-.description { color: #7f8c8d; margin-bottom: 10px; }
-.category-badge { background: #3498db; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.9em; }
-.category-section { margin-bottom: 40px; }
-.category-title { color: #34495e; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; }
-.category-group { margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; }
-.category-name { color: #2980b9; margin-bottom: 5px; }
-.category-description { color: #7f8c8d; margin-bottom: 15px; }
-.tissue-records-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
-.tissue-record-card { background: white; padding: 15px; border-radius: 6px; border-left: 4px solid #3498db; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-.thumbnail { width: 100%; height: 150px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; }
-.tissue-record-card h4 { margin: 0 0 8px 0; color: #2c3e50; }
-.taxonomic-class { font-weight: bold; color: #27ae60; margin: 5px 0; }
-.notes { color: #7f8c8d; font-size: 0.9em; margin: 8px 0; }
-.slides-count { background: #ecf0f1; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; color: #7f8c8d; }
-.no-records { color: #95a5a6; font-style: italic; }
+.atlas-header { margin-bottom: 20px; }
+.atlas-header-main { display: flex; flex-direction: column; gap: 12px; }
+@media (min-width: 760px) {
+  .atlas-header-main { flex-direction: row; justify-content: space-between; align-items: flex-start; }
+}
+.atlas-header h1 { color: #0f172a; margin-bottom: 10px; font-size: clamp(2rem, 2.5vw, 3rem); }
+.description { color: #475569; margin-bottom: 14px; max-width: 780px; }
+.category-badge { background: #d1fae5; color: #0f766e; padding: 6px 14px; border-radius: 999px; font-size: 0.9em; font-weight: 700; }
+.category-section { margin-bottom: 32px; }
+.category-title { color: #0f766e; border-bottom: 2px solid #d9f7ef; padding-bottom: 10px; margin-bottom: 18px; }
+.category-group { margin-bottom: 22px; padding: 20px; background: #f0fdfa; border-radius: 18px; border: 1px solid #d1fae5; }
+.category-name { color: #0f766e; margin-bottom: 8px; }
+.category-description { color: #475569; margin-bottom: 16px; }
+.tissue-records-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.tissue-record-card { background: white; padding: 18px; border-radius: 16px; border-left: 5px solid #14b8a6; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); }
+.thumbnail { width: 100%; height: 160px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; }
+.tissue-record-card h4 { margin: 0 0 10px 0; color: #111827; }
+.taxonomic-class { font-weight: 700; color: #0f766e; margin: 6px 0; }
+.notes { color: #475569; font-size: 0.95em; margin: 10px 0; line-height: 1.7; }
+.slides-count { background: #d1fae5; padding: 6px 10px; border-radius: 999px; font-size: 0.8em; color: #0f766e; display: inline-flex; }
+.no-records { color: #64748b; font-style: italic; }
+.button.tertiary { border: 1px solid #0d9488; color: #0f766e; background: #ecfeff; }
 </style>
 {{end}}

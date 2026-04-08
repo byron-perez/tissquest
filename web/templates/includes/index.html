@@ -3,29 +3,29 @@
 {{ define "content"}}
 <section class="page-hero">
     <div class="hero-copy">
-        <p class="eyebrow">Plant Anatomy Quest</p>
-        <h1 class="hero-title">Discover plant tissues through microscopy and clear learning paths.</h1>
-        <p class="hero-text">Tissquest turns plant anatomy into a focused exploration: browse curated atlases, inspect tissue records, and learn what each slide reveals.</p>
+        <p class="eyebrow">Búsqueda de Anatomía Vegetal</p>
+        <h1 class="hero-title">Descubre tejidos vegetales mediante microscopía y rutas de aprendizaje claras.</h1>
+        <p class="hero-text">Tissquest convierte la anatomía vegetal en una exploración enfocada: recorre atlas curados, examina registros de tejidos y aprende lo que revela cada diapositiva.</p>
         <div class="hero-actions">
-            <a href="#featured" class="button primary">Start with Plant Anatomy</a>
-            <a href="#how-it-works" class="button secondary">How it works</a>
+            <a href="#featured" class="button primary">Comenzar con Anatomía Vegetal</a>
+            <a href="#how-it-works" class="button secondary">Cómo funciona</a>
         </div>
     </div>
     <div class="hero-visual">
         <div class="hero-card">
-            <span class="hero-card-label">Your next learning journey</span>
-            <p>Track plants, tissues, and microscope slides in a clean learning-first interface.</p>
+            <span class="hero-card-label">Tu próxima exploración</span>
+            <p>Supervisa plantas, tejidos y diapositivas en una interfaz limpia pensada para el aprendizaje.</p>
         </div>
     </div>
 </section>
 
 <section class="page-search section">
-    <label for="atlas-search" class="search-label">Search atlases</label>
-    <input id="atlas-search" type="search" placeholder="Search by atlas, tissue type, or category" />
+    <label for="atlas-search" class="search-label">Buscar atlas</label>
+    <input id="atlas-search" type="search" placeholder="Buscar por atlas, tipo de tejido o categoría" />
 </section>
 
 <section id="featured" class="featured-atlas section">
-    <h2 class="section-title">Featured atlas</h2>
+    <h2 class="section-title">Atlas destacado</h2>
     {{ if .FeaturedAtlas }}
     <div class="featured-card">
         <div>
@@ -33,36 +33,36 @@
             <h3>{{.FeaturedAtlas.Name}}</h3>
             <p>{{.FeaturedAtlas.Description}}</p>
         </div>
-        <a href="/atlas/{{.FeaturedAtlas.ID}}" class="button tertiary">View this atlas</a>
+        <a href="/atlas/{{.FeaturedAtlas.ID}}" class="button tertiary">Ver este atlas</a>
     </div>
     {{ else }}
-    <p>No atlases are available yet. Add one to begin the quest.</p>
+    <p>Aún no hay atlas disponibles. Agrega uno para comenzar la aventura.</p>
     {{ end }}
 </section>
 
 <section id="how-it-works" class="how-it-works section">
-    <h2 class="section-title">How the quest works</h2>
+    <h2 class="section-title">Cómo funciona la búsqueda</h2>
     <div class="steps-grid">
         <article class="step-card">
             <span class="step-number">1</span>
-            <h3>Browse the atlas list</h3>
-            <p>Choose a plant atlas and discover how tissues are grouped for learning.</p>
+            <h3>Explora la lista de atlas</h3>
+            <p>Elige un atlas vegetal y descubre cómo se agrupan los tejidos para aprender.</p>
         </article>
         <article class="step-card">
             <span class="step-number">2</span>
-            <h3>Open tissue records</h3>
-            <p>Study each sample’s notes, taxonomy, and microscopy slide details.</p>
+            <h3>Abre registros de tejidos</h3>
+            <p>Estudia las notas, la taxonomía y los detalles de las diapositivas de cada muestra.</p>
         </article>
         <article class="step-card">
             <span class="step-number">3</span>
-            <h3>Learn step by step</h3>
-            <p>Use the atlas structure to explore plant anatomy in a simple, progressive way.</p>
+            <h3>Aprende paso a paso</h3>
+            <p>Usa la estructura del atlas para explorar la anatomía vegetal de forma sencilla y progresiva.</p>
         </article>
     </div>
 </section>
 
 <section class="atlas-section section">
-    <h2 class="section-title">Available atlases</h2>
+    <h2 class="section-title">Atlas disponibles</h2>
     {{ template "main-menu.html" . }}
 </section>
 
