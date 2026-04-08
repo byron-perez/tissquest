@@ -10,7 +10,7 @@ body {
 }
 
 a {
-  color: #2563eb;
+  color: #0d9488;
   text-decoration: none;
 }
 
@@ -48,7 +48,7 @@ input[type="submit"] {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #2563eb;
+  color: #0d9488;
 }
 
 .hero-title {
@@ -86,13 +86,13 @@ input[type="submit"] {
 }
 
 .primary {
-  background: #2563eb;
+  background: #14b8a6;
   color: #ffffff;
 }
 
 .secondary {
-  background: #e2e8f0;
-  color: #1f2937;
+  background: #d9f7ef;
+  color: #164e46;
 }
 
 .tertiary {
@@ -111,9 +111,9 @@ input[type="submit"] {
   width: min(100%, 360px);
   padding: 30px;
   border-radius: 28px;
-  background: linear-gradient(180deg, #ffffff 0%, #eff6ff 100%);
-  border: 1px solid rgba(96, 165, 250, 0.2);
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #d9f7ef 100%);
+  border: 1px solid rgba(20, 184, 166, 0.22);
+  box-shadow: 0 20px 50px rgba(20, 184, 166, 0.08);
 }
 
 .hero-card-label {
@@ -123,7 +123,7 @@ input[type="submit"] {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #2563eb;
+  color: #0f766e;
 }
 
 .hero-card p {
@@ -170,8 +170,8 @@ input[type="submit"] {
 
 #atlas-search:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.18);
 }
 
 .featured-card {
@@ -190,8 +190,8 @@ input[type="submit"] {
   border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #1d4ed8;
-  background: #e0f2fe;
+  color: #0f766e;
+  background: #d1fae5;
 }
 
 .featured-card h3 {
@@ -234,7 +234,7 @@ input[type="submit"] {
   border-radius: 50%;
   font-weight: 700;
   color: #ffffff;
-  background: #2563eb;
+  background: #14b8a6;
 }
 
 .step-card h3 {
@@ -290,8 +290,8 @@ input[type="submit"] {
   width: max-content;
   padding: 10px 16px;
   border-radius: 999px;
-  background: #eef2ff;
-  color: #3730a3;
+  background: #14b8a6;
+  color: #ffffff;
   font-weight: 700;
 }
 
@@ -353,17 +353,7 @@ input[type="submit"] {
 .atlas-link {
     display: inline-block;
     padding: 8px 16px;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-}
-
-.atlas-link:hover {
-    background-color: #0056b3;
-}
-
+        background-color: #14b8a6;
 /* Responsive adjustments */
 @media (max-width: 1200px) {
     .atlas-grid {

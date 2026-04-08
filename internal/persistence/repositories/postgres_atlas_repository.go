@@ -31,7 +31,6 @@ func NewPostgresAtlasRepository() *PostgresAtlasRepository {
 		host, port, user, password, dbname, sslmode)
 
 	return &PostgresAtlasRepository{dsn: dsn}
-	return &new_repository
 }
 
 func (repo *PostgresAtlasRepository) getDB() (*gorm.DB, error) {

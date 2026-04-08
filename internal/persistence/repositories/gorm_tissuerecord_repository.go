@@ -11,9 +11,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var NOT_FOUND_ERROR int = 0
-var OK_STATUS int = 1
-
 type GormTissueRecordRepository struct {
 	conn string
 }
