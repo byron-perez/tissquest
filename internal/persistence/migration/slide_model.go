@@ -4,12 +4,11 @@ import "gorm.io/gorm"
 
 type SlideModel struct {
 	gorm.Model
-	ID             uint `gorm:"primaryKey"`
 	Name           string
 	Url            string
 	TissueRecordID uint
-	StainingID     uint
-	Staining       StainingModel
+	PreparationID  uint
+	Preparation    PreparationModel
 	Magnification  int
 }
 

@@ -15,40 +15,24 @@
         <span class="category-badge">{{.data.Atlas.Category}}</span>
     </header>
 
-    <div class="tissue-records">
-        {{range $categoryType, $categories := .data.Categories}}
-        {{if $categories}}
-        <section class="category-section">
-            <h2 class="category-title">{{$categoryType}}</h2>
-
-            {{range $categories}}
-            <div class="category-group">
-                <h3 class="category-name">{{.Category.Name}}</h3>
-                <p class="category-description">{{.Category.Description}}</p>
-
-                {{if .TissueRecords}}
-                <div class="tissue-records-grid">
-                    {{range .TissueRecords}}
-                    <div class="tissue-record-card">
-                        {{if .Slides}}
-                        <img src="{{index .Slides 0}}" alt="Tissue sample" class="thumbnail">
-                        {{end}}
-                        <h4>{{.Name}}</h4>
-                        <p class="taxonomic-class">{{.Taxonomicclass}}</p>
-                        <p class="notes">{{.Notes}}</p>
-                        {{if .Slides}}
-                        <div class="slides-count">{{len .Slides}} slides</div>
-                        {{end}}
-                    </div>
-                    {{end}}
-                </div>
-                {{else}}
-                <p class="no-records">No hay registros de tejidos en esta categoría</p>
-                {{end}}
+    <div class="tissue-records-grid">
+        {{range .data.TissueRecords}}
+        <div class="tissue-record-card">
+            {{if .Slides}}
+            <img src="{{(index .Slides 0).Url}}" alt="{{.Name}}" class="thumbnail">
+            {{end}}
+            <h4>{{.Name}}</h4>
+            <p class="taxonomic-class">{{.Taxonomicclass}}</p>
+            <p class="notes">{{.Notes}}</p>
+            {{if .Slides}}
+            <div class="slides-info">
+                <span>{{len .Slides}} slide(s)</span>
+                <span>{{(index .Slides 0).Preparation.Staining}}</span>
             </div>
             {{end}}
-        </section>
-        {{end}}
+        </div>
+        {{else}}
+        <p>No hay registros de tejidos en este atlas.</p>
         {{end}}
     </div>
 </div>

@@ -1,16 +1,16 @@
 package slide
 
-type image struct {
-	Url string
-}
-
-type staining struct {
-	Name string
+type Preparation struct {
+	Staining        string
+	InclusionMethod string
+	Reagents        string
+	Protocol        string
+	Notes           string
 }
 
 type Slide struct {
 	Name          string
+	Url           string
 	Magnification int
-	Staining      staining
-	Img           image
+	Preparation   Preparation
 }

@@ -7,158 +7,167 @@ import (
 	"mcba/tissquest/internal/persistence/migration"
 	"os"
 
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type GormTissueRecordRepository struct {
-	conn string
+	dsn string
 }
 
 func NewGormTissueRecordRepository() *GormTissueRecordRepository {
-	connection := os.Getenv("DB_PATH")
-	if connection == "" {
-		connection = "tissquest.db"
-	}
-	return &GormTissueRecordRepository{conn: connection}
+	dsn := buildDSN()
+	return &GormTissueRecordRepository{dsn: dsn}
+}
+
+func (repo *GormTissueRecordRepository) getDB() (*gorm.DB, error) {
+	return gorm.Open(postgres.Open(repo.dsn), &gorm.Config{})
 }
 
 func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint {
-	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	db, err := repo.getDB()
 	if err != nil {
 		panic("failed to connect database")
 	}
 
-	slides_models := []migration.SlideModel{}
-	for _, slide := range tr.Slides {
-		// create a staining object
-		staining := &migration.StainingModel{
-			Name: slide.Staining.Name,
+	slideModels := make([]migration.SlideModel, len(tr.Slides))
+	for i, s := range tr.Slides {
+		slideModels[i] = migration.SlideModel{
+			Name:          s.Name,
+			Url:           s.Url,
+			Magnification: s.Magnification,
+			Preparation: migration.PreparationModel{
+				Staining:        s.Preparation.Staining,
+				InclusionMethod: s.Preparation.InclusionMethod,
+				Reagents:        s.Preparation.Reagents,
+				Protocol:        s.Preparation.Protocol,
+				Notes:           s.Preparation.Notes,
+			},
 		}
-
-		new_slide := &migration.SlideModel{
-			Name:          slide.Name,
-			Url:           slide.Img.Url,
-			Staining:      *staining,
-			Magnification: slide.Magnification,
-		}
-		slides_models = append(slides_models, *new_slide)
 	}
 
-	new_tissue_record_model := &migration.TissueRecordModel{
+	model := &migration.TissueRecordModel{
 		Name:           tr.Name,
 		Notes:          tr.Notes,
 		Taxonomicclass: tr.Taxonomicclass,
-		Slides:         slides_models,
+		Slides:         slideModels,
 	}
-
-	db.Create(new_tissue_record_model)
-	return new_tissue_record_model.ID
+	db.Create(model)
+	return model.ID
 }
 
 func (repo *GormTissueRecordRepository) Delete(id uint) {
-	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	db, err := repo.getDB()
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.Select("slides").Delete(&migration.TissueRecordModel{ID: id})
+	db.Select("Slides").Delete(&migration.TissueRecordModel{Model: gorm.Model{ID: id}})
 }
 
 func (repo *GormTissueRecordRepository) Retrieve(id uint) (tissuerecord.TissueRecord, int) {
-	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	db, err := repo.getDB()
 	if err != nil {
 		panic("failed to connect database")
 	}
-	tissuerecord_found := migration.TissueRecordModel{}
 
-	not_found_error := db.First(&tissuerecord_found, id).Error
-
-	if errors.Is(not_found_error, gorm.ErrRecordNotFound) {
-		return tissuerecord.TissueRecord{}, NOT_FOUND_ERROR
-	}
-
-	slides := []slide.Slide{}
-	for _, slide_model := range tissuerecord_found.Slides {
-		new_slide := &slide.Slide{
-			Name: slide_model.Name,
+	var model migration.TissueRecordModel
+	if err := db.Preload("Slides.Preparation").First(&model, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return tissuerecord.TissueRecord{}, NOT_FOUND_ERROR
 		}
-		slides = append(slides, *new_slide)
+		panic(err)
 	}
 
-	mapped_tissue_record := tissuerecord.TissueRecord{
-		Name:           tissuerecord_found.Name,
-		Notes:          tissuerecord_found.Notes,
-		Taxonomicclass: tissuerecord_found.Taxonomicclass,
-		Slides:         slides,
-	}
-	return mapped_tissue_record, OK_STATUS
+	return mapToTissueRecord(model), OK_STATUS
 }
 
 func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueRecord) {
-	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	db, err := repo.getDB()
 	if err != nil {
 		panic("failed to connect database")
 	}
 
-	slides_models := []migration.SlideModel{}
-	for _, slide := range tr.Slides {
-		new_slide := &migration.SlideModel{
-			Name:          slide.Name,
-			Magnification: slide.Magnification,
+	slideModels := make([]migration.SlideModel, len(tr.Slides))
+	for i, s := range tr.Slides {
+		slideModels[i] = migration.SlideModel{
+			Name:          s.Name,
+			Url:           s.Url,
+			Magnification: s.Magnification,
+			Preparation: migration.PreparationModel{
+				Staining:        s.Preparation.Staining,
+				InclusionMethod: s.Preparation.InclusionMethod,
+				Reagents:        s.Preparation.Reagents,
+				Protocol:        s.Preparation.Protocol,
+				Notes:           s.Preparation.Notes,
+			},
 		}
-		slides_models = append(slides_models, *new_slide)
 	}
 
-	new_tissue_record_model := &migration.TissueRecordModel{
-		ID:             id,
+	db.Save(&migration.TissueRecordModel{
+		Model:          gorm.Model{ID: id},
 		Name:           tr.Name,
 		Notes:          tr.Notes,
 		Taxonomicclass: tr.Taxonomicclass,
-		Slides:         slides_models,
-	}
-
-	db.Save(new_tissue_record_model)
+		Slides:         slideModels,
+	})
 }
 
 func (repo *GormTissueRecordRepository) List(page, limit int) ([]tissuerecord.TissueRecord, int64, error) {
-	var tissueRecords []tissuerecord.TissueRecord
-	var total int64
-
-	offset := (page - 1) * limit
-
-	// Get total count
-	db, err := gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	db, err := repo.getDB()
 	if err != nil {
 		return nil, 0, err
 	}
 
+	var total int64
 	if err := db.Model(&migration.TissueRecordModel{}).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	// Get paginated records
-	var tissueRecordModels []migration.TissueRecordModel
-	if err := db.Offset(offset).Limit(limit).Find(&tissueRecordModels).Error; err != nil {
+	var models []migration.TissueRecordModel
+	offset := (page - 1) * limit
+	if err := db.Preload("Slides.Preparation").Offset(offset).Limit(limit).Find(&models).Error; err != nil {
 		return nil, 0, err
 	}
 
-	for _, model := range tissueRecordModels {
-		slides := []slide.Slide{}
-		for _, slideModel := range model.Slides {
-			newSlide := slide.Slide{
-				Name: slideModel.Name,
-			}
-			slides = append(slides, newSlide)
-		}
-
-		tissueRecord := tissuerecord.TissueRecord{
-			Name:           model.Name,
-			Notes:          model.Notes,
-			Taxonomicclass: model.Taxonomicclass,
-			Slides:         slides,
-		}
-		tissueRecords = append(tissueRecords, tissueRecord)
+	records := make([]tissuerecord.TissueRecord, len(models))
+	for i, m := range models {
+		records[i] = mapToTissueRecord(m)
 	}
+	return records, total, nil
+}
 
-	return tissueRecords, total, nil
+func mapToTissueRecord(m migration.TissueRecordModel) tissuerecord.TissueRecord {
+	slides := make([]slide.Slide, len(m.Slides))
+	for i, s := range m.Slides {
+		slides[i] = slide.Slide{
+			Name:          s.Name,
+			Url:           s.Url,
+			Magnification: s.Magnification,
+			Preparation: slide.Preparation{
+				Staining:        s.Preparation.Staining,
+				InclusionMethod: s.Preparation.InclusionMethod,
+				Reagents:        s.Preparation.Reagents,
+				Protocol:        s.Preparation.Protocol,
+				Notes:           s.Preparation.Notes,
+			},
+		}
+	}
+	return tissuerecord.TissueRecord{
+		Name:           m.Name,
+		Notes:          m.Notes,
+		Taxonomicclass: m.Taxonomicclass,
+		Slides:         slides,
+	}
+}
+
+func buildDSN() string {
+	if dbType := os.Getenv("DB_TYPE"); dbType == "postgres" || dbType == "postgresql" {
+		return "host=" + os.Getenv("DATABASE_HOST") +
+			" user=" + os.Getenv("DATABASE_USER") +
+			" password=" + os.Getenv("DATABASE_PASSWORD") +
+			" dbname=" + os.Getenv("DATABASE_NAME") +
+			" port=" + os.Getenv("DATABASE_PORT") +
+			" sslmode=require TimeZone=UTC"
+	}
+	return os.Getenv("DB_PATH")
 }

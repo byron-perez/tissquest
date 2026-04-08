@@ -493,6 +493,8 @@ input[type="submit"] {
 }
 
 .taxonomic-class {
+  word-break: break-all;
+  overflow-wrap: break-word;
   font-weight: 700;
   color: #0f766e;
   margin: 6px 0;
@@ -649,31 +651,3 @@ input[type="submit"] {
 .tissue-record-card h4 {
   margin: 0 0 10px 0;
   color: #111827;
-}
-
-.taxonomic-class {
-  font-weight: 700;
-  color: #0f766e;
-  margin: 6px 0;
-}
-
-.notes {
-  color: #475569;
-  font-size: 0.95em;
-  margin: 10px 0;
-  line-height: 1.7;
-}
-
-.slides-count {
-  background: #d1fae5;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 0.8em;
-  color: #0f766e;
-  display: inline-flex;
-}
-
-.no-records {
-  color: #64748b;
-  font-style: italic;
-}
