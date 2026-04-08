@@ -58,6 +58,7 @@ func RunMigration() {
 
     // Run migrations for all models
     err = db.AutoMigrate(
+        &CategoryModel{},
         &AtlasModel{},
         &TissueRecordModel{},
         &SlideModel{},

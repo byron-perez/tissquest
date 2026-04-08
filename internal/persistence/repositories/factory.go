@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"mcba/tissquest/internal/core/atlas"
+	"mcba/tissquest/internal/core/category"
 	"mcba/tissquest/internal/core/tissuerecord"
 )
 
@@ -22,4 +23,12 @@ func NewTissueRecordRepository() tissuerecord.RepositoryInterface {
 		return NewPostgresTissueRecordRepository()
 	}
 	return NewGormTissueRecordRepository()
+}
+
+func NewCategoryRepository() category.RepositoryInterface {
+	dbType := strings.ToLower(os.Getenv("DB_TYPE"))
+	if dbType == "postgres" || dbType == "postgresql" {
+		return NewPostgresCategoryRepository()
+	}
+	return NewGormCategoryRepository()
 }

@@ -37,7 +37,7 @@ func ViewAtlas(c *gin.Context) {
 	}
 
 	trService := services.NewTissueRecordService(repositories.NewTissueRecordRepository())
-	categories, _ := repositories.NewMemoryCategoryRepository().List()
+	categories, _ := repositories.NewCategoryRepository().List()
 	categorizedData := make(map[string][]CategoryWithRecords)
 
 	// Create a set of tissue record IDs in this atlas for quick lookup

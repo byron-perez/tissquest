@@ -8,8 +8,9 @@ type TissueRecordModel struct {
     Name           string
     Notes          string
     Taxonomicclass string
-    Slides         []SlideModel `gorm:"foreignKey:TissueRecordID;"`
-    Atlases        []AtlasModel `gorm:"many2many:atlas_tissue_records;"`
+    Slides         []SlideModel   `gorm:"foreignKey:TissueRecordID;"`
+    Categories     []CategoryModel `gorm:"many2many:tissue_record_categories;"`
+    Atlases        []AtlasModel   `gorm:"many2many:atlas_tissue_records;"`
 }
 
 func (TissueRecordModel) TableName() string {
