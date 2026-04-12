@@ -1,72 +1,99 @@
 {{define "content"}}
-<section class="page-hero">
-    <div class="hero-copy">
-        <p class="eyebrow">Búsqueda de Anatomía Vegetal</p>
-        <h1 class="hero-title">Descubre tejidos vegetales mediante microscopía y rutas de aprendizaje claras.</h1>
-        <p class="hero-text">Tissquest convierte la anatomía vegetal en una exploración enfocada: recorre atlas curados, examina registros de tejidos y aprende lo que revela cada diapositiva.</p>
-        <div class="hero-actions">
-            <a href="#featured" class="button primary">Comenzar con Anatomía Vegetal</a>
-            <a href="#how-it-works" class="button secondary">Cómo funciona</a>
+<div class="min-h-screen bg-base-200">
+
+  {{/* Hero */}}
+  <section class="hero min-h-[60vh] bg-base-100 shadow-sm">
+    <div class="hero-content flex-col lg:flex-row-reverse gap-10 max-w-6xl w-full py-16 px-6">
+      <div class="card bg-base-200 border border-teal-200 shadow-xl w-full max-w-sm shrink-0">
+        <div class="card-body">
+          <p class="text-xs font-bold uppercase tracking-widest text-teal-600">Tu próxima exploración</p>
+          <p class="text-base-content/70 leading-relaxed">Supervisa plantas, tejidos y diapositivas en una interfaz limpia pensada para el aprendizaje.</p>
         </div>
-    </div>
-    <div class="hero-visual">
-        <div class="hero-card">
-            <span class="hero-card-label">Tu próxima exploración</span>
-            <p>Supervisa plantas, tejidos y diapositivas en una interfaz limpia pensada para el aprendizaje.</p>
+      </div>
+      <div class="max-w-xl">
+        <p class="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">Búsqueda de Anatomía Vegetal</p>
+        <h1 class="text-4xl lg:text-5xl font-bold leading-tight">Descubre tejidos vegetales mediante microscopía y rutas de aprendizaje claras.</h1>
+        <p class="py-6 text-base-content/60 leading-relaxed">Tissquest convierte la anatomía vegetal en una exploración enfocada: recorre atlas curados, examina registros de tejidos y aprende lo que revela cada diapositiva.</p>
+        <div class="flex flex-wrap gap-3">
+          <a href="#featured" class="btn btn-primary">Comenzar con Anatomía Vegetal</a>
+          <a href="#how-it-works" class="btn btn-ghost">Cómo funciona</a>
         </div>
+      </div>
     </div>
-</section>
+  </section>
 
-<section class="page-search section">
-    <label for="atlas-search" class="search-label">Buscar atlas</label>
-    <input id="atlas-search" type="search" placeholder="Buscar por atlas, tipo de tejido o categoría" />
-</section>
+  <div class="max-w-6xl mx-auto px-6 py-10 space-y-16">
 
-<section id="featured" class="featured-atlas section">
-    <h2 class="section-title">Atlas destacado</h2>
-    {{ if .FeaturedAtlas }}
-    <div class="featured-card">
-        <div>
-            <span class="pill">{{.FeaturedAtlas.Category}}</span>
-            <h3>{{.FeaturedAtlas.Name}}</h3>
-            <p>{{.FeaturedAtlas.Description}}</p>
+    {{/* Search */}}
+    <section>
+      <label class="input input-bordered flex items-center gap-2 max-w-2xl">
+        <svg class="w-4 h-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="atlas-search" type="search" placeholder="Buscar por atlas, tipo de tejido o categoría" class="grow" />
+      </label>
+    </section>
+
+    {{/* Featured atlas */}}
+    <section id="featured">
+      <h2 class="text-3xl font-bold mb-6">Atlas destacado</h2>
+      {{ if .FeaturedAtlas }}
+      <div class="card bg-base-100 shadow-md border border-base-300">
+        <div class="card-body">
+          <div class="badge badge-success badge-outline">{{.FeaturedAtlas.Category}}</div>
+          <h3 class="card-title text-2xl mt-2">{{.FeaturedAtlas.Name}}</h3>
+          <p class="text-base-content/60 leading-relaxed">{{.FeaturedAtlas.Description}}</p>
+          <div class="card-actions mt-4">
+            <a href="/atlas/{{.FeaturedAtlas.ID}}" class="btn btn-primary">Ver este atlas</a>
+          </div>
         </div>
-        <a href="/atlas/{{.FeaturedAtlas.ID}}" class="button tertiary">Ver este atlas</a>
-    </div>
-    {{ else }}
-    <p>Aún no hay atlas disponibles. Agrega uno para comenzar la aventura.</p>
-    {{ end }}
-</section>
+      </div>
+      {{ else }}
+      <div class="alert alert-info">
+        <span>Aún no hay atlas disponibles. Agrega uno para comenzar la aventura.</span>
+      </div>
+      {{ end }}
+    </section>
 
-<section id="how-it-works" class="how-it-works section">
-    <h2 class="section-title">Cómo funciona la búsqueda</h2>
-    <div class="steps-grid">
-        <article class="step-card">
-            <span class="step-number">1</span>
-            <h3>Explora la lista de atlas</h3>
-            <p>Elige un atlas vegetal y descubre cómo se agrupan los tejidos para aprender.</p>
-        </article>
-        <article class="step-card">
-            <span class="step-number">2</span>
-            <h3>Abre registros de tejidos</h3>
-            <p>Estudia las notas, la taxonomía y los detalles de las diapositivas de cada muestra.</p>
-        </article>
-        <article class="step-card">
-            <span class="step-number">3</span>
-            <h3>Aprende paso a paso</h3>
-            <p>Usa la estructura del atlas para explorar la anatomía vegetal de forma sencilla y progresiva.</p>
-        </article>
-    </div>
-</section>
+    {{/* How it works */}}
+    <section id="how-it-works">
+      <h2 class="text-3xl font-bold text-center mb-8">Cómo funciona la búsqueda</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card bg-base-100 shadow border border-base-300">
+          <div class="card-body">
+            <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">1</div>
+            <h3 class="card-title">Explora la lista de atlas</h3>
+            <p class="text-base-content/60">Elige un atlas vegetal y descubre cómo se agrupan los tejidos para aprender.</p>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow border border-base-300">
+          <div class="card-body">
+            <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">2</div>
+            <h3 class="card-title">Abre registros de tejidos</h3>
+            <p class="text-base-content/60">Estudia las notas, la taxonomía y los detalles de las diapositivas de cada muestra.</p>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow border border-base-300">
+          <div class="card-body">
+            <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">3</div>
+            <h3 class="card-title">Aprende paso a paso</h3>
+            <p class="text-base-content/60">Usa la estructura del atlas para explorar la anatomía vegetal de forma sencilla y progresiva.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<section class="atlas-section section">
-    <h2 class="section-title">Atlas disponibles</h2>
-    {{ template "main-menu" . }}
-</section>
+    {{/* Atlas list */}}
+    <section>
+      <h2 class="text-3xl font-bold mb-6">Atlas disponibles</h2>
+      {{ template "main-menu" . }}
+    </section>
 
-<footer class="page-footer">
+  </div>
+
+  <footer class="footer footer-center p-6 bg-base-100 text-base-content/50 mt-10">
     <p>Simple design, purposeful learning. Tissquest helps you explore plant anatomy without distractions.</p>
-</footer>
+  </footer>
+
+</div>
 {{end}}
 
 {{define "index"}}

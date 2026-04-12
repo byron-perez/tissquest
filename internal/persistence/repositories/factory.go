@@ -6,6 +6,7 @@ import (
 
 	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/core/category"
+	"mcba/tissquest/internal/core/taxon"
 	"mcba/tissquest/internal/core/tissuerecord"
 )
 
@@ -23,6 +24,10 @@ func NewTissueRecordRepository() tissuerecord.RepositoryInterface {
 		return NewPostgresTissueRecordRepository()
 	}
 	return NewGormTissueRecordRepository()
+}
+
+func NewTaxonRepo() taxon.RepositoryInterface {
+	return NewTaxonRepository()
 }
 
 func NewCategoryRepository() category.RepositoryInterface {

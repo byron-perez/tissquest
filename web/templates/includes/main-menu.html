@@ -1,11 +1,15 @@
 {{define "main-menu"}}
-<ul class="atlas-grid">
-    {{ range .Atlases }}
-    <li class="atlas-card">
-        <h3 class="atlas-title">{{ .Name }}</h3>
-        <p class="atlas-description">{{ .Description }}</p>
-        <a href="/atlas/{{ .ID }}" class="atlas-link">Ver atlas</a>
-    </li>
-    {{ end }}
-</ul>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+  {{ range .Atlases }}
+  <div class="card bg-base-100 shadow border border-base-300 hover:-translate-y-1 transition-transform">
+    <div class="card-body gap-3">
+      <h3 class="card-title">{{ .Name }}</h3>
+      <p class="text-base-content/60 text-sm leading-relaxed">{{ .Description }}</p>
+      <div class="card-actions mt-2">
+        <a href="/atlas/{{ .ID }}" class="btn btn-primary btn-sm">Ver atlas</a>
+      </div>
+    </div>
+  </div>
+  {{ end }}
+</div>
 {{end}}

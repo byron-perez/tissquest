@@ -55,6 +55,7 @@ func RunMigration() {
     }
 
     if err = db.AutoMigrate(
+        &TaxonModel{},
         &CategoryModel{},
         &AtlasModel{},
         &TissueRecordModel{},
@@ -68,11 +69,37 @@ func RunMigration() {
         panic(fmt.Sprintf("failed to seed categories: %v", err))
     }
 
+    if err := seedTaxa(db); err != nil {
+        panic(fmt.Sprintf("failed to seed taxa: %v", err))
+    }
+
     if err := seedSampleTissueRecords(db); err != nil {
         panic(fmt.Sprintf("failed to seed tissue records: %v", err))
     }
 
     fmt.Println("Database migration completed successfully")
+}
+
+func seedTaxa(db *gorm.DB) error {
+    var count int64
+    if err := db.Model(&TaxonModel{}).Count(&count).Error; err != nil {
+        return err
+    }
+    if count > 0 {
+        return nil
+    }
+
+    plantae := TaxonModel{Rank: "kingdom", Name: "Plantae"}
+    if err := db.Create(&plantae).Error; err != nil {
+        return err
+    }
+    tracheophyta := TaxonModel{Rank: "phylum", Name: "Tracheophyta", ParentID: &plantae.ID}
+    if err := db.Create(&tracheophyta).Error; err != nil {
+        return err
+    }
+    polypodiopsida := TaxonModel{Rank: "class", Name: "Polypodiopsida", ParentID: &tracheophyta.ID}
+    magnoliopsida := TaxonModel{Rank: "class", Name: "Magnoliopsida", ParentID: &tracheophyta.ID}
+    return db.Create(&[]TaxonModel{polypodiopsida, magnoliopsida}).Error
 }
 
 func seedSampleTissueRecords(db *gorm.DB) error {
@@ -84,7 +111,7 @@ func seedSampleTissueRecords(db *gorm.DB) error {
         return nil
     }
 
-    var hoja, parenquima, xe, he, azul, plantae, magnoliophyta CategoryModel
+    var hoja, parenquima, xe, he, azul CategoryModel
 
     if err := db.Where("name = ?", "Hoja").First(&hoja).Error; err != nil {
         return err
@@ -101,17 +128,19 @@ func seedSampleTissueRecords(db *gorm.DB) error {
     if err := db.Where("name = ?", "Azul de metileno").First(&azul).Error; err != nil {
         return err
     }
-    if err := db.Where("name = ?", "Plantae").First(&plantae).Error; err != nil {
+
+    var polypodiopsida, magnoliopsida TaxonModel
+    if err := db.Where("name = ? AND rank = ?", "Polypodiopsida", "class").First(&polypodiopsida).Error; err != nil {
         return err
     }
-    if err := db.Where("name = ?", "Magnoliophyta").First(&magnoliophyta).Error; err != nil {
+    if err := db.Where("name = ? AND rank = ?", "Magnoliopsida", "class").First(&magnoliopsida).Error; err != nil {
         return err
     }
 
     fernRecord := TissueRecordModel{
-        Name:           "Fronda de helecho",
-        Notes:          "Corte longitudinal y transversal de un helecho (Pteridium sp.), preparado para mostrar la anatom\u00eda de la fronda y los tejidos internos.",
-        Taxonomicclass: "K:Plantae,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
+        Name:    "Fronda de helecho",
+        Notes:   "Corte longitudinal y transversal de un helecho (Pteridium sp.), preparado para mostrar la anatom\u00eda de la fronda y los tejidos internos.",
+        TaxonID: &polypodiopsida.ID,
         Slides: []SlideModel{
             {
                 Name:          "Corte longitudinal",
@@ -129,9 +158,9 @@ func seedSampleTissueRecords(db *gorm.DB) error {
     }
 
     stemRecord := TissueRecordModel{
-        Name:           "Corte de tallo",
-        Notes:          "Secci\u00f3n transversal de tallo vascular mostrando xilema y floema, \u00fatil para entender conducci\u00f3n y organizaci\u00f3n de tejidos.",
-        Taxonomicclass: "K:Plantae,Cld:Tracheophytes,D:Magnoliophyta,Cls:Magnoliopsida",
+        Name:    "Corte de tallo",
+        Notes:   "Secci\u00f3n transversal de tallo vascular mostrando xilema y floema, \u00fatil para entender conducci\u00f3n y organizaci\u00f3n de tejidos.",
+        TaxonID: &magnoliopsida.ID,
         Slides: []SlideModel{
             {
                 Name:          "Tallo transversal",
@@ -149,10 +178,10 @@ func seedSampleTissueRecords(db *gorm.DB) error {
         return err
     }
 
-    if err := db.Model(&fernRecord).Association("Categories").Append(&hoja, &parenquima, &he, &plantae); err != nil {
+    if err := db.Model(&fernRecord).Association("Categories").Append(&hoja, &parenquima, &he); err != nil {
         return err
     }
-    if err := db.Model(&stemRecord).Association("Categories").Append(&xe, &plantae, &magnoliophyta, &azul); err != nil {
+    if err := db.Model(&stemRecord).Association("Categories").Append(&xe, &azul); err != nil {
         return err
     }
 

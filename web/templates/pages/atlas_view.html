@@ -1,39 +1,64 @@
 {{define "content"}}
-<div class="container">
-    <nav class="breadcrumb">
-        <a href="/" class="button tertiary">Inicio</a> &gt; <a href="/atlases">Atlas</a> &gt; <span>{{.data.Atlas.Name}}</span>
-    </nav>
+<div class="min-h-screen bg-base-200">
+  <div class="max-w-5xl mx-auto px-6 py-8 space-y-8">
 
-    <header class="atlas-header">
-        <div class="atlas-header-main">
-            <div>
-                <h1>{{.data.Atlas.Name}}</h1>
-                <p class="description">{{.data.Atlas.Description}}</p>
-            </div>
-            <a href="/atlases" class="button tertiary">Volver a la lista de atlas</a>
-        </div>
-        <span class="category-badge">{{.data.Atlas.Category}}</span>
-    </header>
-
-    <div class="tissue-records-grid">
-        {{range .data.TissueRecords}}
-        <div class="tissue-record-card">
-            {{if .Slides}}
-            <img src="{{(index .Slides 0).Url}}" alt="{{.Name}}" class="thumbnail">
-            {{end}}
-            <h4>{{.Name}}</h4>
-            <p class="taxonomic-class">{{.Taxonomicclass}}</p>
-            <p class="notes">{{.Notes}}</p>
-            {{if .Slides}}
-            <div class="slides-info">
-                <span>{{len .Slides}} slide(s)</span>
-                <span>{{(index .Slides 0).Preparation.Staining}}</span>
-            </div>
-            {{end}}
-        </div>
-        {{else}}
-        <p>No hay registros de tejidos en este atlas.</p>
-        {{end}}
+    {{/* Breadcrumb */}}
+    <div class="breadcrumbs text-sm">
+      <ul>
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/atlases">Atlas</a></li>
+        <li>{{.data.Atlas.Name}}</li>
+      </ul>
     </div>
+
+    {{/* Atlas header */}}
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+      <div>
+        <h1 class="text-4xl font-bold text-base-content">{{.data.Atlas.Name}}</h1>
+        <p class="mt-2 text-base-content/60 max-w-2xl leading-relaxed">{{.data.Atlas.Description}}</p>
+        <div class="badge badge-success badge-outline mt-3">{{.data.Atlas.Category}}</div>
+      </div>
+      <a href="/atlases" class="btn btn-ghost btn-sm shrink-0">← Volver a atlas</a>
+    </div>
+
+    <div class="divider"></div>
+
+    {{/* Tissue records grid */}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {{range .data.TissueRecords}}
+      <div class="card bg-base-100 shadow border-l-4 border-primary">
+        {{if .Slides}}
+        <figure>
+          <img src="{{(index .Slides 0).Url}}" alt="{{.Name}}" class="w-full h-40 object-cover" />
+        </figure>
+        {{end}}
+        <div class="card-body p-4 gap-2">
+          <h4 class="card-title text-base">{{.Name}}</h4>
+          {{if .Taxon}}
+          <div class="flex flex-wrap gap-1 mt-1">
+            {{range .Taxon.Lineage}}
+            <span class="badge badge-outline badge-sm text-primary border-primary">{{.Name}}</span>
+            {{end}}
+          </div>
+          {{end}}
+          <p class="text-base-content/60 text-sm leading-relaxed">{{.Notes}}</p>
+          {{if .Slides}}
+          <div class="flex gap-2 mt-2 flex-wrap">
+            <span class="badge badge-success badge-outline">{{len .Slides}} slide(s)</span>
+            <span class="badge badge-ghost">{{(index .Slides 0).Preparation.Staining}}</span>
+          </div>
+          {{end}}
+        </div>
+      </div>
+      {{else}}
+      <div class="col-span-full">
+        <div class="alert alert-warning">
+          <span>No hay registros de tejidos en este atlas.</span>
+        </div>
+      </div>
+      {{end}}
+    </div>
+
+  </div>
 </div>
 {{end}}

@@ -5,15 +5,17 @@ import (
 	"log"
 	"mcba/tissquest/cmd/api-server-gin/atlas"
 	"mcba/tissquest/cmd/api-server-gin/index"
+	"mcba/tissquest/cmd/api-server-gin/slides"
 	"mcba/tissquest/cmd/api-server-gin/tissue_records"
 	"mcba/tissquest/internal/persistence/migration"
+	persistencestorage "mcba/tissquest/internal/persistence/storage"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
-func setupRouter() (*gin.Engine, error) {
+func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 	r := gin.Default()
 
 	// Serve static files
@@ -25,6 +27,7 @@ func setupRouter() (*gin.Engine, error) {
 	r.POST("/tissue_records", tissue_records.CreateTissueRecord)
 	r.GET("/atlases", atlas.ListAtlases)
 	r.GET("/atlas/:id", atlas.ViewAtlas)
+	r.POST("/slides/:id/image", slides.UploadSlideImage(s3))
 
 	return r, nil
 }
@@ -59,6 +62,7 @@ func logStartupInfo() {
 	log.Println("    POST /tissue_records")
 	log.Println("    GET  /atlases")
 	log.Println("    GET  /atlas/:id")
+	log.Println("    POST /slides/:id/image")
 	log.Println("---------------------------------------")
 }
 
@@ -69,7 +73,17 @@ func main() {
 
 	migration.RunMigration()
 
-	r, err := setupRouter()
+	s3, err := persistencestorage.NewS3Storage(
+		os.Getenv("AWS_REGION"),
+		os.Getenv("S3_BUCKET"),
+		os.Getenv("AWS_ACCESS_KEY_ID"),
+		os.Getenv("AWS_SECRET_ACCESS_KEY"),
+	)
+	if err != nil {
+		log.Fatalf("Failed to initialize S3 storage: %v", err)
+	}
+
+	r, err := setupRouter(s3)
 	if err != nil {
 		log.Fatalf("Failed to set up router: %v", err)
 	}

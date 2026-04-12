@@ -5,7 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+      :root, [data-theme] {
+        --color-primary: oklch(0.70 0.14 180);
+        --color-primary-content: oklch(1 0 0);
+        --color-secondary: oklch(0.95 0.05 170);
+        --color-secondary-content: oklch(0.30 0.08 170);
+      }
+    </style>
     {{block "head" .}}{{end}}
 </head>
 <body>

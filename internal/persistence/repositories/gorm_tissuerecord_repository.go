@@ -47,10 +47,10 @@ func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint
 	}
 
 	model := &migration.TissueRecordModel{
-		Name:           tr.Name,
-		Notes:          tr.Notes,
-		Taxonomicclass: tr.Taxonomicclass,
-		Slides:         slideModels,
+		Name:    tr.Name,
+		Notes:   tr.Notes,
+		TaxonID: tr.TaxonID,
+		Slides:  slideModels,
 	}
 	db.Create(model)
 	return model.ID
@@ -71,7 +71,7 @@ func (repo *GormTissueRecordRepository) Retrieve(id uint) (tissuerecord.TissueRe
 	}
 
 	var model migration.TissueRecordModel
-	if err := db.Preload("Slides.Preparation").First(&model, id).Error; err != nil {
+	if err := db.Preload("Slides.Preparation").Preload("Taxon").First(&model, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return tissuerecord.TissueRecord{}, NOT_FOUND_ERROR
 		}
@@ -104,11 +104,11 @@ func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueR
 	}
 
 	db.Save(&migration.TissueRecordModel{
-		Model:          gorm.Model{ID: id},
-		Name:           tr.Name,
-		Notes:          tr.Notes,
-		Taxonomicclass: tr.Taxonomicclass,
-		Slides:         slideModels,
+		Model:   gorm.Model{ID: id},
+		Name:    tr.Name,
+		Notes:   tr.Notes,
+		TaxonID: tr.TaxonID,
+		Slides:  slideModels,
 	})
 }
 
@@ -125,7 +125,7 @@ func (repo *GormTissueRecordRepository) List(page, limit int) ([]tissuerecord.Ti
 
 	var models []migration.TissueRecordModel
 	offset := (page - 1) * limit
-	if err := db.Preload("Slides.Preparation").Offset(offset).Limit(limit).Find(&models).Error; err != nil {
+	if err := db.Preload("Slides.Preparation").Preload("Taxon").Offset(offset).Limit(limit).Find(&models).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -152,12 +152,17 @@ func mapToTissueRecord(m migration.TissueRecordModel) tissuerecord.TissueRecord 
 			},
 		}
 	}
-	return tissuerecord.TissueRecord{
-		Name:           m.Name,
-		Notes:          m.Notes,
-		Taxonomicclass: m.Taxonomicclass,
-		Slides:         slides,
+	tr := tissuerecord.TissueRecord{
+		ID:      m.ID,
+		Name:    m.Name,
+		Notes:   m.Notes,
+		TaxonID: m.TaxonID,
+		Slides:  slides,
 	}
+	if m.Taxon.ID != 0 {
+		tr.Taxon = modelToTaxonDeep(m.Taxon)
+	}
+	return tr
 }
 
 func buildDSN() string {
