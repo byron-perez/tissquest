@@ -1,0 +1,28 @@
+{{define "category-row"}}
+<tr id="category-row-{{.ID}}">
+  <td class="font-medium">{{.Name}}</td>
+  <td>
+    <span class="badge badge-outline capitalize">{{.Type}}</span>
+  </td>
+  <td class="text-base-content/70 max-w-xs truncate">{{.ShortDescription}}</td>
+  <td class="text-base-content/70">{{.ParentName}}</td>
+  <td class="text-right">
+    <div class="inline-flex gap-2 items-center">
+      <button class="btn btn-ghost btn-sm"
+              hx-get="/categories/{{.ID}}/edit"
+              hx-target="#category-row-{{.ID}}"
+              hx-swap="outerHTML">
+        Edit
+      </button>
+      <span id="category-row-{{.ID}}-delete">
+        <button class="btn btn-error btn-sm btn-outline"
+                hx-get="/categories/{{.ID}}/confirm-delete"
+                hx-target="#category-row-{{.ID}}-delete"
+                hx-swap="outerHTML">
+          Delete
+        </button>
+      </span>
+    </div>
+  </td>
+</tr>
+{{end}}

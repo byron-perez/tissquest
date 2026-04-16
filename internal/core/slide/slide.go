@@ -1,5 +1,12 @@
 package slide
 
+import "errors"
+
+var (
+	ErrEmptyName             = errors.New("slide name cannot be empty")
+	ErrInvalidMagnification  = errors.New("magnification must be a positive value")
+)
+
 type Preparation struct {
 	Staining        string
 	InclusionMethod string
@@ -9,8 +16,20 @@ type Preparation struct {
 }
 
 type Slide struct {
-	Name          string
-	Url           string
-	Magnification int
-	Preparation   Preparation
+	ID             uint
+	TissueRecordID uint
+	Name           string
+	Url            string
+	Magnification  int
+	Preparation    Preparation
+}
+
+func (s *Slide) Validate() error {
+	if s.Name == "" {
+		return ErrEmptyName
+	}
+	if s.Magnification <= 0 {
+		return ErrInvalidMagnification
+	}
+	return nil
 }

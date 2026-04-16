@@ -10,7 +10,7 @@ import (
 )
 
 func UploadSlideImage(storage corestorage.ImageStorage) gin.HandlerFunc {
-	svc := services.NewSlideService(storage)
+	svc := services.NewSlideService(storage, nil)
 	return func(c *gin.Context) {
 		slideID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 		if err != nil {

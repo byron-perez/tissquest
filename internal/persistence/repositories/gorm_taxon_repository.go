@@ -14,7 +14,7 @@ import (
 
 type GormTaxonRepository struct{}
 
-func NewTaxonRepository() *GormTaxonRepository {
+func newGormTaxonRepository() *GormTaxonRepository {
 	return &GormTaxonRepository{}
 }
 
@@ -83,6 +83,30 @@ func (r *GormTaxonRepository) ListByRank(rank taxon.Rank) ([]taxon.Taxon, error)
 	return result, nil
 }
 
+func (r *GormTaxonRepository) List() ([]taxon.Taxon, error) {
+	db, err := r.getDB()
+	if err != nil {
+		return nil, err
+	}
+	var models []migration.TaxonModel
+	if err := db.Find(&models).Error; err != nil {
+		return nil, err
+	}
+	result := make([]taxon.Taxon, len(models))
+	for i, m := range models {
+		result[i] = *modelToTaxon(m)
+	}
+	return result, nil
+}
+
+func (r *GormTaxonRepository) Delete(id uint) error {
+	db, err := r.getDB()
+	if err != nil {
+		return err
+	}
+	return db.Delete(&migration.TaxonModel{}, id).Error
+}
+
 func loadWithParents(db *gorm.DB, id uint) (*migration.TaxonModel, error) {
 	var m migration.TaxonModel
 	if err := db.First(&m, id).Error; err != nil {
@@ -113,4 +137,16 @@ func modelToTaxonDeep(m migration.TaxonModel) *taxon.Taxon {
 		t.Parent = modelToTaxonDeep(*m.Parent)
 	}
 	return t
+}
+
+func (r *GormTaxonRepository) Update(id uint, t *taxon.Taxon) error {
+	db, err := r.getDB()
+	if err != nil {
+		return err
+	}
+	return db.Model(&migration.TaxonModel{}).Where("id = ?", id).Updates(map[string]interface{}{
+		"rank":      string(t.Rank),
+		"name":      t.Name,
+		"parent_id": t.ParentID,
+	}).Error
 }

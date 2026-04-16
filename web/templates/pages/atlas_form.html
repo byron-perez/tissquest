@@ -1,0 +1,89 @@
+{{define "atlas-form"}}
+<div class="card bg-base-100 shadow rounded-box p-6 mb-4">
+  <h2 class="text-xl font-bold mb-4">
+    {{if .Atlas}}Edit Atlas{{else}}New Atlas{{end}}
+  </h2>
+
+  <form
+    {{if .Atlas}}
+      hx-put="/atlases/{{.Atlas.ID}}"
+    {{else}}
+      hx-post="/atlases"
+    {{end}}
+    hx-target="#atlas-form-container"
+    hx-swap="innerHTML"
+    class="space-y-4">
+
+    {{/* Name */}}
+    <div class="form-control">
+      <label class="label" for="atlas-name">
+        <span class="label-text">Name <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="atlas-name"
+        type="text"
+        name="name"
+        value="{{if .Atlas}}{{.Atlas.Name}}{{end}}"
+        placeholder="Atlas name"
+        class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}"
+        required />
+      {{if index .Errors "name"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Description */}}
+    <div class="form-control">
+      <label class="label" for="atlas-description">
+        <span class="label-text">Description</span>
+      </label>
+      <textarea
+        id="atlas-description"
+        name="description"
+        placeholder="Optional description"
+        class="textarea textarea-bordered w-full {{if index .Errors "description"}}textarea-error{{end}}"
+        rows="3">{{if .Atlas}}{{.Atlas.Description}}{{end}}</textarea>
+      {{if index .Errors "description"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "description"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Category */}}
+    <div class="form-control">
+      <label class="label" for="atlas-category">
+        <span class="label-text">Category</span>
+      </label>
+      <input
+        id="atlas-category"
+        type="text"
+        name="category"
+        value="{{if .Atlas}}{{.Atlas.Category}}{{end}}"
+        placeholder="e.g. Botany, Zoology"
+        class="input input-bordered w-full {{if index .Errors "category"}}input-error{{end}}" />
+      {{if index .Errors "category"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "category"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              class="btn btn-ghost btn-sm"
+              hx-get="{{.CancelURL}}"
+              hx-target="{{.CancelTarget}}"
+              hx-swap="{{.CancelSwap}}">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        {{if .Atlas}}Save Changes{{else}}Create Atlas{{end}}
+      </button>
+    </div>
+
+  </form>
+</div>
+{{end}}

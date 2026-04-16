@@ -1,0 +1,84 @@
+{{define "content"}}
+<div class="min-h-screen bg-base-200">
+  <div class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+
+    {{template "main-menu" .}}
+
+    {{template "breadcrumb" .}}
+
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Tissue Records</h1>
+      <button class="btn btn-primary btn-sm"
+              hx-get="/tissue_records/new"
+              hx-target="#tr-form-container"
+              hx-swap="innerHTML">
+        New Tissue Record
+      </button>
+    </div>
+
+    <div id="tr-form-container"></div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full bg-base-100 shadow rounded-box">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Notes</th>
+            <th>Taxon</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tr-list-tbody">
+          {{range .TissueRecords}}
+          <tr id="tr-row-{{.ID}}">
+            <td class="font-medium">{{.Name}}</td>
+            <td class="text-base-content/70 max-w-xs truncate">{{.Notes}}</td>
+            <td>
+              {{if .Taxon}}
+              <span class="badge badge-outline">{{.Taxon.Name}}</span>
+              {{end}}
+            </td>
+            <td class="text-right">
+              <div class="inline-flex gap-2 items-center">
+                <a href="/tissue_records/{{.ID}}" class="btn btn-ghost btn-sm">View</a>
+                <button class="btn btn-ghost btn-sm"
+                        hx-get="/tissue_records/{{.ID}}/edit"
+                        hx-target="#tr-row-{{.ID}}"
+                        hx-swap="outerHTML">
+                  Edit
+                </button>
+                <span id="tr-row-{{.ID}}-delete">
+                  <button class="btn btn-error btn-sm btn-outline"
+                          hx-get="/tissue_records/{{.ID}}/confirm-delete"
+                          hx-target="#tr-row-{{.ID}}-delete"
+                          hx-swap="outerHTML">
+                    Delete
+                  </button>
+                </span>
+              </div>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="4" class="text-center text-base-content/50 py-8">No tissue records found.</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+    {{if gt .TotalPages 1}}
+    <div class="flex justify-center gap-2">
+      {{if .PrevPage}}
+      <a href="/tissue_records?page={{.PrevPage}}" class="btn btn-sm btn-ghost">← Prev</a>
+      {{end}}
+      <span class="btn btn-sm btn-disabled">Page {{.Page}} of {{.TotalPages}}</span>
+      {{if .NextPage}}
+      <a href="/tissue_records?page={{.NextPage}}" class="btn btn-sm btn-ghost">Next →</a>
+      {{end}}
+    </div>
+    {{end}}
+
+  </div>
+</div>
+{{end}}

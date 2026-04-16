@@ -1,0 +1,61 @@
+{{define "slide-gallery"}}
+<div class="space-y-4">
+  <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-semibold">Slides</h2>
+    <button class="btn btn-primary btn-sm"
+            hx-get="/tissue_records/{{$.TissueRecordID}}/slides/new"
+            hx-target="#slide-gallery"
+            hx-swap="innerHTML">
+      + Add Slide
+    </button>
+  </div>
+
+  {{if .Slides}}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {{range .Slides}}
+    <div class="card bg-base-100 shadow" id="slide-card-{{.ID}}">
+      {{if .Url}}
+      <figure class="h-40 overflow-hidden">
+        <img src="{{.Url}}" alt="{{.Name}}" class="w-full h-full object-cover" />
+      </figure>
+      {{else}}
+      <div class="h-40 bg-base-200 flex items-center justify-center text-base-content/30">
+        <span class="text-4xl">🔬</span>
+      </div>
+      {{end}}
+      <div class="card-body p-4">
+        <h3 class="card-title text-base">{{.Name}}</h3>
+        <div class="flex flex-wrap gap-1 text-sm text-base-content/70">
+          <span class="badge badge-outline badge-sm">{{.Magnification}}×</span>
+          {{if .Preparation.Staining}}
+          <span class="badge badge-outline badge-sm">{{.Preparation.Staining}}</span>
+          {{end}}
+        </div>
+        <div class="card-actions justify-end mt-2">
+          <button class="btn btn-ghost btn-xs"
+                  hx-get="/slides/{{.ID}}/edit"
+                  hx-target="#slide-gallery"
+                  hx-swap="innerHTML">
+            Edit
+          </button>
+          <span id="slide-{{.ID}}-delete">
+            <button class="btn btn-error btn-xs btn-outline"
+                    hx-get="/slides/{{.ID}}/confirm-delete"
+                    hx-target="#slide-{{.ID}}-delete"
+                    hx-swap="outerHTML">
+              Delete
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+    {{end}}
+  </div>
+  {{else}}
+  <div class="text-center py-12 text-base-content/40">
+    <p class="text-lg">No slides yet.</p>
+    <p class="text-sm mt-1">Click "Add Slide" to get started.</p>
+  </div>
+  {{end}}
+</div>
+{{end}}

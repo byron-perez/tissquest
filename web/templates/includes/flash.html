@@ -1,0 +1,9 @@
+{{define "flash-oob"}}
+<div id="flash-region" class="fixed top-4 right-4 z-50 w-80" hx-swap-oob="true">
+  {{if .Message}}
+  <div class="alert {{if eq .Type "error"}}alert-error{{else}}alert-success{{end}} shadow-lg">
+    <span>{{.Message}}</span>
+  </div>
+  {{end}}
+</div>
+{{end}}

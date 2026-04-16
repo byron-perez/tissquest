@@ -1,0 +1,30 @@
+{{define "tr-row"}}
+<tr id="tr-row-{{.ID}}">
+  <td class="font-medium">{{.Name}}</td>
+  <td class="text-base-content/70 max-w-xs truncate">{{.Notes}}</td>
+  <td>
+    {{if .Taxon}}
+    <span class="badge badge-outline">{{.Taxon.Name}}</span>
+    {{end}}
+  </td>
+  <td class="text-right">
+    <div class="inline-flex gap-2 items-center">
+      <a href="/tissue_records/{{.ID}}" class="btn btn-ghost btn-sm">View</a>
+      <button class="btn btn-ghost btn-sm"
+              hx-get="/tissue_records/{{.ID}}/edit"
+              hx-target="#tr-row-{{.ID}}"
+              hx-swap="outerHTML">
+        Edit
+      </button>
+      <span id="tr-row-{{.ID}}-delete">
+        <button class="btn btn-error btn-sm btn-outline"
+                hx-get="/tissue_records/{{.ID}}/confirm-delete"
+                hx-target="#tr-row-{{.ID}}-delete"
+                hx-swap="outerHTML">
+          Delete
+        </button>
+      </span>
+    </div>
+  </td>
+</tr>
+{{end}}

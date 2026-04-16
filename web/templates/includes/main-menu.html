@@ -1,15 +1,16 @@
 {{define "main-menu"}}
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-  {{ range .Atlases }}
-  <div class="card bg-base-100 shadow border border-base-300 hover:-translate-y-1 transition-transform">
-    <div class="card-body gap-3">
-      <h3 class="card-title">{{ .Name }}</h3>
-      <p class="text-base-content/60 text-sm leading-relaxed">{{ .Description }}</p>
-      <div class="card-actions mt-2">
-        <a href="/atlas/{{ .ID }}" class="btn btn-primary btn-sm">Ver atlas</a>
-      </div>
-    </div>
+<nav class="navbar bg-base-100 shadow mb-4">
+  <div class="navbar-start">
+    <a href="/" class="btn btn-ghost text-xl">TissQuest</a>
   </div>
-  {{ end }}
-</div>
+  <div class="navbar-center hidden lg:flex">
+    <ul class="menu menu-horizontal px-1">
+      <li><a href="/">Home</a></li>
+      <li><a href="/atlases">Atlases</a></li>
+      <li><a href="/tissue_records">Tissue Records</a></li>
+      <li><a href="/taxa">Taxa</a></li>
+      <li><a href="/categories">Categories</a></li>
+    </ul>
+  </div>
+</nav>
 {{end}}

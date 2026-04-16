@@ -15,9 +15,13 @@
         --color-secondary-content: oklch(0.30 0.08 170);
       }
     </style>
+    <script src="https://unpkg.com/htmx.org@2" defer></script>
     {{block "head" .}}{{end}}
 </head>
 <body>
+    <div id="flash-region" class="fixed top-4 right-4 z-50 w-80"
+         hx-on:show-flash="const d=event.detail; const msg=typeof d==='string'?d:(d.message||''); const type=typeof d==='object'&&d.type==='error'?'alert-error':'alert-success'; this.innerHTML='<div class=\'alert '+type+' shadow-lg\'><span>'+msg+'</span></div>'; setTimeout(()=>this.innerHTML='',3000);">
+    </div>
     {{block "content" .}}{{end}}
     {{block "scripts" .}}{{end}}
 </body>

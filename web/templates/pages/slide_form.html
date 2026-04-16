@@ -1,0 +1,153 @@
+{{define "slide-form"}}
+<div class="card bg-base-100 shadow rounded-box p-6 mb-4">
+  <h2 class="text-xl font-bold mb-4">
+    {{if .Slide}}Edit Slide{{else}}New Slide{{end}}
+  </h2>
+
+  <form
+    {{if .Slide}}
+      hx-put="/slides/{{.Slide.ID}}"
+    {{else}}
+      hx-post="/tissue_records/{{.TissueRecordID}}/slides"
+    {{end}}
+    hx-target="#slide-gallery"
+    hx-swap="innerHTML"
+    class="space-y-4">
+
+    {{/* Name */}}
+    <div class="form-control">
+      <label class="label" for="slide-name">
+        <span class="label-text">Name <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="slide-name"
+        type="text"
+        name="name"
+        value="{{if .Slide}}{{.Slide.Name}}{{end}}"
+        placeholder="Slide name"
+        class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}"
+        required />
+      {{if index .Errors "name"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Image URL */}}
+    <div class="form-control">
+      <label class="label" for="slide-url">
+        <span class="label-text">Image URL</span>
+      </label>
+      <input
+        id="slide-url"
+        type="text"
+        name="url"
+        value="{{if .Slide}}{{.Slide.Url}}{{end}}"
+        placeholder="https://..."
+        class="input input-bordered w-full" />
+    </div>
+
+    {{/* Magnification */}}
+    <div class="form-control">
+      <label class="label" for="slide-magnification">
+        <span class="label-text">Magnification <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="slide-magnification"
+        type="number"
+        name="magnification"
+        value="{{if .Slide}}{{.Slide.Magnification}}{{end}}"
+        placeholder="e.g. 40"
+        class="input input-bordered w-full {{if index .Errors "magnification"}}input-error{{end}}"
+        required />
+      {{if index .Errors "magnification"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "magnification"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Staining */}}
+    <div class="form-control">
+      <label class="label" for="slide-staining">
+        <span class="label-text">Staining</span>
+      </label>
+      <input
+        id="slide-staining"
+        type="text"
+        name="staining"
+        value="{{if .Slide}}{{.Slide.Preparation.Staining}}{{end}}"
+        placeholder="e.g. H&E"
+        class="input input-bordered w-full" />
+    </div>
+
+    {{/* Inclusion Method */}}
+    <div class="form-control">
+      <label class="label" for="slide-inclusion-method">
+        <span class="label-text">Inclusion Method</span>
+      </label>
+      <input
+        id="slide-inclusion-method"
+        type="text"
+        name="inclusion_method"
+        value="{{if .Slide}}{{.Slide.Preparation.InclusionMethod}}{{end}}"
+        placeholder="e.g. Paraffin"
+        class="input input-bordered w-full" />
+    </div>
+
+    {{/* Reagents */}}
+    <div class="form-control">
+      <label class="label" for="slide-reagents">
+        <span class="label-text">Reagents</span>
+      </label>
+      <textarea
+        id="slide-reagents"
+        name="reagents"
+        placeholder="List of reagents used"
+        class="textarea textarea-bordered w-full"
+        rows="2">{{if .Slide}}{{.Slide.Preparation.Reagents}}{{end}}</textarea>
+    </div>
+
+    {{/* Protocol */}}
+    <div class="form-control">
+      <label class="label" for="slide-protocol">
+        <span class="label-text">Protocol</span>
+      </label>
+      <textarea
+        id="slide-protocol"
+        name="protocol"
+        placeholder="Protocol description"
+        class="textarea textarea-bordered w-full"
+        rows="2">{{if .Slide}}{{.Slide.Preparation.Protocol}}{{end}}</textarea>
+    </div>
+
+    {{/* Notes */}}
+    <div class="form-control">
+      <label class="label" for="slide-notes">
+        <span class="label-text">Notes</span>
+      </label>
+      <textarea
+        id="slide-notes"
+        name="notes"
+        placeholder="Additional notes"
+        class="textarea textarea-bordered w-full"
+        rows="3">{{if .Slide}}{{.Slide.Preparation.Notes}}{{end}}</textarea>
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              class="btn btn-ghost btn-sm"
+              hx-get="/tissue_records/{{.TissueRecordID}}/slides"
+              hx-target="#slide-gallery"
+              hx-swap="innerHTML">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        {{if .Slide}}Save Changes{{else}}Add Slide{{end}}
+      </button>
+    </div>
+
+  </form>
+</div>
+{{end}}

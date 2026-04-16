@@ -1,0 +1,17 @@
+{{define "confirm-delete"}}
+<span id="{{.TargetID}}" class="inline-flex items-center gap-2">
+  <span class="text-sm text-base-content/70">Are you sure?</span>
+  <button class="btn btn-error btn-sm"
+          hx-delete="{{.DeleteURL}}"
+          hx-target="{{.RowTarget}}"
+          hx-swap="outerHTML">
+    Delete
+  </button>
+  <button class="btn btn-ghost btn-sm"
+          hx-get="{{.CancelURL}}"
+          hx-target="#{{.TargetID}}"
+          hx-swap="outerHTML">
+    Cancel
+  </button>
+</span>
+{{end}}

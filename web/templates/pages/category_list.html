@@ -1,0 +1,71 @@
+{{define "content"}}
+<div class="min-h-screen bg-base-200">
+  <div class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+
+    {{template "main-menu" .}}
+
+    {{template "breadcrumb" .}}
+
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Categories</h1>
+      <button class="btn btn-primary btn-sm"
+              hx-get="/categories/new"
+              hx-target="#category-form-container"
+              hx-swap="innerHTML">
+        New Category
+      </button>
+    </div>
+
+    <div id="category-form-container"></div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full bg-base-100 shadow rounded-box">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Parent</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Categories}}
+          <tr id="category-row-{{.ID}}">
+            <td class="font-medium">{{.Name}}</td>
+            <td>
+              <span class="badge badge-outline capitalize">{{.Type}}</span>
+            </td>
+            <td class="text-base-content/70 max-w-xs truncate">{{.ShortDescription}}</td>
+            <td class="text-base-content/70">{{.ParentName}}</td>
+            <td class="text-right">
+              <div class="inline-flex gap-2 items-center">
+                <button class="btn btn-ghost btn-sm"
+                        hx-get="/categories/{{.ID}}/edit"
+                        hx-target="#category-row-{{.ID}}"
+                        hx-swap="outerHTML">
+                  Edit
+                </button>
+                <span id="category-row-{{.ID}}-delete">
+                  <button class="btn btn-error btn-sm btn-outline"
+                          hx-get="/categories/{{.ID}}/confirm-delete"
+                          hx-target="#category-row-{{.ID}}-delete"
+                          hx-swap="outerHTML">
+                    Delete
+                  </button>
+                </span>
+              </div>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="5" class="text-center text-base-content/50 py-8">No categories found.</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{{end}}

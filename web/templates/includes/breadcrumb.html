@@ -1,0 +1,13 @@
+{{define "breadcrumb"}}
+<div class="breadcrumbs text-sm">
+  <ul>
+    {{range .Crumbs}}
+    {{if .URL}}
+    <li><a href="{{.URL}}">{{.Label}}</a></li>
+    {{else}}
+    <li>{{.Label}}</li>
+    {{end}}
+    {{end}}
+  </ul>
+</div>
+{{end}}

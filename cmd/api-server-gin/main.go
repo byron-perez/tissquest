@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"mcba/tissquest/cmd/api-server-gin/atlas"
+	"mcba/tissquest/cmd/api-server-gin/categories"
 	"mcba/tissquest/cmd/api-server-gin/index"
 	"mcba/tissquest/cmd/api-server-gin/slides"
+	"mcba/tissquest/cmd/api-server-gin/taxa"
 	"mcba/tissquest/cmd/api-server-gin/tissue_records"
 	"mcba/tissquest/internal/persistence/migration"
 	persistencestorage "mcba/tissquest/internal/persistence/storage"
@@ -23,11 +25,67 @@ func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 
 	// Setup routes
 	r.GET("/", index.GetIndex)
-	r.GET("/tissue_records", tissue_records.ListTissueRecords)
-	r.POST("/tissue_records", tissue_records.CreateTissueRecord)
-	r.GET("/atlases", atlas.ListAtlases)
+
+	// Atlas routes
+	r.GET("/atlases", atlas.ListAtlasesHTML)
+	r.GET("/atlases/new", atlas.NewAtlasForm)
+	r.GET("/atlases/new-form-cancel", atlas.NewAtlasFormCancel)
+	r.POST("/atlases", atlas.CreateAtlasHTML)
+	r.GET("/atlases/:id/edit", atlas.EditAtlasForm)
+	r.GET("/atlases/:id/edit-cancel", atlas.EditCancelAtlas)
+	r.PUT("/atlases/:id", atlas.UpdateAtlasHTML)
+	r.DELETE("/atlases/:id", atlas.DeleteAtlasHTML)
+	r.GET("/atlases/:id/confirm-delete", atlas.ConfirmDeleteAtlas)
+	r.GET("/atlases/:id/confirm-delete-cancel", atlas.ConfirmDeleteAtlasCancel)
 	r.GET("/atlas/:id", atlas.ViewAtlas)
+
+	// Tissue record routes
+	r.GET("/tissue_records", tissue_records.ListTissueRecordsHTML)
+	r.GET("/tissue_records/new", tissue_records.NewTissueRecordForm)
+	r.GET("/tissue_records/new-form-cancel", tissue_records.NewTissueRecordFormCancel)
+	r.POST("/tissue_records", tissue_records.CreateTissueRecordHTML)
+	r.GET("/tissue_records/:id", tissue_records.ViewTissueRecordHTML)
+	r.GET("/tissue_records/:id/edit", tissue_records.EditTissueRecordForm)
+	r.GET("/tissue_records/:id/edit-cancel", tissue_records.EditCancelTissueRecord)
+	r.PUT("/tissue_records/:id", tissue_records.UpdateTissueRecordHTML)
+	r.DELETE("/tissue_records/:id", tissue_records.DeleteTissueRecordHTML)
+	r.GET("/tissue_records/:id/confirm-delete", tissue_records.ConfirmDeleteTissueRecord)
+	r.GET("/tissue_records/:id/confirm-delete-cancel", tissue_records.ConfirmDeleteTissueRecordCancel)
+	r.GET("/tissue_records/:id/slides", slides.ListSlides)
+	r.GET("/tissue_records/:id/slides/new", slides.NewSlideForm)
+	r.POST("/tissue_records/:id/slides", slides.CreateSlide)
+
+	// Slide routes
+	r.GET("/slides/:id/edit", slides.EditSlideForm)
+	r.PUT("/slides/:id", slides.UpdateSlide)
+	r.DELETE("/slides/:id", slides.DeleteSlide)
+	r.GET("/slides/:id/confirm-delete", slides.ConfirmDeleteSlide)
+	r.GET("/slides/:id/confirm-delete-cancel", slides.ConfirmDeleteSlideCancel)
 	r.POST("/slides/:id/image", slides.UploadSlideImage(s3))
+
+	// Taxa routes
+	r.GET("/taxa", taxa.ListTaxa)
+	r.GET("/taxa/new", taxa.NewTaxonForm)
+	r.GET("/taxa/new-form-cancel", taxa.NewTaxonFormCancel)
+	r.POST("/taxa", taxa.CreateTaxon)
+	r.GET("/taxa/:id/edit", taxa.EditTaxonForm)
+	r.GET("/taxa/:id/edit-cancel", taxa.EditCancelTaxon)
+	r.PUT("/taxa/:id", taxa.UpdateTaxon)
+	r.DELETE("/taxa/:id", taxa.DeleteTaxon)
+	r.GET("/taxa/:id/confirm-delete", taxa.ConfirmDeleteTaxon)
+	r.GET("/taxa/:id/confirm-delete-cancel", taxa.ConfirmDeleteTaxonCancel)
+
+	// Category routes
+	r.GET("/categories", categories.ListCategories)
+	r.GET("/categories/new", categories.NewCategoryForm)
+	r.GET("/categories/new-form-cancel", categories.NewCategoryFormCancel)
+	r.POST("/categories", categories.CreateCategory)
+	r.GET("/categories/:id/edit", categories.EditCategoryForm)
+	r.GET("/categories/:id/edit-cancel", categories.EditCancelCategory)
+	r.PUT("/categories/:id", categories.UpdateCategory)
+	r.DELETE("/categories/:id", categories.DeleteCategory)
+	r.GET("/categories/:id/confirm-delete", categories.ConfirmDeleteCategory)
+	r.GET("/categories/:id/confirm-delete-cancel", categories.ConfirmDeleteCategoryCancel)
 
 	return r, nil
 }
@@ -57,12 +115,59 @@ func logStartupInfo() {
 	log.Printf("  DB       : %s", dbInfo)
 	log.Printf("  Workdir  : %s", cwd)
 	log.Println("  Routes   :")
-	log.Println("    GET  /")
-	log.Println("    GET  /tissue_records")
-	log.Println("    POST /tissue_records")
-	log.Println("    GET  /atlases")
-	log.Println("    GET  /atlas/:id")
-	log.Println("    POST /slides/:id/image")
+	log.Println("    GET    /")
+	log.Println("    --- Atlases ---")
+	log.Println("    GET    /atlases")
+	log.Println("    GET    /atlases/new")
+	log.Println("    GET    /atlases/new-form-cancel")
+	log.Println("    POST   /atlases")
+	log.Println("    GET    /atlases/:id/edit")
+	log.Println("    PUT    /atlases/:id")
+	log.Println("    DELETE /atlases/:id")
+	log.Println("    GET    /atlases/:id/confirm-delete")
+	log.Println("    GET    /atlases/:id/confirm-delete-cancel")
+	log.Println("    GET    /atlas/:id")
+	log.Println("    --- Tissue Records ---")
+	log.Println("    GET    /tissue_records")
+	log.Println("    GET    /tissue_records/new")
+	log.Println("    GET    /tissue_records/new-form-cancel")
+	log.Println("    POST   /tissue_records")
+	log.Println("    GET    /tissue_records/:id")
+	log.Println("    GET    /tissue_records/:id/edit")
+	log.Println("    PUT    /tissue_records/:id")
+	log.Println("    DELETE /tissue_records/:id")
+	log.Println("    GET    /tissue_records/:id/confirm-delete")
+	log.Println("    GET    /tissue_records/:id/confirm-delete-cancel")
+	log.Println("    GET    /tissue_records/:id/slides")
+	log.Println("    GET    /tissue_records/:id/slides/new")
+	log.Println("    POST   /tissue_records/:id/slides")
+	log.Println("    --- Slides ---")
+	log.Println("    GET    /slides/:id/edit")
+	log.Println("    PUT    /slides/:id")
+	log.Println("    DELETE /slides/:id")
+	log.Println("    GET    /slides/:id/confirm-delete")
+	log.Println("    GET    /slides/:id/confirm-delete-cancel")
+	log.Println("    POST   /slides/:id/image")
+	log.Println("    --- Taxa ---")
+	log.Println("    GET    /taxa")
+	log.Println("    GET    /taxa/new")
+	log.Println("    GET    /taxa/new-form-cancel")
+	log.Println("    POST   /taxa")
+	log.Println("    GET    /taxa/:id/edit")
+	log.Println("    PUT    /taxa/:id")
+	log.Println("    DELETE /taxa/:id")
+	log.Println("    GET    /taxa/:id/confirm-delete")
+	log.Println("    GET    /taxa/:id/confirm-delete-cancel")
+	log.Println("    --- Categories ---")
+	log.Println("    GET    /categories")
+	log.Println("    GET    /categories/new")
+	log.Println("    GET    /categories/new-form-cancel")
+	log.Println("    POST   /categories")
+	log.Println("    GET    /categories/:id/edit")
+	log.Println("    PUT    /categories/:id")
+	log.Println("    DELETE /categories/:id")
+	log.Println("    GET    /categories/:id/confirm-delete")
+	log.Println("    GET    /categories/:id/confirm-delete-cancel")
 	log.Println("---------------------------------------")
 }
 

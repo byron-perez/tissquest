@@ -1,0 +1,93 @@
+{{define "tr-form"}}
+<div class="card bg-base-100 shadow rounded-box p-6 mb-4">
+  <h2 class="text-xl font-bold mb-4">
+    {{if .TissueRecord}}Edit Tissue Record{{else}}New Tissue Record{{end}}
+  </h2>
+
+  <form
+    {{if .TissueRecord}}
+      hx-put="/tissue_records/{{.TissueRecord.ID}}"
+    {{else}}
+      hx-post="/tissue_records"
+    {{end}}
+    hx-target="#tr-form-container"
+    hx-swap="innerHTML"
+    class="space-y-4">
+
+    {{/* Name */}}
+    <div class="form-control">
+      <label class="label" for="tr-name">
+        <span class="label-text">Name <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="tr-name"
+        type="text"
+        name="name"
+        value="{{if .TissueRecord}}{{.TissueRecord.Name}}{{end}}"
+        placeholder="Tissue record name"
+        class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}"
+        required />
+      {{if index .Errors "name"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Notes */}}
+    <div class="form-control">
+      <label class="label" for="tr-notes">
+        <span class="label-text">Notes</span>
+      </label>
+      <textarea
+        id="tr-notes"
+        name="notes"
+        placeholder="Optional notes"
+        class="textarea textarea-bordered w-full {{if index .Errors "notes"}}textarea-error{{end}}"
+        rows="3">{{if .TissueRecord}}{{.TissueRecord.Notes}}{{end}}</textarea>
+      {{if index .Errors "notes"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "notes"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Taxon */}}
+    <div class="form-control">
+      <label class="label" for="tr-taxon">
+        <span class="label-text">Taxon</span>
+      </label>
+      <select
+        id="tr-taxon"
+        name="taxon_id"
+        class="select select-bordered w-full {{if index .Errors "taxon_id"}}select-error{{end}}">
+        <option value="">— None —</option>
+        {{range .Taxa}}
+        <option value="{{.ID}}" {{if eq .ID $.SelectedTaxonID}}selected{{end}}>
+          {{.Name}}
+        </option>
+        {{end}}
+      </select>
+      {{if index .Errors "taxon_id"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "taxon_id"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              class="btn btn-ghost btn-sm"
+              hx-get="{{.CancelURL}}"
+              hx-target="{{.CancelTarget}}"
+              hx-swap="{{.CancelSwap}}">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        {{if .TissueRecord}}Save Changes{{else}}Create Tissue Record{{end}}
+      </button>
+    </div>
+
+  </form>
+</div>
+{{end}}

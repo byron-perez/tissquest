@@ -2,7 +2,6 @@ package tests
 
 import (
 	"log"
-	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/migration"
 	"mcba/tissquest/internal/persistence/repositories"
@@ -12,118 +11,80 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	// load .env
 	err := godotenv.Load("../../../../.env")
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	// run migrations
 	migration.RunMigration()
-
-	// run tests
 	m.Run()
 }
 
 func TestTissueRecordSave(t *testing.T) {
-	tissslide1 := slide.Slide{Name: "Corte longitudinal", Magnification: 40}
-	tissslide1.Img.Url = "https://botweb.uwsp.edu/Anatomy/images/dicotwood/images_c/Anat0343.jpg"
-	tissslide1.Staining.Name = "HyE"
-	tissslide2 := slide.Slide{Name: "Corte transversal", Magnification: 100}
-	tissslide2.Img.Url = "https://botweb.uwsp.edu/Anatomy/images/primaryxylem/images_c/Anat0144.jpg"
-	tissslide2.Staining.Name = "Azul de metileno"
+	repo := repositories.NewGormTissueRecordRepository()
 
-	tissrecord := tissuerecord.TissueRecord{
-		Name:           "??? de un helecho",
-		Notes:          "Corte 'y' de un '.' de un helecho, Pteridium sp. etc, etc, etc",
-		Taxonomicclass: "K:Plantae,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
-		Slides:         []slide.Slide{tissslide1, tissslide2},
+	tr := &tissuerecord.TissueRecord{
+		Name:  "Helecho sp.",
+		Notes: "Corte transversal de un helecho",
 	}
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord.ConfigureTissueRecord(gorm_repository)
 
-	save_return := tissrecord.Save()
-
-	if save_return == 0 {
-		t.Errorf("got: %q, wanted %q", "zero", save_return)
+	id := repo.Save(tr)
+	if id == 0 {
+		t.Errorf("expected non-zero ID after save, got 0")
 	}
 }
 
 func TestTissueRecordRetrieve(t *testing.T) {
-	// arrange
-	tissslide1 := slide.Slide{Name: "img-10x"}
-	tissslide2 := slide.Slide{Name: "img-200x"}
-	tissrecord := tissuerecord.TissueRecord{
-		Name:           "test retrive",
-		Notes:          "'y' de un '.'",
-		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
-		Slides:         []slide.Slide{tissslide1, tissslide2},
+	repo := repositories.NewGormTissueRecordRepository()
+
+	tr := &tissuerecord.TissueRecord{
+		Name:  "test retrieve",
+		Notes: "notes for retrieve test",
 	}
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord.ConfigureTissueRecord(gorm_repository)
-	inserted_id := tissrecord.Save()
+	id := repo.Save(tr)
 
-	// act
-	_, status_code := tissrecord.GetById(inserted_id)
-
-	// assert
-	if status_code == 0 {
-		t.Errorf("Not found record")
+	retrieved, statusCode := repo.Retrieve(id)
+	if statusCode == 0 {
+		t.Errorf("expected non-zero status code, record not found")
+	}
+	if retrieved.Name != tr.Name {
+		t.Errorf("got name %q, want %q", retrieved.Name, tr.Name)
 	}
 }
 
 func TestTissueRecordUpdate(t *testing.T) {
-	// arrange
-	tissslide1 := slide.Slide{Name: "img-10x"}
-	tissslide2 := slide.Slide{Name: "img-200x"}
-	tissrecord := tissuerecord.TissueRecord{
-		Name:           "original name",
-		Notes:          "'y' de un '.'",
-		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
-		Slides:         []slide.Slide{tissslide1, tissslide2},
+	repo := repositories.NewGormTissueRecordRepository()
+
+	original := &tissuerecord.TissueRecord{
+		Name:  "original name",
+		Notes: "original notes",
 	}
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord.ConfigureTissueRecord(gorm_repository)
-	inserted_id := tissrecord.Save()
+	id := repo.Save(original)
 
-	tissslide3 := slide.Slide{Name: "img-10x"}
-	tissslide4 := slide.Slide{Name: "img-200x"}
-	tissrecord_to_update := tissuerecord.TissueRecord{
-		Name:           "updated name",
-		Notes:          "'y' de un '.'",
-		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
-		Slides:         []slide.Slide{tissslide3, tissslide4},
+	updated := &tissuerecord.TissueRecord{
+		Name:  "updated name",
+		Notes: "updated notes",
 	}
+	repo.Update(id, updated)
 
-	// act
-	tissrecord.Update(inserted_id, tissrecord_to_update)
-
-	// assert
-	retrieved, _ := tissrecord.GetById(inserted_id)
-	if tissrecord.Name == retrieved.Name {
-		t.Errorf("got: '%+v', wanted '%+v'", tissrecord.Name, tissrecord_to_update.Name)
+	retrieved, _ := repo.Retrieve(id)
+	if retrieved.Name != updated.Name {
+		t.Errorf("got name %q, want %q", retrieved.Name, updated.Name)
 	}
 }
 
 func TestTissueRecordDelete(t *testing.T) {
-	// arrange
-	tissslide1 := slide.Slide{Name: "img-10x"}
-	tissslide2 := slide.Slide{Name: "img-200x"}
-	tissrecord := tissuerecord.TissueRecord{
-		Name:           "test retrive",
-		Notes:          "'y' de un '.'",
-		Taxonomicclass: "K:Any,Cld:Tracheophytes,D:Polypodiophyta,Cls:Polypodiopsida",
-		Slides:         []slide.Slide{tissslide1, tissslide2},
+	repo := repositories.NewGormTissueRecordRepository()
+
+	tr := &tissuerecord.TissueRecord{
+		Name:  "to be deleted",
+		Notes: "delete test",
 	}
-	gorm_repository := repositories.NewGormTissueRecordRepository()
-	tissrecord.ConfigureTissueRecord(gorm_repository)
-	inserted_id := tissrecord.Save()
+	id := repo.Save(tr)
 
-	// act
-	tissrecord.Delete(inserted_id)
+	repo.Delete(id)
 
-	// assert
-	_, status_code := tissrecord.GetById(inserted_id)
-	if status_code != 0 {
-		t.Errorf("Not deleted")
+	_, statusCode := repo.Retrieve(id)
+	if statusCode != 0 {
+		t.Errorf("expected record to be deleted, but it was found (status %d)", statusCode)
 	}
 }
