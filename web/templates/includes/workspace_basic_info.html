@@ -1,0 +1,87 @@
+{{define "workspace-basic-info"}}
+<div class="card bg-base-100 shadow rounded-box p-6"
+     x-data="{ editing: false }">
+
+  <!-- Display view -->
+  <div x-show="!editing" x-cloak>
+    <h2 class="text-xl font-semibold mb-4">Basic Info</h2>
+    <div class="space-y-2">
+      <div>
+        <span class="text-sm text-base-content/50">Name</span>
+        <p class="font-medium">{{.TissueRecord.Name}}</p>
+      </div>
+      {{if .TissueRecord.Notes}}
+      <div>
+        <span class="text-sm text-base-content/50">Notes</span>
+        <p class="text-base-content/80">{{.TissueRecord.Notes}}</p>
+      </div>
+      {{end}}
+      {{if .TissueRecord.Taxon}}
+      <div>
+        <span class="text-sm text-base-content/50">Taxon</span>
+        <p class="text-base-content/80">{{.TissueRecord.Taxon.Name}}</p>
+      </div>
+      {{end}}
+    </div>
+    <div class="mt-4">
+      <button @click="editing = true" class="btn btn-primary btn-sm">Edit</button>
+    </div>
+  </div>
+
+  <!-- Edit form -->
+  <div x-show="editing" x-cloak>
+    <h2 class="text-xl font-semibold mb-4">Edit Basic Info</h2>
+    <form hx-put="/tissue_records/{{.TissueRecord.ID}}/workspace/basic-info"
+          hx-target="#basic-info-section"
+          hx-swap="innerHTML"
+          class="space-y-4">
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Name <span class="text-error">*</span></span>
+        </label>
+        <input type="text"
+               name="name"
+               value="{{.TissueRecord.Name}}"
+               required
+               class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}" />
+        {{if index .Errors "name"}}
+        <label class="label">
+          <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+        </label>
+        {{end}}
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Notes</span>
+        </label>
+        <textarea name="notes"
+                  rows="3"
+                  class="textarea textarea-bordered w-full">{{.TissueRecord.Notes}}</textarea>
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Taxon</span>
+        </label>
+        <select name="taxon_id" class="select select-bordered w-full">
+          <option value="">— None —</option>
+          {{range .Taxa}}
+          <option value="{{.ID}}" {{if eq $.SelectedTaxonID .ID}}selected{{end}}>{{.Name}}</option>
+          {{end}}
+        </select>
+      </div>
+
+      <div class="flex gap-2 mt-4">
+        <button type="submit" class="btn btn-primary btn-sm">Save</button>
+        <button type="button"
+                @click="editing = false"
+                class="btn btn-ghost btn-sm">Cancel</button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{{end}}

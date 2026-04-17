@@ -1,9 +1,11 @@
 {{define "content"}}
 <div class="min-h-screen bg-base-200">
 
+  {{template "main-menu" .}}
+
   {{/* Hero */}}
   <section class="hero min-h-[60vh] bg-base-100 shadow-sm">
-    <div class="hero-content flex-col lg:flex-row-reverse gap-10 max-w-6xl w-full py-16 px-6">
+    <div class="hero-content flex-col lg:flex-row-reverse gap-10 max-w-5xl w-full py-16 px-6">
       <div class="card bg-base-200 border border-teal-200 shadow-xl w-full max-w-sm shrink-0">
         <div class="card-body">
           <p class="text-xs font-bold uppercase tracking-widest text-teal-600">Tu próxima exploración</p>
@@ -22,7 +24,7 @@
     </div>
   </section>
 
-  <div class="max-w-6xl mx-auto px-6 py-10 space-y-16">
+  <div class="max-w-5xl mx-auto px-6 py-10 space-y-16">
 
     {{/* Search */}}
     <section>
@@ -84,7 +86,24 @@
     {{/* Atlas list */}}
     <section>
       <h2 class="text-3xl font-bold mb-6">Atlas disponibles</h2>
-      {{ template "main-menu" . }}
+      {{if .Atlases}}
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {{range .Atlases}}
+        <div class="card bg-base-100 shadow border border-base-300 hover:-translate-y-1 transition-transform">
+          <div class="card-body gap-3">
+            <h3 class="card-title">{{.Name}}</h3>
+            <p class="text-base-content/60 text-sm leading-relaxed">{{.Description}}</p>
+            {{if .Category}}<div class="badge badge-outline badge-sm">{{.Category}}</div>{{end}}
+            <div class="card-actions mt-2">
+              <a href="/atlas/{{.ID}}" class="btn btn-primary btn-sm">Ver atlas</a>
+            </div>
+          </div>
+        </div>
+        {{end}}
+      </div>
+      {{else}}
+      <div class="alert alert-info"><span>Aún no hay atlas disponibles.</span></div>
+      {{end}}
     </section>
 
   </div>

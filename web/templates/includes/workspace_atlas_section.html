@@ -1,0 +1,44 @@
+{{define "workspace-atlas-section"}}
+<div class="card bg-base-100 shadow rounded-box p-6"
+     x-data="{ showDropdown: false }">
+
+  <h2 class="text-xl font-semibold mb-4">Atlases</h2>
+
+  <!-- Associated atlases list -->
+  {{if .Atlases}}
+  <div class="space-y-2 mb-4">
+    {{range .Atlases}}
+    <div class="flex items-center justify-between py-1">
+      <span class="text-base-content">{{.Name}}</span>
+      <button hx-delete="/tissue_records/{{$.TissueRecord.ID}}/atlases/{{.ID}}"
+              hx-target="#atlas-section"
+              hx-swap="innerHTML"
+              class="btn btn-error btn-xs btn-outline">Remove</button>
+    </div>
+    {{end}}
+  </div>
+  {{else}}
+  <p class="text-base-content/40 text-sm mb-4">No atlases associated.</p>
+  {{end}}
+
+  <!-- Add Atlas dropdown -->
+  {{if .AvailAtlases}}
+  <div x-show="showDropdown" class="mb-3 card bg-base-200 shadow rounded-box">
+    <ul class="menu menu-compact p-2">
+      {{range .AvailAtlases}}
+      <li>
+        <button hx-post="/tissue_records/{{$.TissueRecord.ID}}/atlases/{{.ID}}"
+                hx-target="#atlas-section"
+                hx-swap="innerHTML"
+                @click="showDropdown = false"
+                class="w-full text-left">{{.Name}}</button>
+      </li>
+      {{end}}
+    </ul>
+  </div>
+  <button @click="showDropdown = !showDropdown"
+          class="btn btn-primary btn-sm">+ Add Atlas</button>
+  {{end}}
+
+</div>
+{{end}}

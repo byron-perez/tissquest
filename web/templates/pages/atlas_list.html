@@ -63,40 +63,6 @@
           </tr>
           {{end}}
         </tbody>
-          {{range .Atlases}}
-          <tr id="atlas-row-{{.ID}}">
-            <td class="font-medium">{{.Name}}</td>
-            <td class="text-base-content/70 max-w-xs truncate">{{.Description}}</td>
-            <td>
-              {{if .Category}}
-              <span class="badge badge-outline">{{.Category}}</span>
-              {{end}}
-            </td>
-            <td class="text-right">
-              <div class="inline-flex gap-2 items-center">
-                <button class="btn btn-ghost btn-sm"
-                        hx-get="/atlases/{{.ID}}/edit"
-                        hx-target="#atlas-row-{{.ID}}"
-                        hx-swap="outerHTML">
-                  Edit
-                </button>
-                <span id="atlas-row-{{.ID}}-delete">
-                  <button class="btn btn-error btn-sm btn-outline"
-                          hx-get="/atlases/{{.ID}}/confirm-delete"
-                          hx-target="#atlas-row-{{.ID}}-delete"
-                          hx-swap="outerHTML">
-                    Delete
-                  </button>
-                </span>
-              </div>
-            </td>
-          </tr>
-          {{else}}
-          <tr>
-            <td colspan="4" class="text-center text-base-content/50 py-8">No atlases found.</td>
-          </tr>
-          {{end}}
-        </tbody>
       </table>
     </div>
 

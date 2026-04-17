@@ -14,11 +14,13 @@
         --color-secondary: oklch(0.95 0.05 170);
         --color-secondary-content: oklch(0.30 0.08 170);
       }
+      [x-cloak] { display: none !important; }
     </style>
     <script src="https://unpkg.com/htmx.org@2" defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     {{block "head" .}}{{end}}
 </head>
-<body>
+<body data-layout="{{if .Layout}}{{.Layout}}{{else}}admin{{end}}">
     <div id="flash-region" class="fixed top-4 right-4 z-50 w-80"
          hx-on:show-flash="const d=event.detail; const msg=typeof d==='string'?d:(d.message||''); const type=typeof d==='object'&&d.type==='error'?'alert-error':'alert-success'; this.innerHTML='<div class=\'alert '+type+' shadow-lg\'><span>'+msg+'</span></div>'; setTimeout(()=>this.innerHTML='',3000);">
     </div>

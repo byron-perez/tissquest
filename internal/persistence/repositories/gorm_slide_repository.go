@@ -4,25 +4,29 @@ import (
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/persistence/migration"
 	"os"
+	"strings"
 
+	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-type GormSlideRepository struct {
-	conn string
-}
+type GormSlideRepository struct{}
 
 func NewGormSlideRepository() *GormSlideRepository {
-	connection := os.Getenv("DB_PATH")
-	if connection == "" {
-		connection = "tissquest.db"
-	}
-	return &GormSlideRepository{conn: connection}
+	return &GormSlideRepository{}
 }
 
 func (repo *GormSlideRepository) getDB() (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	dbType := strings.ToLower(os.Getenv("DB_TYPE"))
+	if dbType == "postgres" || dbType == "postgresql" {
+		return gorm.Open(postgres.Open(buildDSN()), &gorm.Config{})
+	}
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = "tissquest.db"
+	}
+	return gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 }
 
 func toSlideModel(sl *slide.Slide) migration.SlideModel {

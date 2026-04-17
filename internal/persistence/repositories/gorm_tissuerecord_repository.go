@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"errors"
+	"mcba/tissquest/internal/core/atlas"
+	"mcba/tissquest/internal/core/category"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/migration"
@@ -175,4 +177,99 @@ func buildDSN() string {
 			" sslmode=require TimeZone=UTC"
 	}
 	return os.Getenv("DB_PATH")
+}
+
+func (repo *GormTissueRecordRepository) AddAtlas(trID, atlasID uint) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	model := migration.TissueRecordModel{}
+	model.ID = trID
+	atlasModel := migration.AtlasModel{}
+	atlasModel.ID = atlasID
+	return db.Model(&model).Association("Atlases").Append(&atlasModel)
+}
+
+func (repo *GormTissueRecordRepository) RemoveAtlas(trID, atlasID uint) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	model := migration.TissueRecordModel{}
+	model.ID = trID
+	atlasModel := migration.AtlasModel{}
+	atlasModel.ID = atlasID
+	return db.Model(&model).Association("Atlases").Delete(&atlasModel)
+}
+
+func (repo *GormTissueRecordRepository) ListAtlases(trID uint) ([]atlas.Atlas, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, err
+	}
+	model := migration.TissueRecordModel{}
+	model.ID = trID
+	var atlasModels []migration.AtlasModel
+	if err := db.Model(&model).Association("Atlases").Find(&atlasModels); err != nil {
+		return nil, err
+	}
+	result := make([]atlas.Atlas, len(atlasModels))
+	for i, a := range atlasModels {
+		result[i] = atlas.Atlas{
+			ID:          a.ID,
+			Name:        a.Name,
+			Description: a.Description,
+			Category:    a.Category,
+		}
+	}
+	return result, nil
+}
+
+func (repo *GormTissueRecordRepository) AddCategory(trID, catID uint) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	model := migration.TissueRecordModel{}
+	model.ID = trID
+	catModel := migration.CategoryModel{}
+	catModel.ID = catID
+	return db.Model(&model).Association("Categories").Append(&catModel)
+}
+
+func (repo *GormTissueRecordRepository) RemoveCategory(trID, catID uint) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	model := migration.TissueRecordModel{}
+	model.ID = trID
+	catModel := migration.CategoryModel{}
+	catModel.ID = catID
+	return db.Model(&model).Association("Categories").Delete(&catModel)
+}
+
+func (repo *GormTissueRecordRepository) ListCategories(trID uint) ([]category.Category, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, err
+	}
+	model := migration.TissueRecordModel{}
+	model.ID = trID
+	var catModels []migration.CategoryModel
+	if err := db.Model(&model).Association("Categories").Find(&catModels); err != nil {
+		return nil, err
+	}
+	result := make([]category.Category, len(catModels))
+	for i, c := range catModels {
+		result[i] = category.Category{
+			ID:          c.ID,
+			Name:        c.Name,
+			Type:        category.CategoryType(c.Type),
+			Description: c.Description,
+			ParentID:    c.ParentID,
+		}
+	}
+	return result, nil
 }

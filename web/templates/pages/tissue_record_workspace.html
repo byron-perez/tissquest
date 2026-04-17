@@ -1,0 +1,36 @@
+{{define "content"}}
+<div class="min-h-screen bg-base-200">
+  <div class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+
+    {{template "main-menu" .}}
+
+    {{template "breadcrumb" .}}
+
+    <h1 class="text-3xl font-bold text-base-content">{{.TissueRecord.Name}}</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left column: Basic Info + Atlas + Category (stacked) -->
+      <div class="lg:col-span-1 space-y-6">
+        <div id="basic-info-section">
+          {{template "workspace-basic-info" .}}
+        </div>
+        <div id="atlas-section">
+          {{template "workspace-atlas-section" .}}
+        </div>
+        <div id="category-section">
+          {{template "workspace-category-section" .}}
+        </div>
+      </div>
+
+      <!-- Right column: Slide gallery (2/3 width) -->
+      <div class="lg:col-span-2">
+        <div id="slide-gallery">
+          {{template "slide-gallery" .}}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{{end}}

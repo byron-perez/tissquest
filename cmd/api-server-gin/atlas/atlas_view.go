@@ -53,6 +53,11 @@ func ViewAtlas(c *gin.Context) {
 
 	data := gin.H{
 		"Title": atlasData.Name,
+		"Crumbs": []map[string]string{
+			{"Label": "Home", "URL": "/"},
+			{"Label": "Atlases", "URL": "/atlases"},
+			{"Label": atlasData.Name},
+		},
 		"data": AtlasViewData{
 			Atlas:         *atlasData,
 			TissueRecords: tissueRecords,
@@ -62,6 +67,8 @@ func ViewAtlas(c *gin.Context) {
 	tmpl := template.Must(template.ParseFiles(
 		"web/templates/layouts/base.html",
 		"web/templates/pages/atlas_view.html",
+		"web/templates/includes/main-menu.html",
+		"web/templates/includes/breadcrumb.html",
 	))
 	c.Header("Content-Type", "text/html")
 	if err := tmpl.ExecuteTemplate(c.Writer, "base", data); err != nil {

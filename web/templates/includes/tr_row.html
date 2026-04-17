@@ -9,13 +9,8 @@
   </td>
   <td class="text-right">
     <div class="inline-flex gap-2 items-center">
-      <a href="/tissue_records/{{.ID}}" class="btn btn-ghost btn-sm">View</a>
-      <button class="btn btn-ghost btn-sm"
-              hx-get="/tissue_records/{{.ID}}/edit"
-              hx-target="#tr-row-{{.ID}}"
-              hx-swap="outerHTML">
-        Edit
-      </button>
+      <a href="/tissue_records/{{.ID}}/workspace" class="btn btn-ghost btn-sm">View</a>
+      <a href="/tissue_records/{{.ID}}/workspace" class="btn btn-ghost btn-sm">Edit</a>
       <span id="tr-row-{{.ID}}-delete">
         <button class="btn btn-error btn-sm btn-outline"
                 hx-get="/tissue_records/{{.ID}}/confirm-delete"
