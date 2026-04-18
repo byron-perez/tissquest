@@ -4,7 +4,7 @@
   <button class="btn btn-error btn-sm"
           hx-delete="{{.DeleteURL}}"
           hx-target="{{.RowTarget}}"
-          hx-swap="outerHTML">
+          hx-swap="{{if .RowSwap}}{{.RowSwap}}{{else}}outerHTML{{end}}">
     Delete
   </button>
   <button class="btn btn-ghost btn-sm"

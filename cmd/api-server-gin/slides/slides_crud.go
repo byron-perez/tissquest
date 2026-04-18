@@ -190,7 +190,7 @@ func UpdateSlide(c *gin.Context) {
 	renderGallery(c, existing.TissueRecordID)
 }
 
-// DeleteSlide deletes a slide and returns the updated gallery fragment.
+// DeleteSlide deletes a slide and returns an empty response so HTMX removes the card.
 func DeleteSlide(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
@@ -199,12 +199,10 @@ func DeleteSlide(c *gin.Context) {
 	}
 
 	svc := slideService()
-	existing, err := svc.GetByID(uint(id))
-	if err != nil {
+	if _, err := svc.GetByID(uint(id)); err != nil {
 		shared.RenderError(c, http.StatusNotFound, "Slide not found")
 		return
 	}
-	trID := existing.TissueRecordID
 
 	if err := svc.Delete(uint(id)); err != nil {
 		shared.RenderError(c, http.StatusInternalServerError, "Failed to delete slide")
@@ -212,7 +210,7 @@ func DeleteSlide(c *gin.Context) {
 	}
 
 	shared.SetFlash(c, "Slide deleted successfully")
-	renderGallery(c, trID)
+	c.Status(http.StatusOK) // empty body — HTMX replaces the card with nothing
 }
 
 // ConfirmDeleteSlide renders the confirm-delete fragment for a slide.
@@ -223,6 +221,7 @@ func ConfirmDeleteSlide(c *gin.Context) {
 		"CancelURL": fmt.Sprintf("/slides/%s/confirm-delete-cancel", id),
 		"TargetID":  fmt.Sprintf("slide-%s-delete", id),
 		"RowTarget": fmt.Sprintf("#slide-card-%s", id),
+		"RowSwap":   "outerHTML",
 	})
 }
 
