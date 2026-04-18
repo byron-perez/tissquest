@@ -34,7 +34,7 @@ func slideService() *services.SlideService {
 
 func renderGallery(c *gin.Context, tissueRecordID uint) {
 	svc := slideService()
-	slides, err := svc.ListByTissueRecord(tissueRecordID)
+	slides, err := svc.ListDisplayByTissueRecord(tissueRecordID, coreSlide.ImageSizeThumb)
 	if err != nil {
 		shared.RenderError(c, http.StatusInternalServerError, "Failed to load slides")
 		return
@@ -81,7 +81,6 @@ func CreateSlide(c *gin.Context) {
 
 	sl := &coreSlide.Slide{
 		Name:          c.PostForm("name"),
-		Url:           c.PostForm("url"),
 		Magnification: mag,
 		Preparation: coreSlide.Preparation{
 			Staining:        c.PostForm("staining"),
@@ -158,7 +157,6 @@ func UpdateSlide(c *gin.Context) {
 
 	updated := &coreSlide.Slide{
 		Name:          c.PostForm("name"),
-		Url:           c.PostForm("url"),
 		Magnification: mag,
 		Preparation: coreSlide.Preparation{
 			Staining:        c.PostForm("staining"),

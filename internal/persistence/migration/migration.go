@@ -61,6 +61,7 @@ func RunMigration() {
         &TissueRecordModel{},
         &PreparationModel{},
         &SlideModel{},
+        &SlideImageVariantModel{},
     ); err != nil {
         panic(fmt.Sprintf("database migration failed: %v", err))
     }
@@ -139,34 +140,31 @@ func seedSampleTissueRecords(db *gorm.DB) error {
 
     fernRecord := TissueRecordModel{
         Name:    "Fronda de helecho",
-        Notes:   "Corte longitudinal y transversal de un helecho (Pteridium sp.), preparado para mostrar la anatom\u00eda de la fronda y los tejidos internos.",
+        Notes:   "Corte longitudinal y transversal de un helecho (Pteridium sp.), preparado para mostrar la anatomía de la fronda y los tejidos internos.",
         TaxonID: &polypodiopsida.ID,
         Slides: []SlideModel{
             {
                 Name:          "Corte longitudinal",
-                Url:           "https://botweb.uwsp.edu/Anatomy/images/dicotwood/images_c/Anat0343.jpg",
                 Magnification: 40,
-                Preparation:   PreparationModel{Staining: "H&E", InclusionMethod: "Parafina", Reagents: "Hematoxilina, Eosina", Protocol: "Deshidrataci\u00f3n en etanol, inclusi\u00f3n en parafina, secci\u00f3n 5\u03bcm"},
+                Preparation:   PreparationModel{Staining: "H&E", InclusionMethod: "Parafina", Reagents: "Hematoxilina, Eosina", Protocol: "Deshidratación en etanol, inclusión en parafina, sección 5μm"},
             },
             {
                 Name:          "Corte transversal",
-                Url:           "https://botweb.uwsp.edu/Anatomy/images/primaryxylem/images_c/Anat0144.jpg",
                 Magnification: 100,
-                Preparation:   PreparationModel{Staining: "Azul de metileno", InclusionMethod: "Criost\u00e1to", Reagents: "Azul de metileno 1%", Protocol: "Secci\u00f3n en fresco, tinci\u00f3n directa"},
+                Preparation:   PreparationModel{Staining: "Azul de metileno", InclusionMethod: "Criostáto", Reagents: "Azul de metileno 1%", Protocol: "Sección en fresco, tinción directa"},
             },
         },
     }
 
     stemRecord := TissueRecordModel{
         Name:    "Corte de tallo",
-        Notes:   "Secci\u00f3n transversal de tallo vascular mostrando xilema y floema, \u00fatil para entender conducci\u00f3n y organizaci\u00f3n de tejidos.",
+        Notes:   "Sección transversal de tallo vascular mostrando xilema y floema, útil para entender conducción y organización de tejidos.",
         TaxonID: &magnoliopsida.ID,
         Slides: []SlideModel{
             {
                 Name:          "Tallo transversal",
-                Url:           "https://upload.wikimedia.org/wikipedia/commons/5/5d/Stem_cross_section.png",
                 Magnification: 80,
-                Preparation:   PreparationModel{Staining: "PAS", InclusionMethod: "Parafina", Reagents: "\u00c1cido peri\u00f3dico, reactivo de Schiff", Protocol: "Oxidaci\u00f3n con \u00e1cido peri\u00f3dico, tinci\u00f3n con Schiff"},
+                Preparation:   PreparationModel{Staining: "PAS", InclusionMethod: "Parafina", Reagents: "Ácido periódico, reactivo de Schiff", Protocol: "Oxidación con ácido periódico, tinción con Schiff"},
             },
         },
     }

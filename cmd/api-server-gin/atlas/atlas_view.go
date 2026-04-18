@@ -3,6 +3,7 @@ package atlas
 import (
 	"html/template"
 	"mcba/tissquest/internal/core/atlas"
+	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/repositories"
 	"mcba/tissquest/internal/services"
@@ -12,9 +13,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TissueRecordCard is the view model for a tissue record card in the atlas view.
+// It carries the resolved thumbnail URL so the template stays simple.
+type TissueRecordCard struct {
+	tissuerecord.TissueRecord
+	ThumbUrl string // best available low-res image for the first slide
+}
+
 type AtlasViewData struct {
 	Atlas         atlas.Atlas
-	TissueRecords []tissuerecord.TissueRecord
+	TissueRecords []TissueRecordCard
 }
 
 func renderError(c *gin.Context, status int, message string) {
@@ -44,10 +52,18 @@ func ViewAtlas(c *gin.Context) {
 	}
 
 	trService := services.NewTissueRecordService(repositories.NewTissueRecordRepository())
-	var tissueRecords []tissuerecord.TissueRecord
+	slideService := services.NewSlideService(nil, repositories.NewSlideRepository())
+
+	var cards []TissueRecordCard
 	for _, recordID := range atlasData.TissueRecords {
 		if record, status := trService.GetByID(recordID); status != 0 {
-			tissueRecords = append(tissueRecords, record)
+			card := TissueRecordCard{TissueRecord: record}
+			// Resolve the low-res thumbnail for the first slide
+			displaySlides, err := slideService.ListDisplayByTissueRecord(record.ID, slide.ImageSizeThumb)
+			if err == nil && len(displaySlides) > 0 {
+				card.ThumbUrl = displaySlides[0].ImageUrl
+			}
+			cards = append(cards, card)
 		}
 	}
 
@@ -60,7 +76,7 @@ func ViewAtlas(c *gin.Context) {
 		},
 		"data": AtlasViewData{
 			Atlas:         *atlasData,
-			TissueRecords: tissueRecords,
+			TissueRecords: cards,
 		},
 	}
 

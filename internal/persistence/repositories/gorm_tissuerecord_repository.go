@@ -36,7 +36,7 @@ func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint
 	for i, s := range tr.Slides {
 		slideModels[i] = migration.SlideModel{
 			Name:          s.Name,
-			Url:           s.Url,
+			ImageKey:      s.ImageKey,
 			Magnification: s.Magnification,
 			Preparation: migration.PreparationModel{
 				Staining:        s.Preparation.Staining,
@@ -93,7 +93,7 @@ func (repo *GormTissueRecordRepository) Update(id uint, tr *tissuerecord.TissueR
 	for i, s := range tr.Slides {
 		slideModels[i] = migration.SlideModel{
 			Name:          s.Name,
-			Url:           s.Url,
+			ImageKey:      s.ImageKey,
 			Magnification: s.Magnification,
 			Preparation: migration.PreparationModel{
 				Staining:        s.Preparation.Staining,
@@ -142,8 +142,9 @@ func mapToTissueRecord(m migration.TissueRecordModel) tissuerecord.TissueRecord 
 	slides := make([]slide.Slide, len(m.Slides))
 	for i, s := range m.Slides {
 		slides[i] = slide.Slide{
+			ID:            s.ID,
 			Name:          s.Name,
-			Url:           s.Url,
+			ImageKey:      s.ImageKey,
 			Magnification: s.Magnification,
 			Preparation: slide.Preparation{
 				Staining:        s.Preparation.Staining,

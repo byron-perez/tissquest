@@ -30,7 +30,32 @@ func (s *SlideService) UploadImage(slideID uint, file multipart.File, header *mu
 
 	// Store under slides/original/ so Lambda trigger can process it
 	filename := fmt.Sprintf("slides/original/%d.png", slideID)
-	return s.storage.Upload(filename, contentType, data)
+	url, err := s.storage.Upload(filename, contentType, data)
+	if err != nil {
+		return "", err
+	}
+
+	// Record the original variant and set the logical image key
+	imageKey := fmt.Sprintf("slides/%d", slideID)
+	if err := s.slideRepo.SetImageVariant(slideID, slide.ImageSizeOriginal, url); err != nil {
+		return "", fmt.Errorf("failed to store image variant: %w", err)
+	}
+
+	// Update the slide's ImageKey so it knows it has an image
+	sl, err := s.slideRepo.GetByID(slideID)
+	if err != nil {
+		return "", err
+	}
+	sl.ImageKey = imageKey
+	if err := s.slideRepo.Update(slideID, sl); err != nil {
+		return "", fmt.Errorf("failed to update image key: %w", err)
+	}
+
+	return url, nil
+}
+
+func (s *SlideService) SetImageVariant(slideID uint, size slide.ImageSize, url string) error {
+	return s.slideRepo.SetImageVariant(slideID, size, url)
 }
 
 func (s *SlideService) Create(tissueRecordID uint, sl *slide.Slide) (uint, error) {
@@ -60,6 +85,6 @@ func (s *SlideService) ListByTissueRecord(tissueRecordID uint) ([]slide.Slide, e
 	return s.slideRepo.ListByTissueRecord(tissueRecordID)
 }
 
-func (s *SlideService) UpdateThumbUrl(id uint, thumbUrl string) error {
-	return s.slideRepo.UpdateThumbUrl(id, thumbUrl)
+func (s *SlideService) ListDisplayByTissueRecord(tissueRecordID uint, preferredSize slide.ImageSize) ([]slide.DisplaySlide, error) {
+	return s.slideRepo.ListDisplayByTissueRecord(tissueRecordID, preferredSize)
 }

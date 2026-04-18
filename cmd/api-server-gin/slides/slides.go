@@ -6,30 +6,40 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"mcba/tissquest/cmd/api-server-gin/shared"
+	"mcba/tissquest/internal/core/slide"
 	corestorage "mcba/tissquest/internal/core/storage"
 	"mcba/tissquest/internal/persistence/repositories"
 	"mcba/tissquest/internal/services"
 )
 
-// UpdateThumbUrl is called by the Lambda function after it generates a thumbnail.
-// PATCH /slides/:id/thumb  body: { "thumb_url": "https://..." }
-func UpdateThumbUrl(c *gin.Context) {
+// SetImageVariant is called by the Lambda function after it generates a size variant.
+// PATCH /slides/:id/images/:size  body: { "url": "https://..." }
+func SetImageVariant(c *gin.Context) {
 	slideID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid slide id"})
 		return
 	}
 
+	size := slide.ImageSize(c.Param("size"))
+	switch size {
+	case slide.ImageSizeOriginal, slide.ImageSizeThumb, slide.ImageSizePreview:
+		// valid
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid size, use: original, low, medium"})
+		return
+	}
+
 	var body struct {
-		ThumbUrl string `json:"thumb_url" binding:"required"`
+		Url string `json:"url" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "thumb_url is required"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "url is required"})
 		return
 	}
 
 	svc := services.NewSlideService(nil, repositories.NewSlideRepository())
-	if err := svc.UpdateThumbUrl(uint(slideID), body.ThumbUrl); err != nil {
+	if err := svc.SetImageVariant(uint(slideID), size, body.Url); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -53,25 +63,17 @@ func UploadSlideImage(storage corestorage.ImageStorage) gin.HandlerFunc {
 		defer file.Close()
 
 		svc := services.NewSlideService(storage, repositories.NewSlideRepository())
-		url, err := svc.UploadImage(uint(slideID), file, header)
-		if err != nil {
+		if _, err := svc.UploadImage(uint(slideID), file, header); err != nil {
 			shared.RenderError(c, http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		// Update the slide URL in the database
 		sl, err := svc.GetByID(uint(slideID))
 		if err != nil {
 			shared.RenderError(c, http.StatusInternalServerError, "Slide not found after upload")
 			return
 		}
-		sl.Url = url
-		if err := svc.Update(uint(slideID), sl); err != nil {
-			shared.RenderError(c, http.StatusInternalServerError, "Failed to save image URL")
-			return
-		}
 
-		// Return refreshed gallery fragment
 		renderGallery(c, sl.TissueRecordID)
 	}
 }

@@ -5,8 +5,7 @@ import "gorm.io/gorm"
 type SlideModel struct {
 	gorm.Model
 	Name           string
-	Url            string
-	ThumbUrl       string
+	ImageKey       string // logical image identity, e.g. "slides/6"
 	TissueRecordID uint
 	PreparationID  uint
 	Preparation    PreparationModel

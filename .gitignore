@@ -29,3 +29,7 @@ go.work.sum
 
 # air
 tmp
+
+# Lambda build artifacts
+cmd/lambda-img-resize/bootstrap
+cmd/lambda-img-resize/lambda.zip

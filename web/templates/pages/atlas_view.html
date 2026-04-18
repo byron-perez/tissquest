@@ -21,9 +21,9 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
       {{range .data.TissueRecords}}
       <div class="card bg-base-100 shadow border-l-4 border-primary">
-        {{if .Slides}}
+        {{if .ThumbUrl}}
         <figure>
-          <img src="{{if (index .Slides 0).ThumbUrl}}{{(index .Slides 0).ThumbUrl}}{{else}}{{(index .Slides 0).Url}}{{end}}"
+          <img src="{{.ThumbUrl}}"
                alt="{{.Name}}"
                loading="lazy"
                class="w-full h-40 object-cover" />

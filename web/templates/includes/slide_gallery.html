@@ -14,9 +14,9 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     {{range .Slides}}
     <div class="card bg-base-100 shadow" id="slide-card-{{.ID}}">
-      {{if .Url}}
+      {{if .ImageUrl}}
       <figure class="h-40 overflow-hidden">
-        <img src="{{if .ThumbUrl}}{{.ThumbUrl}}{{else}}{{.Url}}{{end}}"
+        <img src="{{.ImageUrl}}"
              alt="{{.Name}}"
              loading="lazy"
              class="w-full h-full object-cover" />
