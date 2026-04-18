@@ -15,12 +15,11 @@ ENV GO111MODULE=on
 WORKDIR /app
 COPY . .
 
-# Fetch dependencies.
-# Using go get.
-RUN go get -d -v
+# Fetch dependencies using modules
+RUN go mod download
 
 # Build the binary.
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o ./main cmd/api-server-gin/main.go
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o ./main ./cmd/api-server-gin/
 
 ############################
 # STEP 2 build a small image

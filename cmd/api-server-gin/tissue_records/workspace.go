@@ -25,7 +25,7 @@ type WorkspaceViewModel struct {
 	AvailAtlases    []atlas.Atlas    // not yet associated
 	Categories      []category.Category // currently associated
 	AvailCats       []category.Category // not yet associated
-	Slides          []slide.Slide    // for slide gallery
+	Slides          []slide.DisplaySlide // for slide gallery
 	TissueRecordID  uint             // for slide gallery
 	Crumbs          []wsBreadcrumb
 	Errors          map[string]string
@@ -205,7 +205,7 @@ func WorkspaceHandler(c *gin.Context) {
 		return
 	}
 
-	slides, _ := wsSlideService().ListByTissueRecord(id)
+	slides, _ := wsSlideService().ListDisplayByTissueRecord(id, slide.ImageSizeThumb)
 
 	var selectedTaxonID uint
 	if record.TaxonID != nil {
