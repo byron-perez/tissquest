@@ -6,6 +6,7 @@ type SlideModel struct {
 	gorm.Model
 	Name           string
 	Url            string
+	ThumbUrl       string
 	TissueRecordID uint
 	PreparationID  uint
 	Preparation    PreparationModel

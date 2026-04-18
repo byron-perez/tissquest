@@ -25,10 +25,11 @@ func (s *SlideService) UploadImage(slideID uint, file multipart.File, header *mu
 
 	contentType := header.Header.Get("Content-Type")
 	if contentType == "" {
-		contentType = "application/octet-stream"
+		contentType = "image/png"
 	}
 
-	filename := fmt.Sprintf("slides/%d-%s", slideID, header.Filename)
+	// Store under slides/original/ so Lambda trigger can process it
+	filename := fmt.Sprintf("slides/original/%d.png", slideID)
 	return s.storage.Upload(filename, contentType, data)
 }
 
@@ -57,4 +58,8 @@ func (s *SlideService) Delete(id uint) error {
 
 func (s *SlideService) ListByTissueRecord(tissueRecordID uint) ([]slide.Slide, error) {
 	return s.slideRepo.ListByTissueRecord(tissueRecordID)
+}
+
+func (s *SlideService) UpdateThumbUrl(id uint, thumbUrl string) error {
+	return s.slideRepo.UpdateThumbUrl(id, thumbUrl)
 }

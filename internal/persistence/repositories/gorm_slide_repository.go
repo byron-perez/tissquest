@@ -33,6 +33,7 @@ func toSlideModel(sl *slide.Slide) migration.SlideModel {
 	return migration.SlideModel{
 		Name:          sl.Name,
 		Url:           sl.Url,
+		ThumbUrl:      sl.ThumbUrl,
 		TissueRecordID: sl.TissueRecordID,
 		Magnification: sl.Magnification,
 		Preparation: migration.PreparationModel{
@@ -51,6 +52,7 @@ func fromSlideModel(m migration.SlideModel) slide.Slide {
 		TissueRecordID: m.TissueRecordID,
 		Name:           m.Name,
 		Url:            m.Url,
+		ThumbUrl:       m.ThumbUrl,
 		Magnification:  m.Magnification,
 		Preparation: slide.Preparation{
 			Staining:        m.Preparation.Staining,
@@ -110,11 +112,20 @@ func (repo *GormSlideRepository) Update(id uint, sl *slide.Slide) error {
 	}
 
 	return db.Model(&migration.SlideModel{}).Where("id = ?", id).Updates(migration.SlideModel{
-		Name:          sl.Name,
-		Url:           sl.Url,
+		Name:           sl.Name,
+		Url:            sl.Url,
+		ThumbUrl:       sl.ThumbUrl,
 		TissueRecordID: sl.TissueRecordID,
-		Magnification: sl.Magnification,
+		Magnification:  sl.Magnification,
 	}).Error
+}
+
+func (repo *GormSlideRepository) UpdateThumbUrl(id uint, thumbUrl string) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	return db.Model(&migration.SlideModel{}).Where("id = ?", id).Update("thumb_url", thumbUrl).Error
 }
 
 func (repo *GormSlideRepository) Delete(id uint) error {

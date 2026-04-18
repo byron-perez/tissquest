@@ -16,21 +16,26 @@
     <div class="card bg-base-100 shadow" id="slide-card-{{.ID}}">
       {{if .Url}}
       <figure class="h-40 overflow-hidden">
-        <img src="{{.Url}}" alt="{{.Name}}" class="w-full h-full object-cover" />
+        <img src="{{if .ThumbUrl}}{{.ThumbUrl}}{{else}}{{.Url}}{{end}}"
+             alt="{{.Name}}"
+             loading="lazy"
+             class="w-full h-full object-cover" />
       </figure>
       {{else}}
       <div class="h-40 bg-base-200 flex flex-col items-center justify-center gap-2 text-base-content/40">
         <span class="text-4xl">🔬</span>
-        <form hx-post="/slides/{{.ID}}/image"
-              hx-target="#slide-gallery"
-              hx-swap="innerHTML"
-              hx-encoding="multipart/form-data">
-          <label class="btn btn-xs btn-outline cursor-pointer">
-            Upload image
-            <input type="file" name="image" accept="image/*" class="hidden"
-                   onchange="this.closest('form').dispatchEvent(new Event('submit', {bubbles:true}))" />
-          </label>
-        </form>
+        <label class="btn btn-xs btn-outline cursor-pointer">
+          Upload image
+          <input type="file"
+                 name="image"
+                 accept="image/*"
+                 class="hidden"
+                 hx-post="/slides/{{.ID}}/image"
+                 hx-target="#slide-gallery"
+                 hx-swap="innerHTML"
+                 hx-trigger="change"
+                 hx-encoding="multipart/form-data" />
+        </label>
       </div>
       {{end}}
       <div class="card-body p-4">

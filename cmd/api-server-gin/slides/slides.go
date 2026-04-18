@@ -11,6 +11,32 @@ import (
 	"mcba/tissquest/internal/services"
 )
 
+// UpdateThumbUrl is called by the Lambda function after it generates a thumbnail.
+// PATCH /slides/:id/thumb  body: { "thumb_url": "https://..." }
+func UpdateThumbUrl(c *gin.Context) {
+	slideID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid slide id"})
+		return
+	}
+
+	var body struct {
+		ThumbUrl string `json:"thumb_url" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "thumb_url is required"})
+		return
+	}
+
+	svc := services.NewSlideService(nil, repositories.NewSlideRepository())
+	if err := svc.UpdateThumbUrl(uint(slideID), body.ThumbUrl); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
 func UploadSlideImage(storage corestorage.ImageStorage) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		slideID, err := strconv.ParseUint(c.Param("id"), 10, 32)

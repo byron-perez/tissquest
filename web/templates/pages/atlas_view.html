@@ -23,7 +23,10 @@
       <div class="card bg-base-100 shadow border-l-4 border-primary">
         {{if .Slides}}
         <figure>
-          <img src="{{(index .Slides 0).Url}}" alt="{{.Name}}" class="w-full h-40 object-cover" />
+          <img src="{{if (index .Slides 0).ThumbUrl}}{{(index .Slides 0).ThumbUrl}}{{else}}{{(index .Slides 0).Url}}{{end}}"
+               alt="{{.Name}}"
+               loading="lazy"
+               class="w-full h-40 object-cover" />
         </figure>
         {{end}}
         <div class="card-body p-4 gap-2">
