@@ -8,6 +8,8 @@
 
     <h1 class="text-3xl font-bold text-base-content">{{.TissueRecord.Name}}</h1>
 
+    {{template "workspace-summary" .}}
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
       <!-- Left column: Basic Info + Atlas + Category (stacked) -->
@@ -15,8 +17,8 @@
         <div id="basic-info-section">
           {{template "workspace-basic-info" .}}
         </div>
-        <div id="atlas-section">
-          {{template "workspace-atlas-section" .}}
+        <div id="collection-section">
+          {{template "workspace-collection-section" .}}
         </div>
         <div id="category-section">
           {{template "workspace-category-section" .}}

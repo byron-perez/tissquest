@@ -1,7 +1,6 @@
 package services
 
 import (
-	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/core/category"
 	"mcba/tissquest/internal/core/tissuerecord"
 )
@@ -32,18 +31,6 @@ func (s *TissueRecordService) Delete(id uint) {
 
 func (s *TissueRecordService) List(page, limit int) ([]tissuerecord.TissueRecord, int64, error) {
 	return s.repo.List(page, limit)
-}
-
-func (s *TissueRecordService) AddAtlas(trID, atlasID uint) error {
-	return s.repo.AddAtlas(trID, atlasID)
-}
-
-func (s *TissueRecordService) RemoveAtlas(trID, atlasID uint) error {
-	return s.repo.RemoveAtlas(trID, atlasID)
-}
-
-func (s *TissueRecordService) ListAtlases(trID uint) ([]atlas.Atlas, error) {
-	return s.repo.ListAtlases(trID)
 }
 
 func (s *TissueRecordService) AddCategory(trID, catID uint) error {

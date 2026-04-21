@@ -1,0 +1,27 @@
+{{define "tr-search-results"}}
+<div class="card bg-base-200 rounded-box p-2 space-y-1 max-h-48 overflow-y-auto">
+  {{if .Results}}
+  {{range .Results}}
+  <div class="flex items-center justify-between py-1 px-2 hover:bg-base-300 rounded">
+    <div>
+      <span class="text-sm font-medium">{{.Name}}</span>
+      {{if .Taxon}}
+      <span class="text-xs text-base-content/60 ml-1">— {{.Taxon.Name}}</span>
+      {{end}}
+    </div>
+    <button class="btn btn-primary btn-xs"
+            hx-post="/collections/{{$.CollectionID}}/sections/{{$.SectionID}}/assignments"
+            hx-vals='{"tissue_record_id": "{{.ID}}"}'
+            hx-target="#assignments-{{$.SectionID}}"
+            hx-swap="innerHTML">
+      Add
+    </button>
+  </div>
+  {{end}}
+  {{else}}
+  <p class="text-base-content/50 text-xs text-center py-2">
+    {{if .Query}}No tissue records matching "{{.Query}}"{{else}}Start typing to search tissue records{{end}}
+  </p>
+  {{end}}
+</div>
+{{end}}

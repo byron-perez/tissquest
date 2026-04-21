@@ -1,0 +1,111 @@
+{{define "collection-form"}}
+<div class="card bg-base-100 shadow rounded-box p-6 mb-4">
+  <h2 class="text-xl font-bold mb-4">
+    {{if .Collection}}Edit Collection{{else}}New Collection{{end}}
+  </h2>
+
+  <form
+    {{if .Collection}}
+      hx-put="/collections/{{.Collection.ID}}"
+    {{else}}
+      hx-post="/collections"
+    {{end}}
+    hx-target="#collection-form-container"
+    hx-swap="innerHTML"
+    class="space-y-4">
+
+    {{/* Name */}}
+    <div class="form-control">
+      <label class="label" for="collection-name">
+        <span class="label-text">Name <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="collection-name"
+        type="text"
+        name="name"
+        value="{{if .Collection}}{{.Collection.Name}}{{end}}"
+        placeholder="Collection name"
+        class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}"
+        required />
+      {{if index .Errors "name"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Type */}}
+    <div class="form-control">
+      <label class="label" for="collection-type">
+        <span class="label-text">Type <span class="text-error">*</span></span>
+      </label>
+      <select id="collection-type" name="type"
+              class="select select-bordered w-full {{if index .Errors "type"}}select-error{{end}}">
+        <option value="atlas"     {{if and .Collection (eq (print .Collection.Type) "atlas")}}selected{{end}}>Atlas</option>
+        <option value="database"  {{if and .Collection (eq (print .Collection.Type) "database")}}selected{{end}}>Database</option>
+        <option value="reference" {{if and .Collection (eq (print .Collection.Type) "reference")}}selected{{end}}>Reference</option>
+        <option value="other"     {{if and .Collection (eq (print .Collection.Type) "other")}}selected{{end}}>Other</option>
+      </select>
+      {{if index .Errors "type"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "type"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Description */}}
+    <div class="form-control">
+      <label class="label" for="collection-description">
+        <span class="label-text">Description</span>
+      </label>
+      <textarea
+        id="collection-description"
+        name="description"
+        placeholder="Optional description"
+        class="textarea textarea-bordered w-full"
+        rows="3">{{if .Collection}}{{.Collection.Description}}{{end}}</textarea>
+    </div>
+
+    {{/* Goals */}}
+    <div class="form-control">
+      <label class="label" for="collection-goals">
+        <span class="label-text">Goals</span>
+      </label>
+      <textarea
+        id="collection-goals"
+        name="goals"
+        placeholder="Learning goals or objectives"
+        class="textarea textarea-bordered w-full"
+        rows="2">{{if .Collection}}{{.Collection.Goals}}{{end}}</textarea>
+    </div>
+
+    {{/* Authors */}}
+    <div class="form-control">
+      <label class="label" for="collection-authors">
+        <span class="label-text">Authors</span>
+      </label>
+      <input
+        id="collection-authors"
+        type="text"
+        name="authors"
+        value="{{if .Collection}}{{.Collection.Authors}}{{end}}"
+        placeholder="Author names (free text)"
+        class="input input-bordered w-full" />
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              class="btn btn-ghost btn-sm"
+              hx-get="{{.CancelURL}}"
+              hx-target="{{.CancelTarget}}"
+              hx-swap="{{.CancelSwap}}">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        {{if .Collection}}Save Changes{{else}}Create Collection{{end}}
+      </button>
+    </div>
+
+  </form>
+</div>
+{{end}}

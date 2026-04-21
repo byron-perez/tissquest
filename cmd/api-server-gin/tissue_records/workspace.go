@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"mcba/tissquest/cmd/api-server-gin/shared"
-	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/core/category"
+	"mcba/tissquest/internal/core/collection"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/taxon"
 	coreTR "mcba/tissquest/internal/core/tissuerecord"
@@ -21,12 +21,11 @@ import (
 type WorkspaceViewModel struct {
 	TissueRecord    coreTR.TissueRecord
 	Taxa            []taxon.Taxon
-	Atlases         []atlas.Atlas    // currently associated
-	AvailAtlases    []atlas.Atlas    // not yet associated
-	Categories      []category.Category // currently associated
-	AvailCats       []category.Category // not yet associated
-	Slides          []slide.DisplaySlide // for slide gallery
-	TissueRecordID  uint             // for slide gallery
+	Collections     []collection.Collection // currently associated (via section assignments)
+	Categories      []category.Category     // currently associated
+	AvailCats       []category.Category     // not yet associated
+	Slides          []slide.DisplaySlide    // for slide gallery
+	TissueRecordID  uint                    // for slide gallery
 	Crumbs          []wsBreadcrumb
 	Errors          map[string]string
 	SelectedTaxonID uint
@@ -42,8 +41,9 @@ var workspaceTemplateFiles = []string{
 	"web/templates/pages/tissue_record_workspace.html",
 	"web/templates/includes/main-menu.html",
 	"web/templates/includes/breadcrumb.html",
+	"web/templates/includes/workspace_summary.html",
 	"web/templates/includes/workspace_basic_info.html",
-	"web/templates/includes/workspace_atlas_section.html",
+	"web/templates/includes/workspace_collection_section.html",
 	"web/templates/includes/workspace_category_section.html",
 	"web/templates/includes/slide_gallery.html",
 }
@@ -52,16 +52,20 @@ var basicInfoTemplateFiles = []string{
 	"web/templates/includes/workspace_basic_info.html",
 }
 
-var atlasSectionTemplateFiles = []string{
-	"web/templates/includes/workspace_atlas_section.html",
+var collectionSectionTemplateFiles = []string{
+	"web/templates/includes/workspace_collection_section.html",
+}
+
+var workspaceSummaryTemplateFiles = []string{
+	"web/templates/includes/workspace_summary.html",
 }
 
 var categorySectionTemplateFiles = []string{
 	"web/templates/includes/workspace_category_section.html",
 }
 
-func wsAtlasService() *services.AtlasService {
-	return services.NewAtlasService(repositories.NewAtlasRepository())
+func wsCollectionService() *services.CollectionService {
+	return services.NewCollectionService(repositories.NewCollectionRepository(), repositories.NewTissueRecordRepository())
 }
 
 func wsCategoryService() *services.CategoryService {
@@ -70,21 +74,6 @@ func wsCategoryService() *services.CategoryService {
 
 func wsSlideService() *services.SlideService {
 	return services.NewSlideService(nil, repositories.NewSlideRepository())
-}
-
-// subtractAtlases returns all atlases not present in associated.
-func subtractAtlases(all, associated []atlas.Atlas) []atlas.Atlas {
-	assocSet := make(map[uint]struct{}, len(associated))
-	for _, a := range associated {
-		assocSet[a.ID] = struct{}{}
-	}
-	var result []atlas.Atlas
-	for _, a := range all {
-		if _, found := assocSet[a.ID]; !found {
-			result = append(result, a)
-		}
-	}
-	return result
 }
 
 // subtractCategories returns all categories not present in associated.
@@ -112,18 +101,42 @@ func parseID(c *gin.Context) (uint, bool) {
 	return uint(v), true
 }
 
-// loadAtlasSection loads associated and available atlases for a tissue record.
-func loadAtlasSection(trID uint) (assoc []atlas.Atlas, avail []atlas.Atlas, err error) {
-	assoc, err = trService().ListAtlases(trID)
+// loadCollectionsForTR loads collections that contain the given tissue record.
+func loadCollectionsForTR(trID uint) ([]collection.Collection, error) {
+	allCollections, err := wsCollectionService().ListCollections()
 	if err != nil {
-		return
+		return nil, err
 	}
-	all, err := wsAtlasService().ListAtlases()
-	if err != nil {
-		return
+	// Find collections that have this TR assigned in any section
+	var result []collection.Collection
+	for _, col := range allCollections {
+		fullCol, err := wsCollectionService().GetCollection(col.ID)
+		if err != nil {
+			continue
+		}
+		if collectionContainsTR(fullCol, trID) {
+			result = append(result, col)
+		}
 	}
-	avail = subtractAtlases(all, assoc)
-	return
+	return result, nil
+}
+
+func collectionContainsTR(col *collection.Collection, trID uint) bool {
+	for _, sec := range col.Sections {
+		for _, a := range sec.Assignments {
+			if a.TissueRecordID == trID {
+				return true
+			}
+		}
+		for _, sub := range sec.Subsections {
+			for _, a := range sub.Assignments {
+				if a.TissueRecordID == trID {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // loadCategorySection loads associated and available categories for a tissue record.
@@ -140,17 +153,16 @@ func loadCategorySection(trID uint) (assoc []category.Category, avail []category
 	return
 }
 
-// renderAtlasSection renders the atlas section fragment for a tissue record.
-func renderAtlasSection(c *gin.Context, tr coreTR.TissueRecord) {
-	assoc, avail, err := loadAtlasSection(tr.ID)
+// renderCollectionSection renders the collection section fragment for a tissue record.
+func renderCollectionSection(c *gin.Context, tr coreTR.TissueRecord) {
+	cols, err := loadCollectionsForTR(tr.ID)
 	if err != nil {
-		shared.RenderError(c, http.StatusInternalServerError, "Failed to load atlases")
+		shared.RenderError(c, http.StatusInternalServerError, "Failed to load collections")
 		return
 	}
-	shared.RenderFragment(c, atlasSectionTemplateFiles, "workspace-atlas-section", gin.H{
+	shared.RenderFragment(c, collectionSectionTemplateFiles, "workspace-collection-section", gin.H{
 		"TissueRecord": tr,
-		"Atlases":      assoc,
-		"AvailAtlases": avail,
+		"Collections":  cols,
 	})
 }
 
@@ -183,14 +195,9 @@ func WorkspaceHandler(c *gin.Context) {
 
 	taxa, _ := taxonService().List()
 
-	assocAtlases, err := trService().ListAtlases(id)
+	cols, err := loadCollectionsForTR(id)
 	if err != nil {
-		shared.RenderError(c, http.StatusInternalServerError, "Failed to load atlases")
-		return
-	}
-	allAtlases, err := wsAtlasService().ListAtlases()
-	if err != nil {
-		shared.RenderError(c, http.StatusInternalServerError, "Failed to load atlases")
+		shared.RenderError(c, http.StatusInternalServerError, "Failed to load collections")
 		return
 	}
 
@@ -216,12 +223,13 @@ func WorkspaceHandler(c *gin.Context) {
 		"Title":           record.Name,
 		"TissueRecord":    record,
 		"Taxa":            taxa,
-		"Atlases":         assocAtlases,
-		"AvailAtlases":    subtractAtlases(allAtlases, assocAtlases),
+		"Collections":     cols,
 		"Categories":      assocCats,
 		"AvailCats":       subtractCategories(allCats, assocCats),
 		"Slides":          slides,
 		"TissueRecordID":  record.ID,
+		"SlideCount":      len(slides),
+		"CollectionCount": len(cols),
 		"SelectedTaxonID": selectedTaxonID,
 		"Errors":          map[string]string{},
 		"Crumbs": []wsBreadcrumb{
@@ -329,62 +337,8 @@ func SaveBasicInfo(c *gin.Context) {
 	})
 }
 
-// AddAtlasToTissueRecord adds an atlas association and returns the refreshed atlas section.
-func AddAtlasToTissueRecord(c *gin.Context) {
-	id, ok := parseID(c)
-	if !ok {
-		return
-	}
-
-	atlasIDVal, err := strconv.ParseUint(c.Param("atlasID"), 10, 32)
-	if err != nil {
-		shared.RenderError(c, http.StatusBadRequest, "Invalid atlas ID")
-		return
-	}
-
-	record, status := trService().GetByID(id)
-	if status == 0 {
-		shared.RenderError(c, http.StatusNotFound, "Tissue record not found")
-		return
-	}
-
-	if err := trService().AddAtlas(id, uint(atlasIDVal)); err != nil {
-		shared.RenderError(c, http.StatusInternalServerError, "Failed to add atlas")
-		return
-	}
-
-	renderAtlasSection(c, record)
-}
-
-// RemoveAtlasFromTissueRecord removes an atlas association and returns the refreshed atlas section.
-func RemoveAtlasFromTissueRecord(c *gin.Context) {
-	id, ok := parseID(c)
-	if !ok {
-		return
-	}
-
-	atlasIDVal, err := strconv.ParseUint(c.Param("atlasID"), 10, 32)
-	if err != nil {
-		shared.RenderError(c, http.StatusBadRequest, "Invalid atlas ID")
-		return
-	}
-
-	record, status := trService().GetByID(id)
-	if status == 0 {
-		shared.RenderError(c, http.StatusNotFound, "Tissue record not found")
-		return
-	}
-
-	if err := trService().RemoveAtlas(id, uint(atlasIDVal)); err != nil {
-		shared.RenderError(c, http.StatusInternalServerError, "Failed to remove atlas")
-		return
-	}
-
-	renderAtlasSection(c, record)
-}
-
-// AtlasSectionFragment returns the atlas section fragment for a tissue record.
-func AtlasSectionFragment(c *gin.Context) {
+// CollectionSectionFragment returns the collection section fragment for a tissue record.
+func CollectionSectionFragment(c *gin.Context) {
 	id, ok := parseID(c)
 	if !ok {
 		return
@@ -396,7 +350,7 @@ func AtlasSectionFragment(c *gin.Context) {
 		return
 	}
 
-	renderAtlasSection(c, record)
+	renderCollectionSection(c, record)
 }
 
 // AddCategoryToTissueRecord adds a category association and returns the refreshed category section.

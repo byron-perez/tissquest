@@ -1,0 +1,52 @@
+{{define "collection-assignments-list"}}
+{{if .Section}}
+{{$col := .Collection}}
+{{$sec := .Section}}
+<div class="space-y-1">
+  {{range .Section.Assignments}}
+  <div class="flex items-center justify-between py-1 px-2 bg-base-100 rounded">
+    <span class="text-sm text-base-content">{{.TissueRecordName}}</span>
+    <div class="flex gap-1">
+      <button class="btn btn-ghost btn-xs"
+              hx-post="/collections/{{$col.ID}}/sections/{{$sec.ID}}/assignments/{{.ID}}/move"
+              hx-vals='{"direction":"up"}'
+              hx-target="#assignments-{{$sec.ID}}"
+              hx-swap="innerHTML"
+              title="Move up">↑</button>
+      <button class="btn btn-ghost btn-xs"
+              hx-post="/collections/{{$col.ID}}/sections/{{$sec.ID}}/assignments/{{.ID}}/move"
+              hx-vals='{"direction":"down"}'
+              hx-target="#assignments-{{$sec.ID}}"
+              hx-swap="innerHTML"
+              title="Move down">↓</button>
+      <button class="btn btn-ghost btn-xs text-error"
+              hx-delete="/collections/{{$col.ID}}/sections/{{$sec.ID}}/assignments/{{.ID}}"
+              hx-target="#assignments-{{$sec.ID}}"
+              hx-swap="innerHTML"
+              title="Remove">✕</button>
+    </div>
+  </div>
+  {{else}}
+  <p class="text-base-content/40 text-xs py-1">No tissue records assigned.</p>
+  {{end}}
+</div>
+
+<!-- Search / Add TR -->
+<div class="mt-2" x-data="{ showSearch: false }">
+  <button @click="showSearch = !showSearch" class="btn btn-ghost btn-xs text-primary">
+    + Search / Add TR
+  </button>
+  <div x-show="showSearch" x-cloak class="mt-2">
+    <input type="search"
+           placeholder="Search tissue records..."
+           class="input input-bordered input-xs w-full"
+           hx-get="/tissue_records/search"
+           hx-trigger="input changed delay:300ms, search"
+           hx-target="#tr-search-results-{{$sec.ID}}"
+           hx-vals='{"section_id": "{{$sec.ID}}", "collection_id": "{{$col.ID}}"}'
+           name="q" />
+    <div id="tr-search-results-{{$sec.ID}}" class="mt-1"></div>
+  </div>
+</div>
+{{end}}
+{{end}}

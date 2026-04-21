@@ -4,11 +4,7 @@ import (
 	"fmt"
 	"mcba/tissquest/internal/core/taxon"
 	"mcba/tissquest/internal/persistence/migration"
-	"os"
-	"strings"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -19,15 +15,7 @@ func newGormTaxonRepository() *GormTaxonRepository {
 }
 
 func (r *GormTaxonRepository) getDB() (*gorm.DB, error) {
-	dbType := strings.ToLower(os.Getenv("DB_TYPE"))
-	if dbType == "postgres" || dbType == "postgresql" {
-		return gorm.Open(postgres.Open(buildDSN()), &gorm.Config{})
-	}
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "tissquest.db"
-	}
-	return gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	return openDB()
 }
 
 func (r *GormTaxonRepository) Save(t *taxon.Taxon) (uint, error) {

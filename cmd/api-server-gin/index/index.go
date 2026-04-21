@@ -2,7 +2,7 @@ package index
 
 import (
 	"html/template"
-	"mcba/tissquest/internal/core/atlas"
+	"mcba/tissquest/internal/core/collection"
 	"mcba/tissquest/internal/persistence/repositories"
 	"mcba/tissquest/internal/services"
 	"net/http"
@@ -11,21 +11,21 @@ import (
 )
 
 func GetIndex(c *gin.Context) {
-	atlases, err := fetchAtlases()
+	collections, err := fetchCollections()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch atlases"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch collections"})
 		return
 	}
 
-	var featured *atlas.Atlas
-	if len(atlases) > 0 {
-		featured = &atlases[0]
+	var featured *collection.Collection
+	if len(collections) > 0 {
+		featured = &collections[0]
 	}
 
 	data := gin.H{
-		"Title":         "Tissquest",
-		"Atlases":       atlases,
-		"FeaturedAtlas": featured,
+		"Title":       "Tissquest",
+		"Collections": collections,
+		"Featured":    featured,
 	}
 
 	tmpl := template.Must(template.ParseFiles(
@@ -39,8 +39,7 @@ func GetIndex(c *gin.Context) {
 	}
 }
 
-func fetchAtlases() ([]atlas.Atlas, error) {
-	repo := repositories.NewAtlasRepository()
-	service := services.NewAtlasService(repo)
-	return service.ListAtlases()
+func fetchCollections() ([]collection.Collection, error) {
+	svc := services.NewCollectionService(repositories.NewCollectionRepository(), nil)
+	return svc.ListCollections()
 }

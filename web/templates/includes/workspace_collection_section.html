@@ -1,0 +1,22 @@
+{{define "workspace-collection-section"}}
+<div class="card bg-base-100 shadow rounded-box p-6">
+
+  <h2 class="text-xl font-semibold mb-4">Collections</h2>
+
+  {{if .Collections}}
+  <div class="space-y-2 mb-4">
+    {{range .Collections}}
+    <div class="flex items-center justify-between py-1">
+      <a href="/collections/{{.ID}}" class="link link-hover text-base-content">{{.Name}}</a>
+      <span class="badge badge-outline badge-sm">{{.Type}}</span>
+    </div>
+    {{end}}
+  </div>
+  {{else}}
+  <p class="text-base-content/40 text-sm mb-4">Not assigned to any collections.</p>
+  {{end}}
+
+  <a href="/collections" class="btn btn-ghost btn-sm btn-outline">Browse Collections</a>
+
+</div>
+{{end}}

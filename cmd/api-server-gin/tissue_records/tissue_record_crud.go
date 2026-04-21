@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,7 +13,6 @@ import (
 	"mcba/tissquest/internal/persistence/repositories"
 	"mcba/tissquest/internal/services"
 )
-
 const pageSize = 20
 
 var (
@@ -120,6 +120,7 @@ func CreateTissueRecordHTML(c *gin.Context) {
 	name := c.PostForm("name")
 	notes := c.PostForm("notes")
 	taxonIDStr := c.PostForm("taxon_id")
+	sectionIDStr := c.PostForm("section_id")
 
 	if name == "" {
 		taxa, _ := taxonService().List()
@@ -145,7 +146,25 @@ func CreateTissueRecordHTML(c *gin.Context) {
 		}
 	}
 
-	trService().Create(tr)
+	newID := trService().Create(tr)
+	tr.ID = newID
+
+	// If section_id is present, assign the TR to that section
+	if sectionIDStr != "" {
+		if sid, err := strconv.ParseUint(sectionIDStr, 10, 32); err == nil && sid > 0 {
+			collSvc := services.NewCollectionService(repositories.NewCollectionRepository(), repositories.NewTissueRecordRepository())
+			if _, err := collSvc.AssignTissueRecord(uint(sid), newID); err != nil {
+				// Non-fatal: TR was created, assignment failed
+				shared.SetFlash(c, fmt.Sprintf("Tissue record \"%s\" created but assignment failed", tr.Name))
+			} else {
+				shared.SetFlash(c, fmt.Sprintf("Tissue record \"%s\" created and assigned", tr.Name))
+			}
+			c.Header("HX-Redirect", c.GetHeader("HX-Current-URL"))
+			c.Status(http.StatusOK)
+			return
+		}
+	}
+
 	shared.SetFlash(c, fmt.Sprintf("Tissue record \"%s\" created successfully", tr.Name))
 	c.Header("HX-Redirect", "/tissue_records")
 	c.Status(http.StatusOK)
@@ -321,5 +340,51 @@ func ViewTissueRecordHTML(c *gin.Context) {
 			{Label: "Tissue Records", URL: "/tissue_records"},
 			{Label: record.Name},
 		},
+	})
+}
+
+// SearchTissueRecords handles GET /tissue_records/search?q=<term>&section_id=<id>&collection_id=<id>
+// Returns an HTML fragment listing matching tissue records with "Add" buttons.
+func SearchTissueRecords(c *gin.Context) {
+	q := c.Query("q")
+	sectionIDStr := c.Query("section_id")
+	collectionIDStr := c.Query("collection_id")
+
+	var sectionID uint
+	if v, err := strconv.ParseUint(sectionIDStr, 10, 32); err == nil {
+		sectionID = uint(v)
+	}
+	var collectionID uint
+	if v, err := strconv.ParseUint(collectionIDStr, 10, 32); err == nil {
+		collectionID = uint(v)
+	}
+
+	// Use a simple list search
+	records, _, err := trService().List(1, 1000)
+	if err != nil {
+		shared.RenderError(c, http.StatusInternalServerError, "Search failed")
+		return
+	}
+
+	var results []coreTR.TissueRecord
+	ql := strings.ToLower(q)
+	for _, r := range records {
+		if strings.Contains(strings.ToLower(r.Name), ql) {
+			results = append(results, r)
+			continue
+		}
+		if r.Taxon != nil && strings.Contains(strings.ToLower(r.Taxon.Name), ql) {
+			results = append(results, r)
+		}
+	}
+
+	searchTemplateFiles := []string{
+		"web/templates/includes/tr_search_results.html",
+	}
+	shared.RenderFragment(c, searchTemplateFiles, "tr-search-results", gin.H{
+		"Results":      results,
+		"Query":        q,
+		"SectionID":    sectionID,
+		"CollectionID": collectionID,
 	})
 }

@@ -15,7 +15,7 @@
       <div class="max-w-xl">
         <p class="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">Búsqueda de Anatomía Vegetal</p>
         <h1 class="text-4xl lg:text-5xl font-bold leading-tight">Descubre tejidos vegetales mediante microscopía y rutas de aprendizaje claras.</h1>
-        <p class="py-6 text-base-content/60 leading-relaxed">Tissquest convierte la anatomía vegetal en una exploración enfocada: recorre atlas curados, examina registros de tejidos y aprende lo que revela cada diapositiva.</p>
+        <p class="py-6 text-base-content/60 leading-relaxed">Tissquest convierte la anatomía vegetal en una exploración enfocada: recorre colecciones curadas, examina registros de tejidos y aprende lo que revela cada diapositiva.</p>
         <div class="flex flex-wrap gap-3">
           <a href="#featured" class="btn btn-primary">Comenzar con Anatomía Vegetal</a>
           <a href="#how-it-works" class="btn btn-ghost">Cómo funciona</a>
@@ -26,31 +26,23 @@
 
   <div class="max-w-5xl mx-auto px-6 py-10 space-y-16">
 
-    {{/* Search */}}
-    <section>
-      <label class="input input-bordered flex items-center gap-2 max-w-2xl">
-        <svg class="w-4 h-4 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input id="atlas-search" type="search" placeholder="Buscar por atlas, tipo de tejido o categoría" class="grow" />
-      </label>
-    </section>
-
-    {{/* Featured atlas */}}
+    {{/* Featured collection */}}
     <section id="featured">
-      <h2 class="text-3xl font-bold mb-6">Atlas destacado</h2>
-      {{ if .FeaturedAtlas }}
+      <h2 class="text-3xl font-bold mb-6">Colección destacada</h2>
+      {{ if .Featured }}
       <div class="card bg-base-100 shadow-md border border-base-300">
         <div class="card-body">
-          <div class="badge badge-success badge-outline">{{.FeaturedAtlas.Category}}</div>
-          <h3 class="card-title text-2xl mt-2">{{.FeaturedAtlas.Name}}</h3>
-          <p class="text-base-content/60 leading-relaxed">{{.FeaturedAtlas.Description}}</p>
+          <div class="badge badge-success badge-outline">{{.Featured.Type}}</div>
+          <h3 class="card-title text-2xl mt-2">{{.Featured.Name}}</h3>
+          <p class="text-base-content/60 leading-relaxed">{{.Featured.Description}}</p>
           <div class="card-actions mt-4">
-            <a href="/atlas/{{.FeaturedAtlas.ID}}" class="btn btn-primary">Ver este atlas</a>
+            <a href="/collections/{{.Featured.ID}}" class="btn btn-primary">Ver esta colección</a>
           </div>
         </div>
       </div>
       {{ else }}
       <div class="alert alert-info">
-        <span>Aún no hay atlas disponibles. Agrega uno para comenzar la aventura.</span>
+        <span>Aún no hay colecciones disponibles. Agrega una para comenzar la aventura.</span>
       </div>
       {{ end }}
     </section>
@@ -62,8 +54,8 @@
         <div class="card bg-base-100 shadow border border-base-300">
           <div class="card-body">
             <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">1</div>
-            <h3 class="card-title">Explora la lista de atlas</h3>
-            <p class="text-base-content/60">Elige un atlas vegetal y descubre cómo se agrupan los tejidos para aprender.</p>
+            <h3 class="card-title">Explora las colecciones</h3>
+            <p class="text-base-content/60">Elige una colección vegetal y descubre cómo se agrupan los tejidos para aprender.</p>
           </div>
         </div>
         <div class="card bg-base-100 shadow border border-base-300">
@@ -77,32 +69,32 @@
           <div class="card-body">
             <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">3</div>
             <h3 class="card-title">Aprende paso a paso</h3>
-            <p class="text-base-content/60">Usa la estructura del atlas para explorar la anatomía vegetal de forma sencilla y progresiva.</p>
+            <p class="text-base-content/60">Usa la estructura de la colección para explorar la anatomía vegetal de forma sencilla y progresiva.</p>
           </div>
         </div>
       </div>
     </section>
 
-    {{/* Atlas list */}}
+    {{/* Collections list */}}
     <section>
-      <h2 class="text-3xl font-bold mb-6">Atlas disponibles</h2>
-      {{if .Atlases}}
+      <h2 class="text-3xl font-bold mb-6">Colecciones disponibles</h2>
+      {{if .Collections}}
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {{range .Atlases}}
+        {{range .Collections}}
         <div class="card bg-base-100 shadow border border-base-300 hover:-translate-y-1 transition-transform">
           <div class="card-body gap-3">
             <h3 class="card-title">{{.Name}}</h3>
             <p class="text-base-content/60 text-sm leading-relaxed">{{.Description}}</p>
-            {{if .Category}}<div class="badge badge-outline badge-sm">{{.Category}}</div>{{end}}
+            {{if .Type}}<div class="badge badge-outline badge-sm">{{.Type}}</div>{{end}}
             <div class="card-actions mt-2">
-              <a href="/atlas/{{.ID}}" class="btn btn-primary btn-sm">Ver atlas</a>
+              <a href="/collections/{{.ID}}" class="btn btn-primary btn-sm">Ver colección</a>
             </div>
           </div>
         </div>
         {{end}}
       </div>
       {{else}}
-      <div class="alert alert-info"><span>Aún no hay atlas disponibles.</span></div>
+      <div class="alert alert-info"><span>Aún no hay colecciones disponibles.</span></div>
       {{end}}
     </section>
 
@@ -113,8 +105,4 @@
   </footer>
 
 </div>
-{{end}}
-
-{{define "index"}}
-{{template "base" .}}
 {{end}}

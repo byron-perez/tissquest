@@ -1,0 +1,16 @@
+{{define "workspace-summary"}}
+<div id="workspace-summary" hx-swap-oob="true" class="flex flex-wrap gap-4 items-center p-4 bg-base-100 rounded-box shadow text-sm">
+  {{if .TissueRecord.Name}}
+  <span class="font-semibold text-base-content">{{.TissueRecord.Name}}</span>
+  {{end}}
+  {{if .TissueRecord.Taxon}}
+  <span class="badge badge-outline">{{.TissueRecord.Taxon.Name}}</span>
+  {{end}}
+  {{if .SlideCount}}
+  <span class="badge badge-success badge-outline">{{.SlideCount}} slide(s)</span>
+  {{end}}
+  {{if .CollectionCount}}
+  <span class="badge badge-primary badge-outline">{{.CollectionCount}} collection(s)</span>
+  {{end}}
+</div>
+{{end}}

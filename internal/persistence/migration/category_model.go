@@ -11,7 +11,6 @@ type CategoryModel struct {
     Parent        *CategoryModel
     Children      []CategoryModel `gorm:"foreignKey:ParentID"`
     TissueRecords []TissueRecordModel `gorm:"many2many:tissue_record_categories;joinForeignKey:CategoryID;joinReferences:TissueRecordID"`
-    Atlases       []AtlasModel        `gorm:"many2many:atlas_categories;"`
 }
 
 func (CategoryModel) TableName() string {

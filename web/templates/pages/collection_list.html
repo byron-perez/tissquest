@@ -1,0 +1,74 @@
+{{define "content"}}
+<div class="min-h-screen bg-base-200">
+  <div class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+
+    {{template "main-menu" .}}
+
+    {{template "breadcrumb" .}}
+
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Collections</h1>
+      <button class="btn btn-primary btn-sm"
+              hx-get="/collections/new"
+              hx-target="#collection-form-container"
+              hx-swap="innerHTML">
+        New Collection
+      </button>
+    </div>
+
+    <div id="collection-form-container"></div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full bg-base-100 shadow rounded-box">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Created</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="collection-list-tbody">
+          {{range .Collections}}
+          <tr id="collection-row-{{.ID}}">
+            <td class="font-medium">
+              <a href="/collections/{{.ID}}" class="link link-hover">{{.Name}}</a>
+            </td>
+            <td>
+              <span class="badge badge-outline badge-sm">{{.Type}}</span>
+            </td>
+            <td class="text-base-content/60 text-sm">{{.CreatedAt.Format "2006-01-02"}}</td>
+            <td class="text-right">
+              <div class="inline-flex gap-2 items-center">
+                <a href="/collections/{{.ID}}/builder" class="btn btn-ghost btn-sm">Builder</a>
+                <button class="btn btn-ghost btn-sm"
+                        hx-get="/collections/{{.ID}}/edit"
+                        hx-target="#collection-row-{{.ID}}"
+                        hx-swap="outerHTML">
+                  Edit
+                </button>
+                <span id="collection-row-{{.ID}}-delete">
+                  <button class="btn btn-error btn-sm btn-outline"
+                          hx-get="/collections/{{.ID}}/confirm-delete"
+                          hx-target="#collection-row-{{.ID}}-delete"
+                          hx-swap="outerHTML">
+                    Delete
+                  </button>
+                </span>
+              </div>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="4" class="text-center text-base-content/50 py-8">
+              No collections yet. Create your first collection to get started.
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{{end}}

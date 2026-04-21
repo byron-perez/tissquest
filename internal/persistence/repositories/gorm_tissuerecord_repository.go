@@ -2,28 +2,29 @@ package repositories
 
 import (
 	"errors"
-	"mcba/tissquest/internal/core/atlas"
 	"mcba/tissquest/internal/core/category"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/migration"
-	"os"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type GormTissueRecordRepository struct {
-	dsn string
+	getDB func() (*gorm.DB, error)
 }
 
 func NewGormTissueRecordRepository() *GormTissueRecordRepository {
-	dsn := buildDSN()
-	return &GormTissueRecordRepository{dsn: dsn}
+	return &GormTissueRecordRepository{
+		getDB: openDB,
+	}
 }
 
-func (repo *GormTissueRecordRepository) getDB() (*gorm.DB, error) {
-	return gorm.Open(postgres.Open(repo.dsn), &gorm.Config{})
+// NewGormTissueRecordRepositoryWithDB creates a repository using a provided DB — for testing.
+func NewGormTissueRecordRepositoryWithDB(db *gorm.DB) *GormTissueRecordRepository {
+	return &GormTissueRecordRepository{
+		getDB: func() (*gorm.DB, error) { return db, nil },
+	}
 }
 
 func (repo *GormTissueRecordRepository) Save(tr *tissuerecord.TissueRecord) uint {
@@ -166,65 +167,6 @@ func mapToTissueRecord(m migration.TissueRecordModel) tissuerecord.TissueRecord 
 		tr.Taxon = modelToTaxonDeep(m.Taxon)
 	}
 	return tr
-}
-
-func buildDSN() string {
-	if dbType := os.Getenv("DB_TYPE"); dbType == "postgres" || dbType == "postgresql" {
-		return "host=" + os.Getenv("DATABASE_HOST") +
-			" user=" + os.Getenv("DATABASE_USER") +
-			" password=" + os.Getenv("DATABASE_PASSWORD") +
-			" dbname=" + os.Getenv("DATABASE_NAME") +
-			" port=" + os.Getenv("DATABASE_PORT") +
-			" sslmode=require TimeZone=UTC"
-	}
-	return os.Getenv("DB_PATH")
-}
-
-func (repo *GormTissueRecordRepository) AddAtlas(trID, atlasID uint) error {
-	db, err := repo.getDB()
-	if err != nil {
-		return err
-	}
-	model := migration.TissueRecordModel{}
-	model.ID = trID
-	atlasModel := migration.AtlasModel{}
-	atlasModel.ID = atlasID
-	return db.Model(&model).Association("Atlases").Append(&atlasModel)
-}
-
-func (repo *GormTissueRecordRepository) RemoveAtlas(trID, atlasID uint) error {
-	db, err := repo.getDB()
-	if err != nil {
-		return err
-	}
-	model := migration.TissueRecordModel{}
-	model.ID = trID
-	atlasModel := migration.AtlasModel{}
-	atlasModel.ID = atlasID
-	return db.Model(&model).Association("Atlases").Delete(&atlasModel)
-}
-
-func (repo *GormTissueRecordRepository) ListAtlases(trID uint) ([]atlas.Atlas, error) {
-	db, err := repo.getDB()
-	if err != nil {
-		return nil, err
-	}
-	model := migration.TissueRecordModel{}
-	model.ID = trID
-	var atlasModels []migration.AtlasModel
-	if err := db.Model(&model).Association("Atlases").Find(&atlasModels); err != nil {
-		return nil, err
-	}
-	result := make([]atlas.Atlas, len(atlasModels))
-	for i, a := range atlasModels {
-		result[i] = atlas.Atlas{
-			ID:          a.ID,
-			Name:        a.Name,
-			Description: a.Description,
-			Category:    a.Category,
-		}
-	}
-	return result, nil
 }
 
 func (repo *GormTissueRecordRepository) AddCategory(trID, catID uint) error {

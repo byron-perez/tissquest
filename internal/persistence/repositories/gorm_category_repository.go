@@ -4,26 +4,18 @@ import (
 	"errors"
 	"mcba/tissquest/internal/core/category"
 	"mcba/tissquest/internal/persistence/migration"
-	"os"
 
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-type GormCategoryRepository struct {
-	conn string
-}
+type GormCategoryRepository struct{}
 
 func NewGormCategoryRepository() *GormCategoryRepository {
-	connection := os.Getenv("DB_PATH")
-	if connection == "" {
-		connection = "tissquest.db"
-	}
-	return &GormCategoryRepository{conn: connection}
+	return &GormCategoryRepository{}
 }
 
 func (repo *GormCategoryRepository) getDB() (*gorm.DB, error) {
-	return gorm.Open(sqlite.Open(repo.conn), &gorm.Config{})
+	return openDB()
 }
 
 func (repo *GormCategoryRepository) Save(c *category.Category) uint {
@@ -63,13 +55,12 @@ func (repo *GormCategoryRepository) Update(id uint, c *category.Category) error 
 		return err
 	}
 
-	result := db.Model(&migration.CategoryModel{}).Where("id = ?", id).Updates(migration.CategoryModel{
+	return db.Model(&migration.CategoryModel{}).Where("id = ?", id).Updates(migration.CategoryModel{
 		Name:        c.Name,
 		Type:        string(c.Type),
 		Description: c.Description,
 		ParentID:    c.ParentID,
-	})
-	return result.Error
+	}).Error
 }
 
 func (repo *GormCategoryRepository) Delete(id uint) error {
@@ -92,7 +83,7 @@ func (repo *GormCategoryRepository) List() ([]category.Category, error) {
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Find(&categoryModels).Error; err != nil {
+	if err := db.Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -106,7 +97,7 @@ func (repo *GormCategoryRepository) FindByType(categoryType category.CategoryTyp
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Where("type = ?", string(categoryType)).Find(&categoryModels).Error; err != nil {
+	if err := db.Where("type = ?", string(categoryType)).Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -120,7 +111,7 @@ func (repo *GormCategoryRepository) FindByParent(parentID uint) ([]category.Cate
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Where("parent_id = ?", parentID).Find(&categoryModels).Error; err != nil {
+	if err := db.Where("parent_id = ?", parentID).Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -134,7 +125,7 @@ func (repo *GormCategoryRepository) FindRootCategories() ([]category.Category, e
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Where("parent_id IS NULL").Find(&categoryModels).Error; err != nil {
+	if err := db.Where("parent_id IS NULL").Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 

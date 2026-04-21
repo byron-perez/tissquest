@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -38,21 +36,13 @@ func main() {
 }
 
 func openDB() (*gorm.DB, error) {
-	dbType := strings.ToLower(os.Getenv("DB_TYPE"))
-	if dbType == "postgres" || dbType == "postgresql" {
-		dsn := fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
-			os.Getenv("DATABASE_HOST"),
-			os.Getenv("DATABASE_USER"),
-			os.Getenv("DATABASE_PASSWORD"),
-			os.Getenv("DATABASE_NAME"),
-			os.Getenv("DATABASE_PORT"),
-		)
-		return gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	}
-	dbPath := os.Getenv("DB_PATH")
-	if dbPath == "" {
-		dbPath = "tissquest.db"
-	}
-	return gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
+		os.Getenv("DATABASE_HOST"),
+		os.Getenv("DATABASE_USER"),
+		os.Getenv("DATABASE_PASSWORD"),
+		os.Getenv("DATABASE_NAME"),
+		os.Getenv("DATABASE_PORT"),
+	)
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }

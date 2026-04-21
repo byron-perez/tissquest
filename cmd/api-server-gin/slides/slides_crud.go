@@ -13,9 +13,16 @@ import (
 	"mcba/tissquest/internal/services"
 )
 
+func trService() *services.TissueRecordService {
+	return services.NewTissueRecordService(repositories.NewTissueRecordRepository())
+}
+
 var (
 	slideGalleryTemplateFiles = []string{
 		"web/templates/includes/slide_gallery.html",
+	}
+	slideSummaryTemplateFiles = []string{
+		"web/templates/includes/workspace_summary.html",
 	}
 	slideFormTemplateFiles = []string{
 		"web/templates/pages/slide_form.html",
@@ -42,6 +49,13 @@ func renderGallery(c *gin.Context, tissueRecordID uint) {
 	shared.RenderFragment(c, slideGalleryTemplateFiles, "slide-gallery", gin.H{
 		"Slides":         slides,
 		"TissueRecordID": tissueRecordID,
+	})
+	// OOB: update the summary bar with the new slide count
+	tr, _ := trService().GetByID(tissueRecordID)
+
+	shared.AppendFragment(c, slideSummaryTemplateFiles, "workspace-summary", gin.H{
+		"TissueRecord": tr,
+		"SlideCount":   len(slides),
 	})
 }
 
