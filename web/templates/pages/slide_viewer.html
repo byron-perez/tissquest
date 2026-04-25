@@ -1,0 +1,158 @@
+{{define "head"}}
+<script src="https://cdn.jsdelivr.net/npm/openseadragon@4/build/openseadragon/openseadragon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/usnistgov/OpenSeadragonScalebar@master/openseadragon-scalebar.js"></script>
+<style>
+  #microscope-viewer {
+    width: 100%;
+    height: calc(100vh - 56px); /* full height minus the top bar */
+    background: #111;
+  }
+  .objective-btn.active {
+    background-color: oklch(0.70 0.14 180);
+    color: white;
+    border-color: oklch(0.70 0.14 180);
+  }
+</style>
+{{end}}
+
+{{define "content"}}
+<!-- Top bar -->
+<div class="h-14 bg-base-100 border-b border-base-300 flex items-center justify-between px-4 gap-4">
+  <div class="flex items-center gap-3 min-w-0">
+    <a href="/tissue_records/{{.Slide.TissueRecordID}}/workspace"
+       class="btn btn-ghost btn-sm btn-square" title="Back">
+      ←
+    </a>
+    <span class="font-semibold truncate">{{.Slide.Name}}</span>
+    {{if .Slide.Preparation.Staining}}
+    <span class="badge badge-outline badge-sm hidden sm:inline-flex">{{.Slide.Preparation.Staining}}</span>
+    {{end}}
+  </div>
+
+  {{if .Slide.IsTiled}}
+  <!-- Objective lens switcher -->
+  <div role="group" aria-label="Objective lens" class="flex gap-1">
+    {{range .Objectives}}
+    <button class="btn btn-outline btn-sm objective-btn"
+            data-objective="{{.}}"
+            aria-label="{{.}}× objective">
+      {{.}}×
+    </button>
+    {{end}}
+  </div>
+  {{end}}
+
+  <div class="flex items-center gap-2 text-sm text-base-content/60 shrink-0">
+    <span class="hidden sm:inline">{{.Slide.BaseMagnification}}× captured</span>
+    {{if .Slide.MicronsPerPixel}}
+    <span class="hidden sm:inline">· {{.Slide.MicronsPerPixel}} µm/px</span>
+    {{end}}
+  </div>
+</div>
+
+<!-- Viewer area -->
+{{if .Slide.IsTiled}}
+<div id="microscope-viewer"
+     role="img"
+     aria-label="Virtual microscope viewer: {{.Slide.Name}}">
+</div>
+
+<script>
+(function () {
+  const dziURL = "{{.DziMetadata.DziURL}}";
+  const baseMag = {{.DziMetadata.BaseMagnification}};
+  const mpp     = parseFloat("{{.DziMetadata.MicronsPerPixelJS}}") || 0;
+  const homeVP  = {{.DziMetadata.HomeViewportJSON | js}};
+
+  const viewer = OpenSeadragon({
+    id:                    "microscope-viewer",
+    tileSources:           dziURL,
+    showNavigationControl: false,
+    zoomPerScroll:         2,
+    animationTime:         0.5,
+    blendingTime:          0.1,
+    constrainDuringPan:    false,
+    maxZoomPixelRatio:     4,
+    visibilityRatio:       0.5,
+    gestureSettingsTouch:  { pinchRotate: false },
+  });
+
+  viewer.addHandler("open", function () {
+    // Scale bar — attach once on open
+    if (typeof viewer.scalebar === "function") {
+      viewer.scalebar({
+        type:            OpenSeadragon.ScalebarType.MICROSCOPY,
+        pixelsPerMeter:  mpp > 0 ? (1 / mpp) * 1e6 : 0,
+        minWidth:        "75px",
+        location:        OpenSeadragon.ScalebarLocation.BOTTOM_LEFT,
+        xOffset:         10,
+        yOffset:         10,
+        stayInsideImage: false,
+        color:           "white",
+        fontColor:       "white",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        barThickness:    3,
+      });
+    }
+  });
+
+  // Go home after the first resize event — this is when OSD has
+  // actually measured the container and can center correctly.
+  viewer.addHandler("resize", function onResize() {
+    viewer.removeHandler("resize", onResize); // fire once only
+    if (homeVP) {
+      viewer.viewport.panTo(new OpenSeadragon.Point(homeVP.x, homeVP.y), true);
+      viewer.viewport.zoomTo(homeVP.zoom, null, true);
+    } else {
+      viewer.viewport.goHome(true);
+    }
+  });
+
+  // Objective lens switcher
+  // Zoom levels are multiples of the fit-to-screen baseline.
+  // We map: 4× → 1× (fit), 10× → 2.5×, 40× → 10× relative to fit.
+  const objectiveZoom = { 4: 1.0, 10: 2.5, 40: 10.0 };
+
+  const objectives = document.querySelectorAll(".objective-btn");
+  objectives.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      const mag   = parseInt(btn.dataset.objective, 10);
+      const zoom  = objectiveZoom[mag] || (mag / baseMag);
+      viewer.viewport.zoomTo(zoom);
+      viewer.viewport.panTo(viewer.viewport.getCenter(), false);
+      objectives.forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+    });
+  });
+
+  // Keep active button in sync on manual zoom
+  viewer.addHandler("zoom", function (e) {
+    let closest = null, minDiff = Infinity;
+    objectives.forEach(function (btn) {
+      const mag  = parseInt(btn.dataset.objective, 10);
+      const zoom = objectiveZoom[mag] || (mag / baseMag);
+      const diff = Math.abs(e.zoom - zoom);
+      if (diff < minDiff) { minDiff = diff; closest = btn; }
+    });
+    objectives.forEach(function (b) { b.classList.remove("active"); });
+    if (closest && minDiff < 1.0) { closest.classList.add("active"); }
+  });
+})();
+</script>
+
+{{else}}
+<!-- Static image fallback -->
+<div class="flex items-center justify-center bg-base-200" style="height: calc(100vh - 56px);">
+  {{if .StaticImageURL}}
+  <img src="{{.StaticImageURL}}"
+       alt="{{.Slide.Name}}"
+       class="max-h-full max-w-full object-contain" />
+  {{else}}
+  <div class="text-center text-base-content/40">
+    <p class="text-5xl mb-4">🔬</p>
+    <p class="text-lg">No image available yet.</p>
+  </div>
+  {{end}}
+</div>
+{{end}}
+{{end}}

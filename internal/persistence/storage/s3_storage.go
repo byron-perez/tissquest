@@ -32,6 +32,12 @@ func NewS3Storage(region, bucket, accessKey, secretKey string) (*S3Storage, erro
 	}, nil
 }
 
+// Client exposes the underlying S3 client for operations beyond simple uploads
+// (e.g. GetObject in the tiling pipeline). Not part of the ImageStorage interface.
+func (s *S3Storage) Client() *s3.Client {
+	return s.client
+}
+
 func (s *S3Storage) Upload(filename string, contentType string, data []byte) (string, error) {
 	_, err := s.client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),

@@ -26,6 +26,9 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o ./main ./cmd/api-
 ############################
 FROM alpine:3
 
+# Install libvips for the tiling pipeline (vips dzsave)
+RUN apk add --no-cache vips-tools
+
 WORKDIR /app
 
 # Copy our static executable.

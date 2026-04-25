@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"encoding/json"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/persistence/migration"
 
@@ -17,12 +18,35 @@ func (repo *GormSlideRepository) getDB() (*gorm.DB, error) {
 	return GetDB()
 }
 
+func encodeHomeViewport(vp *slide.ViewportPosition) string {
+	if vp == nil {
+		return ""
+	}
+	b, _ := json.Marshal(vp)
+	return string(b)
+}
+
+func decodeHomeViewport(s string) *slide.ViewportPosition {
+	if s == "" {
+		return nil
+	}
+	var vp slide.ViewportPosition
+	if err := json.Unmarshal([]byte(s), &vp); err != nil {
+		return nil
+	}
+	return &vp
+}
+
 func toSlideModel(sl *slide.Slide) migration.SlideModel {
 	return migration.SlideModel{
-		Name:           sl.Name,
-		ImageKey:       sl.ImageKey,
-		TissueRecordID: sl.TissueRecordID,
-		Magnification:  sl.Magnification,
+		Name:              sl.Name,
+		ImageKey:          sl.ImageKey,
+		TissueRecordID:    sl.TissueRecordID,
+		Magnification:     sl.Magnification,
+		DziURL:            sl.DziURL,
+		BaseMagnification: sl.BaseMagnification,
+		MicronsPerPixel:   sl.MicronsPerPixel,
+		HomeViewport:      encodeHomeViewport(sl.HomeViewport),
 		Preparation: migration.PreparationModel{
 			Staining:        sl.Preparation.Staining,
 			InclusionMethod: sl.Preparation.InclusionMethod,
@@ -35,11 +59,15 @@ func toSlideModel(sl *slide.Slide) migration.SlideModel {
 
 func fromSlideModel(m migration.SlideModel) slide.Slide {
 	return slide.Slide{
-		ID:             m.ID,
-		TissueRecordID: m.TissueRecordID,
-		Name:           m.Name,
-		ImageKey:       m.ImageKey,
-		Magnification:  m.Magnification,
+		ID:                m.ID,
+		TissueRecordID:    m.TissueRecordID,
+		Name:              m.Name,
+		ImageKey:          m.ImageKey,
+		Magnification:     m.Magnification,
+		DziURL:            m.DziURL,
+		BaseMagnification: m.BaseMagnification,
+		MicronsPerPixel:   m.MicronsPerPixel,
+		HomeViewport:      decodeHomeViewport(m.HomeViewport),
 		Preparation: slide.Preparation{
 			Staining:        m.Preparation.Staining,
 			InclusionMethod: m.Preparation.InclusionMethod,
@@ -91,11 +119,12 @@ func (repo *GormSlideRepository) Update(id uint, sl *slide.Slide) error {
 		}).Error; err != nil {
 		return err
 	}
-	return db.Model(&migration.SlideModel{}).Where("id = ?", id).Updates(migration.SlideModel{
-		Name:           sl.Name,
-		ImageKey:       sl.ImageKey,
-		TissueRecordID: sl.TissueRecordID,
-		Magnification:  sl.Magnification,
+	return db.Model(&migration.SlideModel{}).Where("id = ?", id).Updates(map[string]any{
+		"name":             sl.Name,
+		"image_key":        sl.ImageKey,
+		"tissue_record_id": sl.TissueRecordID,
+		"magnification":    sl.Magnification,
+		"home_viewport":    encodeHomeViewport(sl.HomeViewport),
 	}).Error
 }
 
@@ -114,6 +143,38 @@ func (repo *GormSlideRepository) SetImageVariant(slideID uint, size slide.ImageS
 	return db.Where(migration.SlideImageVariantModel{SlideID: slideID, Size: string(size)}).
 		Assign(migration.SlideImageVariantModel{Url: url}).
 		FirstOrCreate(&variant).Error
+}
+
+// SetDziMetadata persists the virtual microscope fields after the tiling pipeline runs.
+func (repo *GormSlideRepository) SetDziMetadata(slideID uint, dziURL string, baseMagnification int, micronsPerPixel float64) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	return db.Model(&migration.SlideModel{}).Where("id = ?", slideID).Updates(map[string]any{
+		"dzi_url":            dziURL,
+		"base_magnification": baseMagnification,
+		"microns_per_pixel":  micronsPerPixel,
+	}).Error
+}
+
+// GetPendingTiling returns slides that have a source image but have not been tiled yet.
+func (repo *GormSlideRepository) GetPendingTiling() ([]slide.Slide, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, err
+	}
+	var models []migration.SlideModel
+	if err := db.Preload("Preparation").
+		Where("image_key != '' AND (dzi_url IS NULL OR dzi_url = '')").
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+	slides := make([]slide.Slide, len(models))
+	for i, m := range models {
+		slides[i] = fromSlideModel(m)
+	}
+	return slides, nil
 }
 
 func (repo *GormSlideRepository) Delete(id uint) error {

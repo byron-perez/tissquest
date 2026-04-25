@@ -91,6 +91,10 @@ func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 	r.GET("/slides/:id/confirm-delete-cancel", slides.ConfirmDeleteSlideCancel)
 	r.POST("/slides/:id/image", slides.UploadSlideImage(s3))
 	r.PATCH("/slides/:id/images/:size", slides.SetImageVariant)
+	r.GET("/api/slides/:id/dzi", slides.GetDziMetadata)
+	r.PATCH("/api/slides/:id/home-viewport", slides.SetHomeViewport)
+	r.GET("/slides/:id/viewer", slides.ViewSlide)
+	r.POST("/slides/:id/tile", slides.TileSlide(s3))
 
 	// Taxa routes
 	r.GET("/taxa", taxa.ListTaxa)

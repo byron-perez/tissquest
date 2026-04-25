@@ -99,7 +99,73 @@ This glossary defines key terms used in the Tissquest requirements specification
 
 **Usage in Code**: Router setup in `cmd/api-server-gin/main.go`, handlers throughout the `cmd/api-server-gin/` directory.
 
-## Related Documentation
+## Virtual Microscope Terms
+
+### Tiled Image Format
+**Definition**: A representation of a high-resolution image split into a pyramid of small, fixed-size tiles at multiple zoom levels. Only the tiles covering the currently visible region need to be downloaded, making very large images practical to view in a browser.
+
+**Context**: The standard format used by digital pathology and web-based microscopy viewers. Enables the performance requirement of sub-2-second initial load regardless of source image size.
+
+**Usage in Requirements**: Referenced in [FR-VM-1](REQUIREMENTS.md#fr-vm-1-image-preparation-pipeline) and [FR-VM-2](REQUIREMENTS.md#fr-vm-2-slide-metadata-extension). Technology-specific format details (DZI) are in [Virtual Microscope — Technical Design](VIRTUAL-MICROSCOPE-TECH.md#image-tiling-fr-vm-1).
+
+### Base Magnification
+**Definition**: The objective lens power used on the physical microscope when the source image was captured (e.g., 4×, 10×, 40×). It is a property of the slide, not of the viewer.
+
+**Context**: Required to correctly map viewer zoom levels to real objective equivalents in the Objective Lens Switcher.
+
+**Usage in Requirements**: Referenced in [FR-VM-2](REQUIREMENTS.md#fr-vm-2-slide-metadata-extension) and [FR-VM-5](REQUIREMENTS.md#fr-vm-5-objective-lens-switcher).
+
+### Spatial Calibration
+**Definition**: The physical size of one image pixel expressed in real-world units (micrometers per pixel, µm/px). Derived from the microscope objective and camera sensor specifications at the time of capture.
+
+**Context**: The value that allows the scale bar to display accurate physical measurements at any zoom level.
+
+**Usage in Requirements**: Referenced in [FR-VM-2](REQUIREMENTS.md#fr-vm-2-slide-metadata-extension) and [FR-VM-6](REQUIREMENTS.md#fr-vm-6-scale-indicator).
+
+### Home View
+**Definition**: A curated starting position (viewport center and zoom level) within a slide, chosen by the content author to highlight the most educationally relevant region of the specimen.
+
+**Context**: Ensures students open a slide at a meaningful anatomical feature rather than a default fit-to-screen view.
+
+**Usage in Requirements**: Referenced in [FR-VM-7](REQUIREMENTS.md#fr-vm-7-curated-home-view).
+
+### Objective Lens Switcher
+**Definition**: A UI control that allows the user to jump directly to a zoom level equivalent to a standard microscope objective (4×, 10×, 40×), analogous to rotating the nosepiece on a physical microscope.
+
+**Context**: Core part of the microscope analogy that makes the viewer feel familiar to students with lab experience.
+
+**Usage in Requirements**: Defined in [FR-VM-5](REQUIREMENTS.md#fr-vm-5-objective-lens-switcher).
+
+### Image Pyramid
+**Definition**: The multi-resolution representation produced by the tiling pipeline. The same specimen is stored at many zoom levels simultaneously — from a single thumbnail tile at the top to hundreds of full-resolution tiles at the bottom. The viewer always fetches tiles from the level that matches the current zoom, so the number of tiles downloaded stays constant regardless of the total image size.
+
+**Context**: The pyramid is what makes the "progressive detail" property in the requirements achievable. It is generated once by `vips dzsave` and never changes.
+
+**Usage in Requirements**: Underpins [FR-VM-1](REQUIREMENTS.md#fr-vm-1-image-preparation-pipeline) and [NFR-VM-1](REQUIREMENTS.md#nfr-vm-1-initial-load-performance). Technical detail in [VIRTUAL-MICROSCOPE-TECH.md — The Image Pyramid](VIRTUAL-MICROSCOPE-TECH.md#the-image-pyramid).
+
+### Viewport Coordinates
+**Definition**: The normalized coordinate system used by the interactive viewer, where the full image width equals 1.0. A position is expressed as `{x, y}` values between 0.0 and 1.0, and zoom as a multiplier relative to the fit-to-screen state. Resolution-independent — the same coordinates are valid regardless of source image dimensions.
+
+**Context**: Used to store and restore the [Home View](REQUIREMENTS-GLOSSARY.md#home-view) for each slide. Also the format used if a student shares a link to a specific region of a specimen.
+
+**Usage in Requirements**: Referenced in [FR-VM-7](REQUIREMENTS.md#fr-vm-7-curated-home-view). Technical detail in [VIRTUAL-MICROSCOPE-TECH.md — Viewport Coordinates](VIRTUAL-MICROSCOPE-TECH.md#viewport-coordinates).
+
+### S3 Direct Fetch
+**Definition**: An architectural pattern where the browser retrieves image tiles directly from the object store (AWS S3), bypassing the application backend entirely. The backend's only role is to provide the URL of the tile set; all subsequent image data flows from S3 to the browser.
+
+**Context**: The pattern that makes it possible to serve 50 concurrent users zooming on high-resolution slides without increasing load on the Go application or the database.
+
+**Usage in Requirements**: Supports [NFR-VM-1](REQUIREMENTS.md#nfr-vm-1-initial-load-performance) and [NFR-VM-2](REQUIREMENTS.md#nfr-vm-2-stability-under-adverse-conditions). Technical detail in [VIRTUAL-MICROSCOPE-TECH.md — Architecture: S3 Direct Fetch Model](VIRTUAL-MICROSCOPE-TECH.md#architecture-s3-direct-fetch-model).
+
+### CORS (Cross-Origin Resource Sharing)
+**Definition**: A browser security mechanism that blocks a web page from requesting resources from a different domain unless that domain explicitly permits it. In this system, the browser (served from `tissquest.com`) requests tiles from `s3.amazonaws.com`, which requires an explicit CORS policy on the S3 bucket.
+
+**Context**: A required infrastructure configuration step — without it the viewer will appear blank even though all code is correct.
+
+**Usage in Requirements**: Infrastructure prerequisite for [FR-VM-1](REQUIREMENTS.md#fr-vm-1-image-preparation-pipeline). Configuration detail in [VIRTUAL-MICROSCOPE-TECH.md — CORS Configuration](VIRTUAL-MICROSCOPE-TECH.md#cors-configuration-aws-s3).
+
+
 - [Requirements Specification](REQUIREMENTS.md) - Main requirements document
+- [Virtual Microscope — Technical Design](VIRTUAL-MICROSCOPE-TECH.md) - Technology-specific implementation details for the viewer feature
 - [Workspace Instructions](.github/copilot-instructions.md) - Development guidelines and architecture overview</content>
 <parameter name="filePath">/workspaces/tissquest/REQUIREMENTS-GLOSSARY.md

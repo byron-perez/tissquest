@@ -88,3 +88,8 @@ func (s *SlideService) ListByTissueRecord(tissueRecordID uint) ([]slide.Slide, e
 func (s *SlideService) ListDisplayByTissueRecord(tissueRecordID uint, preferredSize slide.ImageSize) ([]slide.DisplaySlide, error) {
 	return s.slideRepo.ListDisplayByTissueRecord(tissueRecordID, preferredSize)
 }
+
+// SetDziMetadata is called by the tiling pipeline CLI after a slide has been processed.
+func (s *SlideService) SetDziMetadata(slideID uint, dziURL string, baseMagnification int, micronsPerPixel float64) error {
+	return s.slideRepo.SetDziMetadata(slideID, dziURL, baseMagnification, micronsPerPixel)
+}

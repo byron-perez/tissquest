@@ -109,6 +109,92 @@ Provide an accessible, web-based platform for students and enthusiasts to study 
 - Docker containerization for deployment
 - Personal development project (single developer)
 
+## Virtual Microscope Viewer
+
+> For technology-specific decisions, tooling, and implementation guidance see [Virtual Microscope — Technical Design](VIRTUAL-MICROSCOPE-TECH.md).
+
+### Goal
+Replace the static image gallery with an interactive viewer that emulates the experience of operating a real light microscope — allowing a student to navigate a tissue specimen at different magnification levels, measure structures, and return to a curated starting position, all from a web browser without any installed software.
+
+### Key Properties
+1. **Progressive Detail**: The viewer must reveal increasing levels of detail as the user zooms in, without requiring the full high-resolution image to be downloaded upfront.
+2. **Microscope Analogy**: Navigation gestures and controls must map intuitively to the physical actions a student already knows from a laboratory microscope (focus knob, objective switcher, stage movement).
+3. **Calibrated Measurement**: The viewer must always display a scale indicator that reflects real physical dimensions of the specimen, so students can estimate the size of structures they observe.
+4. **Contextual Entry Point**: Each slide may define a curated starting view that highlights the most educationally relevant region of the specimen.
+5. **Graceful Degradation**: Slides that have not been processed for interactive viewing must still be accessible through the existing static image display.
+6. **Integration**: The viewer is not a standalone feature — it is the primary way a [Slide](REQUIREMENTS-GLOSSARY.md#slide) is presented within a [Tissue Record](REQUIREMENTS-GLOSSARY.md#tissue-record).
+
+### Functional Requirements
+
+#### FR-VM-1: Image Preparation Pipeline
+- High-resolution source images must be processable into a [tiled image format](REQUIREMENTS-GLOSSARY.md#tiled-image-format) through an automated, repeatable pipeline.
+- The pipeline must be triggerable without manual image editing steps.
+- Processed tile sets must be stored in a remote object store accessible by the web application.
+- The pipeline must associate the resulting tile set with the corresponding Slide record in the database.
+
+#### FR-VM-2: Slide Metadata Extension
+- The [Slide](REQUIREMENTS-GLOSSARY.md#slide) entity must be extended to carry:
+  - A reference to its [tiled image](REQUIREMENTS-GLOSSARY.md#tiled-image-format) resource.
+  - The [base magnification](REQUIREMENTS-GLOSSARY.md#base-magnification) at which the specimen was captured.
+  - The [spatial calibration](REQUIREMENTS-GLOSSARY.md#spatial-calibration) value (physical size per image pixel) required for accurate measurement display.
+- Slides without a tiled image reference must remain fully functional.
+
+#### FR-VM-3: Viewer Metadata API
+- The system must expose an endpoint that returns all viewer-initialization data for a given Slide in a single request.
+- The response must include the tiled image location, base magnification, and spatial calibration value.
+- This endpoint feeds the viewer exclusively; it does not replace the existing slide detail API.
+
+#### FR-VM-4: Interactive Viewer
+- The Slide detail page must embed an interactive viewer capable of smooth, continuous zoom and pan over the tiled image.
+- The viewer must feel responsive — tile loading must not freeze or stutter the interface.
+- The viewer must occupy the primary content area of the page on all supported screen sizes.
+
+#### FR-VM-5: Objective Lens Switcher
+- The viewer must provide discrete zoom controls labeled with standard microscopy objective values (e.g., 4×, 10×, 40×).
+- Activating a control must animate the viewer to the corresponding zoom level relative to the slide's base magnification.
+- The currently active objective must be visually distinguishable from the others.
+- Controls must be operable by keyboard as well as pointer.
+
+#### FR-VM-6: Scale Indicator
+- The viewer must display a dynamic scale bar that shows a real-world length (in micrometers, µm) at the current zoom level.
+- The scale bar must update continuously as the user zooms.
+- The displayed measurement must be derived from the slide's [spatial calibration](REQUIREMENTS-GLOSSARY.md#spatial-calibration) value.
+
+#### FR-VM-7: Curated Home View
+- A Slide may store a designated starting viewport (position and zoom level) chosen by the content author.
+- When a student opens a slide with a home view defined, the viewer must open at that position.
+- Content authors must be able to set the home view to the current viewport position through the management interface.
+
+#### FR-VM-8: Touch and Mobile Support
+- All viewer interactions (zoom, pan, objective switching) must be fully operable on touch-screen devices.
+- The layout must not break or overflow on small screens.
+
+#### FR-VM-9: Static Image Fallback
+- When a Slide has no tiled image, the viewer area must display the slide's static image without errors or blank space.
+
+### Non-Functional Requirements
+
+#### NFR-VM-1: Initial Load Performance
+- The viewer must display the first visible region of the specimen within 2 seconds on a standard broadband connection, regardless of the full image resolution.
+
+#### NFR-VM-2: Stability Under Adverse Conditions
+- Intermittent network failures during tile loading must not crash or freeze the viewer.
+- Memory consumption must remain bounded during extended browsing sessions.
+
+#### NFR-VM-3: Accessibility
+- The viewer area must carry a descriptive label readable by assistive technologies.
+- Keyboard-only users must be able to zoom and pan without a pointing device.
+
+### Acceptance Criteria
+- At least 20 plant tissue slides are accessible through the interactive viewer.
+- The objective lens switcher navigates to the correct zoom level for each objective.
+- The scale bar displays accurate µm values, verified against a reference slide with known dimensions.
+- The viewer reaches first paint within 2 seconds on a standard broadband connection.
+- Zoom and pan work correctly on a physical touch-screen device.
+- Slides without a tiled image display the static fallback without JavaScript errors.
+
+---
+
 ## Future Expansion (Post-July Delivery)
 - Animal tissues
 - Fungal tissues
