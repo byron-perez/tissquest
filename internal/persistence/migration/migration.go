@@ -3,6 +3,8 @@ package migration
 import (
 	"fmt"
 	"os"
+	"sync"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -12,16 +14,42 @@ type Tabler interface {
 	TableName() string
 }
 
+var (
+	migrationDB   *gorm.DB
+	migrationOnce sync.Once
+)
+
+func openDB() (*gorm.DB, error) {
+	var initErr error
+	migrationOnce.Do(func() {
+		dsn := fmt.Sprintf(
+			"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
+			os.Getenv("DATABASE_HOST"),
+			os.Getenv("DATABASE_USER"),
+			os.Getenv("DATABASE_PASSWORD"),
+			os.Getenv("DATABASE_NAME"),
+			os.Getenv("DATABASE_PORT"),
+		)
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			initErr = err
+			return
+		}
+		sqlDB, err := db.DB()
+		if err != nil {
+			initErr = err
+			return
+		}
+		sqlDB.SetMaxOpenConns(5)
+		sqlDB.SetMaxIdleConns(2)
+		sqlDB.SetConnMaxLifetime(30 * time.Minute)
+		migrationDB = db
+	})
+	return migrationDB, initErr
+}
+
 func RunMigration() {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
-		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_USER"),
-		os.Getenv("DATABASE_PASSWORD"),
-		os.Getenv("DATABASE_NAME"),
-		os.Getenv("DATABASE_PORT"),
-	)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := openDB()
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to PostgreSQL database: %v", err))
 	}
