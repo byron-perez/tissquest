@@ -20,8 +20,9 @@ func (CollectionModel) TableName() string {
 // CollectionSectionModel maps to the "collection_sections" table.
 type CollectionSectionModel struct {
 	gorm.Model
-	CollectionID uint
-	ParentID     *uint
+	CollectionID uint           `gorm:"index"`
+	ParentID     *uint          `gorm:"index"`
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	Name         string
 	Position     int
 	Assignments  []CollectionSectionAssignmentModel `gorm:"foreignKey:SectionID"`
@@ -35,8 +36,9 @@ func (CollectionSectionModel) TableName() string {
 // CollectionSectionAssignmentModel maps to the "collection_section_assignments" table.
 type CollectionSectionAssignmentModel struct {
 	gorm.Model
-	SectionID      uint
-	TissueRecordID uint
+	SectionID      uint           `gorm:"index"`
+	TissueRecordID uint           `gorm:"index"`
+	DeletedAt      gorm.DeletedAt `gorm:"index"`
 	TissueRecord   TissueRecordModel `gorm:"foreignKey:TissueRecordID"`
 	Position       int
 }

@@ -6,7 +6,8 @@ type TissueRecordModel struct {
     gorm.Model
     Name       string
     Notes      string
-    TaxonID    *uint
+    TaxonID    *uint          `gorm:"index"`
+    DeletedAt  gorm.DeletedAt `gorm:"index"`
     Taxon      TaxonModel      `gorm:"foreignKey:TaxonID"`
     Slides     []SlideModel    `gorm:"foreignKey:TissueRecordID;"`
     Categories []CategoryModel `gorm:"many2many:tissue_record_categories;joinForeignKey:TissueRecordID;joinReferences:CategoryID"`

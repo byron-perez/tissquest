@@ -4,10 +4,11 @@ import "gorm.io/gorm"
 
 type TaxonModel struct {
 	gorm.Model
-	Rank     string
-	Name     string
-	ParentID *uint
-	Parent   *TaxonModel `gorm:"foreignKey:ParentID"`
+	Rank      string         `gorm:"index"`
+	Name      string
+	ParentID  *uint          `gorm:"index"`
+	Parent    *TaxonModel    `gorm:"foreignKey:ParentID"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 func (TaxonModel) TableName() string {

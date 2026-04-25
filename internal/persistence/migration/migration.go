@@ -2,12 +2,14 @@ package migration
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Tabler interface {
@@ -30,7 +32,18 @@ func openDB() (*gorm.DB, error) {
 			os.Getenv("DATABASE_NAME"),
 			os.Getenv("DATABASE_PORT"),
 		)
-		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		// Raise slow-query threshold so AutoMigrate's catalog introspection
+		// doesn't flood logs with false positives on Aurora Free Tier.
+		migrationLogger := logger.New(
+			log.New(os.Stdout, "\r\n", log.LstdFlags),
+			logger.Config{
+				SlowThreshold:             500 * time.Millisecond,
+				LogLevel:                  logger.Warn,
+				IgnoreRecordNotFoundError: true,
+				Colorful:                  false,
+			},
+		)
+		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: migrationLogger})
 		if err != nil {
 			initErr = err
 			return
