@@ -15,7 +15,7 @@ func newGormTaxonRepository() *GormTaxonRepository {
 }
 
 func (r *GormTaxonRepository) getDB() (*gorm.DB, error) {
-	return openDB()
+	return GetDB()
 }
 
 func (r *GormTaxonRepository) Save(t *taxon.Taxon) (uint, error) {

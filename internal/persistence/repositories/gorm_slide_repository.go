@@ -14,7 +14,7 @@ func NewGormSlideRepository() *GormSlideRepository {
 }
 
 func (repo *GormSlideRepository) getDB() (*gorm.DB, error) {
-	return openDB()
+	return GetDB()
 }
 
 func toSlideModel(sl *slide.Slide) migration.SlideModel {

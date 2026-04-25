@@ -16,7 +16,7 @@ type GormTissueRecordRepository struct {
 
 func NewGormTissueRecordRepository() *GormTissueRecordRepository {
 	return &GormTissueRecordRepository{
-		getDB: openDB,
+		getDB: GetDB,
 	}
 }
 

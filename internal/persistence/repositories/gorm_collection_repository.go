@@ -15,7 +15,7 @@ type GormCollectionRepository struct {
 func NewGormCollectionRepository() *GormCollectionRepository {
 	return &GormCollectionRepository{
 		getDB: func() (*gorm.DB, error) {
-			return openDB()
+			return GetDB()
 		},
 	}
 }

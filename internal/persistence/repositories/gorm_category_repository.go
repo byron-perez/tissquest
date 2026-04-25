@@ -15,7 +15,7 @@ func NewGormCategoryRepository() *GormCategoryRepository {
 }
 
 func (repo *GormCategoryRepository) getDB() (*gorm.DB, error) {
-	return openDB()
+	return GetDB()
 }
 
 func (repo *GormCategoryRepository) Save(c *category.Category) uint {
