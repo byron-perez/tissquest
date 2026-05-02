@@ -1,0 +1,38 @@
+# Goal: Refactor the Landing Page into a "Library Desk" Interface
+We are redesigning the home page (index.html) to remove the marketing SaaS hero and replace it with an educational "Library Desk" interface.
+
+## Task 1: Database & Service Logic
+1. Update `internal/core/slide/repository_interface.go`:
+   Add `GetRandomTiledDisplaySlides(limit int) ([]DisplaySlide, error)`
+
+2. Update `internal/persistence/repositories/gorm_slide_repository.go`:
+   Implement `GetRandomTiledDisplaySlides`. 
+   - Query `SlideModel` where `dzi_url != ''`.
+   - Order by `RANDOM()` (PostgreSQL/SQLite compatible).
+   - Preload `Preparation`.
+   - Resolve image URLs using `resolveImageUrl` with `slide.ImageSizeThumb`.
+
+3. Update `internal/services/slide_service.go`:
+   Add `func (s *SlideService) GetRandomTiledDisplaySlides(limit int) ([]slide.DisplaySlide, error)` calling the repo.
+
+## Task 2: Controller Update
+Update `cmd/api-server-gin/index/index.go`:
+1. Initialize `services.NewSlideService`.
+2. Fetch 3 random tiled slides using the new service method.
+3. Pass the `RandomSlides` slice to the `index.html` template data.
+## Task 3: UI Redesign (web/templates/pages/index.html)
+Completely replace the content of `index.html` with this structure using DaisyUI:
+
+1. TOP: A centered Search Bar. Large text input with a 🔍 icon. Label: "Search the Histology Library".
+2. MIDDLE: Two large, identical Cards side-by-side.
+   - Card A: "Collections" -> Link to /collections.
+   - Card B: "Tissue Browser" -> Link to /tissue_records.
+3. BOTTOM: A section titled "Try the Virtual Microscope".
+   - Render a grid of the 3 `RandomSlides`.
+   - Each card shows the thumbnail, slide name, magnification badge, and a button labeled "🔬 Open Microscope" linking to `/slides/{{.ID}}/viewer`.
+
+## Task 4: Cleanup
+1. In `web/templates/includes/main-menu.html`, remove the links to "Taxa" and "Categories" from the public navbar to simplify the UI.
+
+Please implement all changes now.
+# END OF INSTRUCTIONS

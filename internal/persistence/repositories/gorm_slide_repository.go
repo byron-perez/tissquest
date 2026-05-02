@@ -177,6 +177,46 @@ func (repo *GormSlideRepository) GetPendingTiling() ([]slide.Slide, error) {
 	return slides, nil
 }
 
+// GetRandomTiledDisplaySlides returns up to limit slides that have a DZI, in random order,
+// with the best available thumbnail URL resolved.
+func (repo *GormSlideRepository) GetRandomTiledDisplaySlides(limit int) ([]slide.DisplaySlide, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, err
+	}
+	var models []migration.SlideModel
+	if err := db.Preload("Preparation").
+		Where("dzi_url != ''").
+		Order("RANDOM()").
+		Limit(limit).
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+	if len(models) == 0 {
+		return nil, nil
+	}
+	ids := make([]uint, len(models))
+	for i, m := range models {
+		ids[i] = m.ID
+	}
+	var variants []migration.SlideImageVariantModel
+	db.Where("slide_id IN ?", ids).Find(&variants)
+
+	variantMap := make(map[uint]map[string]string)
+	for _, v := range variants {
+		if variantMap[v.SlideID] == nil {
+			variantMap[v.SlideID] = make(map[string]string)
+		}
+		variantMap[v.SlideID][v.Size] = v.Url
+	}
+	result := make([]slide.DisplaySlide, len(models))
+	for i, m := range models {
+		sl := fromSlideModel(m)
+		result[i] = slide.DisplaySlide{Slide: sl, ImageUrl: resolveImageUrl(variantMap[m.ID], slide.ImageSizeThumb)}
+	}
+	return result, nil
+}
+
 func (repo *GormSlideRepository) Delete(id uint) error {
 	db, err := repo.getDB()
 	if err != nil {

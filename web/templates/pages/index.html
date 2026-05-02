@@ -3,105 +3,80 @@
 
   {{template "main-menu" .}}
 
-  {{/* Hero */}}
-  <section class="hero min-h-[60vh] bg-base-100 shadow-sm">
-    <div class="hero-content flex-col lg:flex-row-reverse gap-10 max-w-5xl w-full py-16 px-6">
-      <div class="card bg-base-200 border border-teal-200 shadow-xl w-full max-w-sm shrink-0">
-        <div class="card-body">
-          <p class="text-xs font-bold uppercase tracking-widest text-teal-600">Tu próxima exploración</p>
-          <p class="text-base-content/70 leading-relaxed">Supervisa plantas, tejidos y diapositivas en una interfaz limpia pensada para el aprendizaje.</p>
-        </div>
-      </div>
-      <div class="max-w-xl">
-        <p class="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">Búsqueda de Anatomía Vegetal</p>
-        <h1 class="text-4xl lg:text-5xl font-bold leading-tight">Descubre tejidos vegetales mediante microscopía y rutas de aprendizaje claras.</h1>
-        <p class="py-6 text-base-content/60 leading-relaxed">Tissquest convierte la anatomía vegetal en una exploración enfocada: recorre colecciones curadas, examina registros de tejidos y aprende lo que revela cada diapositiva.</p>
-        <div class="flex flex-wrap gap-3">
-          <a href="#featured" class="btn btn-primary">Comenzar con Anatomía Vegetal</a>
-          <a href="#how-it-works" class="btn btn-ghost">Cómo funciona</a>
-        </div>
-      </div>
-    </div>
-  </section>
+  <div class="max-w-4xl mx-auto px-6 py-12 space-y-12">
 
-  <div class="max-w-5xl mx-auto px-6 py-10 space-y-16">
-
-    {{/* Featured collection */}}
-    <section id="featured">
-      <h2 class="text-3xl font-bold mb-6">Colección destacada</h2>
-      {{ if .Featured }}
-      <div class="card bg-base-100 shadow-md border border-base-300">
-        <div class="card-body">
-          <div class="badge badge-success badge-outline">{{.Featured.Type}}</div>
-          <h3 class="card-title text-2xl mt-2">{{.Featured.Name}}</h3>
-          <p class="text-base-content/60 leading-relaxed">{{.Featured.Description}}</p>
-          <div class="card-actions mt-4">
-            <a href="/collections/{{.Featured.ID}}" class="btn btn-primary">Ver esta colección</a>
-          </div>
-        </div>
-      </div>
-      {{ else }}
-      <div class="alert alert-info">
-        <span>Aún no hay colecciones disponibles. Agrega una para comenzar la aventura.</span>
-      </div>
-      {{ end }}
+    {{/* Barra de búsqueda */}}
+    <section class="text-center space-y-4">
+      <h1 class="text-3xl font-bold">Buscar en la Biblioteca de Histología</h1>
+      <form action="/tissue_records/search" method="GET" class="flex gap-2 max-w-xl mx-auto">
+        <input
+          type="text"
+          name="q"
+          placeholder="ej. Pteridium, parénquima, H&E…"
+          class="input input-bordered flex-1 text-base" />
+        <button type="submit" class="btn btn-primary">🔍</button>
+      </form>
     </section>
 
-    {{/* How it works */}}
-    <section id="how-it-works">
-      <h2 class="text-3xl font-bold text-center mb-8">Cómo funciona la búsqueda</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="card bg-base-100 shadow border border-base-300">
-          <div class="card-body">
-            <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">1</div>
-            <h3 class="card-title">Explora las colecciones</h3>
-            <p class="text-base-content/60">Elige una colección vegetal y descubre cómo se agrupan los tejidos para aprender.</p>
-          </div>
+    {{/* Tarjetas de navegación */}}
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <a href="/collections"
+         class="card bg-base-100 shadow border border-base-300 hover:-translate-y-1 transition-transform cursor-pointer">
+        <div class="card-body items-center text-center gap-3">
+          <span class="text-5xl">📚</span>
+          <h2 class="card-title text-xl">Colecciones</h2>
+          <p class="text-base-content/60 text-sm">Conjuntos curados de registros de tejidos organizados para el aprendizaje.</p>
         </div>
-        <div class="card bg-base-100 shadow border border-base-300">
-          <div class="card-body">
-            <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">2</div>
-            <h3 class="card-title">Abre registros de tejidos</h3>
-            <p class="text-base-content/60">Estudia las notas, la taxonomía y los detalles de las diapositivas de cada muestra.</p>
-          </div>
+      </a>
+      <a href="/tissue_records"
+         class="card bg-base-100 shadow border border-base-300 hover:-translate-y-1 transition-transform cursor-pointer">
+        <div class="card-body items-center text-center gap-3">
+          <span class="text-5xl">🧫</span>
+          <h2 class="card-title text-xl">Explorador de Tejidos</h2>
+          <p class="text-base-content/60 text-sm">Navega todos los registros de tejidos por especie, órgano y tinción.</p>
         </div>
-        <div class="card bg-base-100 shadow border border-base-300">
-          <div class="card-body">
-            <div class="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center font-bold mb-2">3</div>
-            <h3 class="card-title">Aprende paso a paso</h3>
-            <p class="text-base-content/60">Usa la estructura de la colección para explorar la anatomía vegetal de forma sencilla y progresiva.</p>
-          </div>
-        </div>
-      </div>
+      </a>
     </section>
 
-    {{/* Collections list */}}
-    <section>
-      <h2 class="text-3xl font-bold mb-6">Colecciones disponibles</h2>
-      {{if .Collections}}
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {{range .Collections}}
-        <div class="card bg-base-100 shadow border border-base-300 hover:-translate-y-1 transition-transform">
-          <div class="card-body gap-3">
-            <h3 class="card-title">{{.Name}}</h3>
-            <p class="text-base-content/60 text-sm leading-relaxed">{{.Description}}</p>
-            {{if .Type}}<div class="badge badge-outline badge-sm">{{.Type}}</div>{{end}}
-            <div class="card-actions mt-2">
-              <a href="/collections/{{.ID}}" class="btn btn-primary btn-sm">Ver colección</a>
+    {{/* Microscopio virtual */}}
+    {{if .RandomSlides}}
+    <section class="space-y-4">
+      <h2 class="text-2xl font-bold">Prueba el Microscopio Virtual</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {{range .RandomSlides}}
+        <div class="card bg-base-100 shadow border border-base-300">
+          {{if .ImageUrl}}
+          <figure class="h-36 overflow-hidden">
+            <img src="{{.ImageUrl}}"
+                 alt="{{.Name}}"
+                 loading="lazy"
+                 class="w-full h-full object-cover" />
+          </figure>
+          {{else}}
+          <div class="h-36 bg-base-200 flex items-center justify-center text-4xl">🔬</div>
+          {{end}}
+          <div class="card-body p-4 gap-2">
+            <h3 class="font-semibold text-sm leading-tight">{{.Name}}</h3>
+            <div class="flex gap-1 flex-wrap">
+              <span class="badge badge-outline badge-xs">{{.Magnification}}×</span>
+              {{if .Preparation.Staining}}
+              <span class="badge badge-outline badge-xs">{{.Preparation.Staining}}</span>
+              {{end}}
             </div>
+            <a href="/slides/{{.ID}}/viewer" class="btn btn-primary btn-xs mt-1">
+              🔬 Abrir Microscopio
+            </a>
           </div>
         </div>
         {{end}}
       </div>
-      {{else}}
-      <div class="alert alert-info"><span>Aún no hay colecciones disponibles.</span></div>
-      {{end}}
     </section>
+    {{end}}
 
   </div>
 
-  <footer class="footer footer-center p-6 bg-base-100 text-base-content/50 mt-10">
-    <p>Simple design, purposeful learning. Tissquest helps you explore plant anatomy without distractions.</p>
+  <footer class="footer footer-center p-6 bg-base-100 text-base-content/40 mt-10 text-sm">
+    <p>Tissquest — histología vegetal para mentes curiosas.</p>
   </footer>
 
 </div>

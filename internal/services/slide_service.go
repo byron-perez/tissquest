@@ -89,6 +89,11 @@ func (s *SlideService) ListDisplayByTissueRecord(tissueRecordID uint, preferredS
 	return s.slideRepo.ListDisplayByTissueRecord(tissueRecordID, preferredSize)
 }
 
+// GetRandomTiledDisplaySlides returns up to limit slides that have been tiled, in random order.
+func (s *SlideService) GetRandomTiledDisplaySlides(limit int) ([]slide.DisplaySlide, error) {
+	return s.slideRepo.GetRandomTiledDisplaySlides(limit)
+}
+
 // SetDziMetadata is called by the tiling pipeline CLI after a slide has been processed.
 func (s *SlideService) SetDziMetadata(slideID uint, dziURL string, baseMagnification int, micronsPerPixel float64) error {
 	return s.slideRepo.SetDziMetadata(slideID, dziURL, baseMagnification, micronsPerPixel)

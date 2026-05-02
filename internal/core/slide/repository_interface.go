@@ -28,6 +28,8 @@ type RepositoryInterface interface {
 	SetDziMetadata(slideID uint, dziURL string, baseMagnification int, micronsPerPixel float64) error
 	// GetPendingTiling returns all slides that have a source image but no DZI yet.
 	GetPendingTiling() ([]Slide, error)
+	// GetRandomTiledDisplaySlides returns up to limit slides that have a DZI, in random order.
+	GetRandomTiledDisplaySlides(limit int) ([]DisplaySlide, error)
 	Delete(id uint) error
 	ListByTissueRecord(tissueRecordID uint) ([]Slide, error)
 	// ListDisplayByTissueRecord returns slides with the best available image URL
