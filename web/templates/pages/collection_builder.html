@@ -1,0 +1,99 @@
+{{define "content"}}
+<div class="min-h-screen bg-base-200">
+  <div class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    {{template "main-menu" .}}
+
+    {{template "breadcrumb" .}}
+
+    <h1 class="text-3xl font-bold text-base-content">{{.Collection.Name}}</h1>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Left panel: Metadata -->
+      <div class="lg:col-span-1">
+        <div class="card bg-base-100 shadow rounded-box p-6 space-y-4">
+          <h2 class="text-xl font-semibold">Metadata</h2>
+
+          <form hx-put="/collections/{{.Collection.ID}}/metadata"
+                hx-swap="none"
+                class="space-y-3">
+
+            <div class="form-control">
+              <label class="label" for="builder-name">
+                <span class="label-text">Name <span class="text-error">*</span></span>
+              </label>
+              <input id="builder-name" type="text" name="name"
+                     value="{{.Collection.Name}}"
+                     class="input input-bordered input-sm w-full" required />
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="builder-type">
+                <span class="label-text">Type</span>
+              </label>
+              <select id="builder-type" name="type" class="select select-bordered select-sm w-full">
+                <option value="atlas"     {{if eq (print .Collection.Type) "atlas"}}selected{{end}}>Atlas</option>
+                <option value="database"  {{if eq (print .Collection.Type) "database"}}selected{{end}}>Database</option>
+                <option value="reference" {{if eq (print .Collection.Type) "reference"}}selected{{end}}>Reference</option>
+                <option value="other"     {{if eq (print .Collection.Type) "other"}}selected{{end}}>Other</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="builder-description">
+                <span class="label-text">Description</span>
+              </label>
+              <textarea id="builder-description" name="description"
+                        class="textarea textarea-bordered textarea-sm w-full"
+                        rows="3">{{.Collection.Description}}</textarea>
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="builder-goals">
+                <span class="label-text">Goals</span>
+              </label>
+              <textarea id="builder-goals" name="goals"
+                        class="textarea textarea-bordered textarea-sm w-full"
+                        rows="2">{{.Collection.Goals}}</textarea>
+            </div>
+
+            <div class="form-control">
+              <label class="label" for="builder-authors">
+                <span class="label-text">Authors</span>
+              </label>
+              <input id="builder-authors" type="text" name="authors"
+                     value="{{.Collection.Authors}}"
+                     class="input input-bordered input-sm w-full" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm w-full">Save Metadata</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right panel: Sections -->
+      <div class="lg:col-span-2">
+        <div class="card bg-base-100 shadow rounded-box p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xl font-semibold">Sections</h2>
+            <button class="btn btn-primary btn-sm"
+                    hx-get="/collections/{{.Collection.ID}}/sections/new"
+                    hx-target="#section-form-container"
+                    hx-swap="innerHTML">
+              + Add Section
+            </button>
+          </div>
+
+          <div id="section-form-container"></div>
+
+          <div id="sections-list">
+            {{template "collection-sections-list" .}}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{{end}}

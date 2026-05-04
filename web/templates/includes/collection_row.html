@@ -1,0 +1,30 @@
+{{define "collection-row"}}
+<tr id="collection-row-{{.Collection.ID}}">
+  <td class="font-medium">
+    <a href="/collections/{{.Collection.ID}}" class="link link-hover">{{.Collection.Name}}</a>
+  </td>
+  <td>
+    <span class="badge badge-outline badge-sm">{{.Collection.Type}}</span>
+  </td>
+  <td class="text-base-content/60 text-sm">{{.Collection.CreatedAt.Format "2006-01-02"}}</td>
+  <td class="text-right">
+    <div class="inline-flex gap-2 items-center">
+      <a href="/collections/{{.Collection.ID}}/builder" class="btn btn-ghost btn-sm">Builder</a>
+      <button class="btn btn-ghost btn-sm"
+              hx-get="/collections/{{.Collection.ID}}/edit"
+              hx-target="#collection-row-{{.Collection.ID}}"
+              hx-swap="outerHTML">
+        Edit
+      </button>
+      <span id="collection-row-{{.Collection.ID}}-delete">
+        <button class="btn btn-error btn-sm btn-outline"
+                hx-get="/collections/{{.Collection.ID}}/confirm-delete"
+                hx-target="#collection-row-{{.Collection.ID}}-delete"
+                hx-swap="outerHTML">
+          Delete
+        </button>
+      </span>
+    </div>
+  </td>
+</tr>
+{{end}}

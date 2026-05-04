@@ -2,30 +2,20 @@ package index
 
 import (
 	"html/template"
-	"mcba/tissquest/internal/core/atlas"
-	"mcba/tissquest/internal/persistence/repositories"
-	"mcba/tissquest/internal/services"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"mcba/tissquest/internal/persistence/repositories"
+	"mcba/tissquest/internal/services"
 )
 
 func GetIndex(c *gin.Context) {
-	atlases, err := fetchAtlases()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch atlases"})
-		return
-	}
-
-	var featured *atlas.Atlas
-	if len(atlases) > 0 {
-		featured = &atlases[0]
-	}
+	slideSvc := services.NewSlideService(nil, repositories.NewSlideRepository())
+	randomSlides, _ := slideSvc.GetRandomTiledDisplaySlides(3)
 
 	data := gin.H{
-		"Title":         "Tissquest",
-		"Atlases":       atlases,
-		"FeaturedAtlas": featured,
+		"Title":        "Tissquest — Histology Library",
+		"RandomSlides": randomSlides,
 	}
 
 	tmpl := template.Must(template.ParseFiles(
@@ -37,10 +27,4 @@ func GetIndex(c *gin.Context) {
 	if err := tmpl.ExecuteTemplate(c.Writer, "base", data); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 	}
-}
-
-func fetchAtlases() ([]atlas.Atlas, error) {
-	repo := repositories.NewAtlasRepository()
-	service := services.NewAtlasService(repo)
-	return service.ListAtlases()
 }

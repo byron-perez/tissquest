@@ -1,0 +1,113 @@
+{{define "category-form"}}
+<div class="card bg-base-100 shadow rounded-box p-6 mb-4">
+  <h2 class="text-xl font-bold mb-4">
+    {{if .Category}}Edit Category{{else}}New Category{{end}}
+  </h2>
+
+  <form
+    {{if .Category}}
+      hx-put="/categories/{{.Category.ID}}"
+    {{else}}
+      hx-post="/categories"
+    {{end}}
+    hx-target="#category-form-container"
+    hx-swap="innerHTML"
+    class="space-y-4">
+
+    {{/* Name */}}
+    <div class="form-control">
+      <label class="label" for="category-name">
+        <span class="label-text">Name <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="category-name"
+        type="text"
+        name="name"
+        value="{{if .Category}}{{.Category.Name}}{{end}}"
+        placeholder="Category name"
+        class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}"
+        required />
+      {{if index .Errors "name"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Type */}}
+    <div class="form-control">
+      <label class="label" for="category-type">
+        <span class="label-text">Type <span class="text-error">*</span></span>
+      </label>
+      <select
+        id="category-type"
+        name="type"
+        class="select select-bordered w-full {{if index .Errors "type"}}select-error{{end}}"
+        required>
+        <option value="" disabled {{if not .Category}}selected{{end}}>Select a type</option>
+        <option value="organ"   {{if and .Category (eq .Category.Type "organ")}}selected{{end}}>Organ</option>
+        <option value="species" {{if and .Category (eq .Category.Type "species")}}selected{{end}}>Species</option>
+        <option value="tissue"  {{if and .Category (eq .Category.Type "tissue")}}selected{{end}}>Tissue</option>
+        <option value="stain"   {{if and .Category (eq .Category.Type "stain")}}selected{{end}}>Stain</option>
+        <option value="custom"  {{if and .Category (eq .Category.Type "custom")}}selected{{end}}>Custom</option>
+      </select>
+      {{if index .Errors "type"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "type"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Description */}}
+    <div class="form-control">
+      <label class="label" for="category-description">
+        <span class="label-text">Description</span>
+      </label>
+      <textarea
+        id="category-description"
+        name="description"
+        placeholder="Optional description"
+        class="textarea textarea-bordered w-full"
+        rows="3">{{if .Category}}{{.Category.Description}}{{end}}</textarea>
+    </div>
+
+    {{/* Parent Category */}}
+    <div class="form-control">
+      <label class="label" for="category-parent">
+        <span class="label-text">Parent Category</span>
+      </label>
+      <select
+        id="category-parent"
+        name="parent_id"
+        class="select select-bordered w-full {{if index .Errors "parent_id"}}select-error{{end}}">
+        <option value="">None</option>
+        {{range .AllCategories}}
+        <option value="{{.ID}}"
+          {{if eq .ID $.SelectedParentID}}selected{{end}}>
+          {{.Name}} ({{.Type}})
+        </option>
+        {{end}}
+      </select>
+      {{if index .Errors "parent_id"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "parent_id"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              class="btn btn-ghost btn-sm"
+              hx-get="{{.CancelURL}}"
+              hx-target="{{.CancelTarget}}"
+              hx-swap="{{.CancelSwap}}">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        {{if .Category}}Save Changes{{else}}Create Category{{end}}
+      </button>
+    </div>
+
+  </form>
+</div>
+{{end}}

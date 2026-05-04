@@ -1,0 +1,26 @@
+{{define "taxon-row"}}
+<tr id="taxon-row-{{.ID}}">
+  <td class="font-medium">{{.Name}}</td>
+  <td class="text-base-content/70">
+    {{if .Parent}}{{.Parent.Name}}{{end}}
+  </td>
+  <td class="text-right">
+    <div class="inline-flex gap-2 items-center">
+      <button class="btn btn-ghost btn-sm"
+              hx-get="/taxa/{{.ID}}/edit"
+              hx-target="#taxon-row-{{.ID}}"
+              hx-swap="outerHTML">
+        Edit
+      </button>
+      <span id="taxon-row-{{.ID}}-delete">
+        <button class="btn btn-error btn-sm btn-outline"
+                hx-get="/taxa/{{.ID}}/confirm-delete"
+                hx-target="#taxon-row-{{.ID}}-delete"
+                hx-swap="outerHTML">
+          Delete
+        </button>
+      </span>
+    </div>
+  </td>
+</tr>
+{{end}}

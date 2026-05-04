@@ -61,7 +61,7 @@ func (repo *PostgresCategoryRepository) Retrieve(id uint) (*category.Category, e
 	}
 
 	var categoryModel migration.CategoryModel
-	if err := db.Preload("TissueRecords").First(&categoryModel, id).Error; err != nil {
+	if err := db.First(&categoryModel, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -103,7 +103,7 @@ func (repo *PostgresCategoryRepository) List() ([]category.Category, error) {
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Find(&categoryModels).Error; err != nil {
+	if err := db.Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -117,7 +117,7 @@ func (repo *PostgresCategoryRepository) FindByType(categoryType category.Categor
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Where("type = ?", string(categoryType)).Find(&categoryModels).Error; err != nil {
+	if err := db.Where("type = ?", string(categoryType)).Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -131,7 +131,7 @@ func (repo *PostgresCategoryRepository) FindByParent(parentID uint) ([]category.
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Where("parent_id = ?", parentID).Find(&categoryModels).Error; err != nil {
+	if err := db.Where("parent_id = ?", parentID).Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -145,7 +145,7 @@ func (repo *PostgresCategoryRepository) FindRootCategories() ([]category.Categor
 	}
 
 	var categoryModels []migration.CategoryModel
-	if err := db.Preload("TissueRecords").Where("parent_id IS NULL").Find(&categoryModels).Error; err != nil {
+	if err := db.Where("parent_id IS NULL").Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 

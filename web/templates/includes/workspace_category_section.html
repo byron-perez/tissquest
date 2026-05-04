@@ -1,0 +1,44 @@
+{{define "workspace-category-section"}}
+<div class="card bg-base-100 shadow rounded-box p-6"
+     x-data="{ showDropdown: false }">
+
+  <h2 class="text-xl font-semibold mb-4">Categories</h2>
+
+  <!-- Category badge tags -->
+  {{if .Categories}}
+  <div class="flex flex-wrap gap-2 mb-4">
+    {{range .Categories}}
+    <span class="badge badge-outline gap-1">
+      {{.Name}}
+      <button hx-delete="/tissue_records/{{$.TissueRecord.ID}}/categories/{{.ID}}"
+              hx-target="#category-section"
+              hx-swap="innerHTML"
+              class="hover:text-error leading-none">×</button>
+    </span>
+    {{end}}
+  </div>
+  {{else}}
+  <p class="text-base-content/40 text-sm mb-4">No categories assigned.</p>
+  {{end}}
+
+  <!-- Add Category dropdown -->
+  {{if .AvailCats}}
+  <div x-show="showDropdown" class="mb-3 card bg-base-200 shadow rounded-box">
+    <ul class="menu menu-compact p-2">
+      {{range .AvailCats}}
+      <li>
+        <button hx-post="/tissue_records/{{$.TissueRecord.ID}}/categories/{{.ID}}"
+                hx-target="#category-section"
+                hx-swap="innerHTML"
+                @click="showDropdown = false"
+                class="w-full text-left">{{.Name}}</button>
+      </li>
+      {{end}}
+    </ul>
+  </div>
+  <button @click="showDropdown = !showDropdown"
+          class="btn btn-primary btn-sm">+ Add Category</button>
+  {{end}}
+
+</div>
+{{end}}

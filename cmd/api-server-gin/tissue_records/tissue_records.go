@@ -51,10 +51,9 @@ func CreateTissueRecord(c *gin.Context) {
 	}
 
 	tr := tissuerecord.TissueRecord{
-		Name:           body.Name,
-		Notes:          body.Notes,
-		Taxonomicclass: body.Taxonomicclass,
-		Slides:         []slide.Slide{},
+		Name:   body.Name,
+		Notes:  body.Notes,
+		Slides: []slide.Slide{},
 	}
 
 	newID := newService().Create(&tr)
@@ -75,10 +74,9 @@ func UpdateTissueRecord(c *gin.Context) {
 	}
 
 	tr := tissuerecord.TissueRecord{
-		Name:           body.Name,
-		Notes:          body.Notes,
-		Taxonomicclass: body.Taxonomicclass,
-		Slides:         []slide.Slide{},
+		Name:   body.Name,
+		Notes:  body.Notes,
+		Slides: []slide.Slide{},
 	}
 
 	newService().Update(uint(id), &tr)

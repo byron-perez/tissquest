@@ -1,0 +1,24 @@
+{{define "collection-section-form"}}
+<form class="flex items-center gap-2 mt-2"
+      hx-post="/collections/{{.CollectionID}}/sections"
+      hx-target="#sections-list"
+      hx-swap="innerHTML">
+  {{if .ParentID}}
+  <input type="hidden" name="parent_id" value="{{.ParentID}}" />
+  {{end}}
+  <input type="text"
+         name="name"
+         placeholder="{{if .ParentID}}Subsection name{{else}}Section name{{end}}"
+         class="input input-bordered input-sm flex-1"
+         autofocus
+         required />
+  <button type="submit" class="btn btn-primary btn-sm">Add</button>
+  <button type="button"
+          class="btn btn-ghost btn-sm"
+          hx-get="/collections/{{.CollectionID}}/sections/new-cancel"
+          hx-target="#section-form-container"
+          hx-swap="innerHTML">
+    Cancel
+  </button>
+</form>
+{{end}}

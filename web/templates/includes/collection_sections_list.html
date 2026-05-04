@@ -1,0 +1,179 @@
+{{define "collection-sections-list"}}
+<div class="space-y-3">
+  {{if .Collection.Sections}}
+  {{$col := .Collection}}
+  {{range .Collection.Sections}}
+  {{$sec := .}}
+  <div class="card bg-base-200 rounded-box p-4 space-y-3">
+    <!-- Section header -->
+    <div class="flex items-center justify-between gap-2">
+      <span class="font-semibold text-base-content">{{.Name}}</span>
+      <div class="flex gap-1 items-center">
+        <button class="btn btn-ghost btn-xs"
+                hx-post="/collections/{{$col.ID}}/sections/{{.ID}}/move"
+                hx-vals='{"direction":"up"}'
+                hx-target="#sections-list"
+                hx-swap="innerHTML"
+                title="Move up">↑</button>
+        <button class="btn btn-ghost btn-xs"
+                hx-post="/collections/{{$col.ID}}/sections/{{.ID}}/move"
+                hx-vals='{"direction":"down"}'
+                hx-target="#sections-list"
+                hx-swap="innerHTML"
+                title="Move down">↓</button>
+        <button class="btn btn-ghost btn-xs text-error"
+                hx-delete="/collections/{{$col.ID}}/sections/{{.ID}}"
+                hx-target="#sections-list"
+                hx-swap="innerHTML"
+                hx-confirm="Delete this section and all its assignments?"
+                title="Delete section">✕</button>
+      </div>
+    </div>
+
+    <!-- Assignments for this section -->
+    <div id="assignments-{{.ID}}">
+      <div class="space-y-1">
+        {{range .Assignments}}
+        <div class="flex items-center justify-between py-1 px-2 bg-base-100 rounded">
+          <span class="text-sm text-base-content">{{.TissueRecordName}}</span>
+          <div class="flex gap-1">
+            <button class="btn btn-ghost btn-xs"
+                    hx-post="/collections/{{$col.ID}}/sections/{{$sec.ID}}/assignments/{{.ID}}/move"
+                    hx-vals='{"direction":"up"}'
+                    hx-target="#assignments-{{$sec.ID}}"
+                    hx-swap="innerHTML"
+                    title="Move up">↑</button>
+            <button class="btn btn-ghost btn-xs"
+                    hx-post="/collections/{{$col.ID}}/sections/{{$sec.ID}}/assignments/{{.ID}}/move"
+                    hx-vals='{"direction":"down"}'
+                    hx-target="#assignments-{{$sec.ID}}"
+                    hx-swap="innerHTML"
+                    title="Move down">↓</button>
+            <button class="btn btn-ghost btn-xs text-error"
+                    hx-delete="/collections/{{$col.ID}}/sections/{{$sec.ID}}/assignments/{{.ID}}"
+                    hx-target="#assignments-{{$sec.ID}}"
+                    hx-swap="innerHTML"
+                    title="Remove">✕</button>
+          </div>
+        </div>
+        {{else}}
+        <p class="text-base-content/40 text-xs py-1">No tissue records assigned.</p>
+        {{end}}
+      </div>
+
+      <!-- Search / Add TR -->
+      <div class="mt-2" x-data="{ showSearch: false }">
+        <button @click="showSearch = !showSearch" class="btn btn-ghost btn-xs text-primary">
+          + Search / Add TR
+        </button>
+        <div x-show="showSearch" x-cloak class="mt-2">
+          <div id="tr-search-{{$sec.ID}}">
+            <input type="search"
+                   placeholder="Search tissue records..."
+                   class="input input-bordered input-xs w-full"
+                   hx-get="/tissue_records/search"
+                   hx-trigger="input changed delay:300ms, search"
+                   hx-target="#tr-search-results-{{$sec.ID}}"
+                   hx-vals='{"section_id": "{{$sec.ID}}", "collection_id": "{{$col.ID}}"}'
+                   name="q" />
+            <div id="tr-search-results-{{$sec.ID}}" class="mt-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subsections -->
+    {{if .Subsections}}
+    <div class="ml-4 space-y-2">
+      {{range .Subsections}}
+      {{$sub := .}}
+      <div class="card bg-base-100 rounded-box p-3 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-medium text-sm text-base-content">{{.Name}}</span>
+          <div class="flex gap-1 items-center">
+            <button class="btn btn-ghost btn-xs"
+                    hx-post="/collections/{{$col.ID}}/sections/{{.ID}}/move"
+                    hx-vals='{"direction":"up"}'
+                    hx-target="#sections-list"
+                    hx-swap="innerHTML"
+                    title="Move up">↑</button>
+            <button class="btn btn-ghost btn-xs"
+                    hx-post="/collections/{{$col.ID}}/sections/{{.ID}}/move"
+                    hx-vals='{"direction":"down"}'
+                    hx-target="#sections-list"
+                    hx-swap="innerHTML"
+                    title="Move down">↓</button>
+            <button class="btn btn-ghost btn-xs text-error"
+                    hx-delete="/collections/{{$col.ID}}/sections/{{.ID}}"
+                    hx-target="#sections-list"
+                    hx-swap="innerHTML"
+                    hx-confirm="Delete this subsection and all its assignments?"
+                    title="Delete subsection">✕</button>
+          </div>
+        </div>
+        <div id="assignments-{{.ID}}">
+          <div class="space-y-1">
+            {{range .Assignments}}
+            <div class="flex items-center justify-between py-1 px-2 bg-base-200 rounded">
+              <span class="text-sm text-base-content">TR #{{.TissueRecordID}}</span>
+              <div class="flex gap-1">
+                <button class="btn btn-ghost btn-xs"
+                        hx-post="/collections/{{$col.ID}}/sections/{{$sub.ID}}/assignments/{{.ID}}/move"
+                        hx-vals='{"direction":"up"}'
+                        hx-target="#assignments-{{$sub.ID}}"
+                        hx-swap="innerHTML"
+                        title="Move up">↑</button>
+                <button class="btn btn-ghost btn-xs"
+                        hx-post="/collections/{{$col.ID}}/sections/{{$sub.ID}}/assignments/{{.ID}}/move"
+                        hx-vals='{"direction":"down"}'
+                        hx-target="#assignments-{{$sub.ID}}"
+                        hx-swap="innerHTML"
+                        title="Move down">↓</button>
+                <button class="btn btn-ghost btn-xs text-error"
+                        hx-delete="/collections/{{$col.ID}}/sections/{{$sub.ID}}/assignments/{{.ID}}"
+                        hx-target="#assignments-{{$sub.ID}}"
+                        hx-swap="innerHTML"
+                        title="Remove">✕</button>
+              </div>
+            </div>
+            {{else}}
+            <p class="text-base-content/40 text-xs py-1">No tissue records assigned.</p>
+            {{end}}
+          </div>
+          <div class="mt-2" x-data="{ showSearch: false }">
+            <button @click="showSearch = !showSearch" class="btn btn-ghost btn-xs text-primary">
+              + Search / Add TR
+            </button>
+            <div x-show="showSearch" x-cloak class="mt-2">
+              <input type="search"
+                     placeholder="Search tissue records..."
+                     class="input input-bordered input-xs w-full"
+                     hx-get="/tissue_records/search"
+                     hx-trigger="input changed delay:300ms, search"
+                     hx-target="#tr-search-results-sub-{{$sub.ID}}"
+                     hx-vals='{"section_id": "{{$sub.ID}}", "collection_id": "{{$col.ID}}"}'
+                     name="q" />
+              <div id="tr-search-results-sub-{{$sub.ID}}" class="mt-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{end}}
+    </div>
+    {{end}}
+
+    <!-- Add Subsection button -->
+    <div id="subsection-form-container-{{$sec.ID}}"></div>
+    <button class="btn btn-ghost btn-xs text-primary"
+            hx-get="/collections/{{$col.ID}}/sections/new?parent_id={{$sec.ID}}"
+            hx-target="#subsection-form-container-{{$sec.ID}}"
+            hx-swap="innerHTML">
+      + Add Subsection
+    </button>
+  </div>
+  {{end}}
+  {{else}}
+  <p class="text-base-content/40 text-sm text-center py-4">No sections yet. Add a section to start building your collection.</p>
+  {{end}}
+</div>
+{{end}}

@@ -4,15 +4,14 @@ import "gorm.io/gorm"
 
 type CategoryModel struct {
     gorm.Model
-    ID            uint           `gorm:"primaryKey"`
     Name          string
-    Type          string
+    Type          string             `gorm:"index"`
     Description   string
-    ParentID      *uint
+    ParentID      *uint              `gorm:"index"`
+    DeletedAt     gorm.DeletedAt     `gorm:"index"`
     Parent        *CategoryModel
-    Children      []CategoryModel `gorm:"foreignKey:ParentID"`
-    TissueRecords []TissueRecordModel `gorm:"many2many:tissue_record_categories;"`
-    Atlases       []AtlasModel        `gorm:"many2many:atlas_categories;"`
+    Children      []CategoryModel    `gorm:"foreignKey:ParentID"`
+    TissueRecords []TissueRecordModel `gorm:"many2many:tissue_record_categories;joinForeignKey:CategoryID;joinReferences:TissueRecordID"`
 }
 
 func (CategoryModel) TableName() string {

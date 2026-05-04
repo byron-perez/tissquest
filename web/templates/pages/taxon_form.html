@@ -1,0 +1,97 @@
+{{define "taxon-form"}}
+<div class="card bg-base-100 shadow rounded-box p-6 mb-4">
+  <h2 class="text-xl font-bold mb-4">
+    {{if .Taxon}}Edit Taxon{{else}}New Taxon{{end}}
+  </h2>
+
+  <form
+    {{if .Taxon}}
+      hx-put="/taxa/{{.Taxon.ID}}"
+    {{else}}
+      hx-post="/taxa"
+    {{end}}
+    hx-target="#taxon-form-container"
+    hx-swap="innerHTML"
+    class="space-y-4">
+
+    {{/* Name */}}
+    <div class="form-control">
+      <label class="label" for="taxon-name">
+        <span class="label-text">Name <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="taxon-name"
+        type="text"
+        name="name"
+        value="{{if .Taxon}}{{.Taxon.Name}}{{end}}"
+        placeholder="Taxon name"
+        class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}"
+        required />
+      {{if index .Errors "name"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Rank */}}
+    <div class="form-control">
+      <label class="label" for="taxon-rank">
+        <span class="label-text">Rank <span class="text-error">*</span></span>
+      </label>
+      <select
+        id="taxon-rank"
+        name="rank"
+        class="select select-bordered w-full {{if index .Errors "rank"}}select-error{{end}}"
+        required>
+        <option value="" disabled {{if not .Taxon}}selected{{end}} >Select a rank</option>
+        <option value="kingdom" {{if and .Taxon (eq .Taxon.Rank "kingdom")}}selected{{end}}>Kingdom</option>
+        <option value="phylum"  {{if and .Taxon (eq .Taxon.Rank "phylum")}}selected{{end}}>Phylum</option>
+        <option value="class"   {{if and .Taxon (eq .Taxon.Rank "class")}}selected{{end}}>Class</option>
+        <option value="order"   {{if and .Taxon (eq .Taxon.Rank "order")}}selected{{end}}>Order</option>
+        <option value="family"  {{if and .Taxon (eq .Taxon.Rank "family")}}selected{{end}}>Family</option>
+        <option value="genus"   {{if and .Taxon (eq .Taxon.Rank "genus")}}selected{{end}}>Genus</option>
+        <option value="species" {{if and .Taxon (eq .Taxon.Rank "species")}}selected{{end}}>Species</option>
+      </select>
+      {{if index .Errors "rank"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "rank"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Parent Taxon */}}
+    <div class="form-control">
+      <label class="label" for="taxon-parent">
+        <span class="label-text">Parent Taxon</span>
+      </label>
+      <select
+        id="taxon-parent"
+        name="parent_id"
+        class="select select-bordered w-full">
+        <option value="">None</option>
+        {{range .AllTaxa}}
+        <option value="{{.ID}}"
+          {{if eq .ID $.SelectedParentID}}selected{{end}}>
+          {{.Name}} ({{.Rank}})
+        </option>
+        {{end}}
+      </select>
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              class="btn btn-ghost btn-sm"
+              hx-get="{{.CancelURL}}"
+              hx-target="{{.CancelTarget}}"
+              hx-swap="{{.CancelSwap}}">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        {{if .Taxon}}Save Changes{{else}}Create Taxon{{end}}
+      </button>
+    </div>
+
+  </form>
+</div>
+{{end}}
