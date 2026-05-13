@@ -4,11 +4,11 @@
    Colors use oklch(lightness chroma hue).
    ──────────────────────────────────────────────────────── */
 :root, [data-theme] {
-  /* Brand colors */
-  --color-primary:           oklch(0.70 0.14 180); /* teal */
+  /* Brand colors - Eye-safe Slate Turquoise palette (WCAG AA compliant) */
+  --color-primary:           oklch(0.56 0.08 195); /* Slate Turquoise */
   --color-primary-content:   oklch(1 0 0);
-  --color-secondary:         oklch(0.95 0.05 170);
-  --color-secondary-content: oklch(0.30 0.08 170);
+  --color-secondary:         oklch(0.92 0.02 195); /* Pale background */
+  --color-secondary-content: oklch(0.38 0.07 195); /* Deep Sea Teal focus/hover */
 
   /* Typography */
   --font-sans:    'Inter', system-ui, ui-sans-serif, sans-serif;
