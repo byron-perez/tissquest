@@ -43,3 +43,7 @@ func (s *CategoryService) Delete(id uint) error {
 func (s *CategoryService) List() ([]category.Category, error) {
 	return s.repo.List()
 }
+
+func (s *CategoryService) ListWithCounts() ([]category.CategoryWithCount, error) {
+	return s.repo.ListWithCounts()
+}

@@ -25,3 +25,12 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Utilities ────────────────────────────────────────── */
 [x-cloak] { display: none !important; }
+
+/* ── Explorer filter checkboxes ──────────────────────── */
+.category-filter {
+  accent-color: var(--color-primary);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}

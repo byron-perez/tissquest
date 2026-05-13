@@ -132,6 +132,37 @@ func (repo *GormCategoryRepository) FindRootCategories() ([]category.Category, e
 	return mapCategoryModelsToDomain(categoryModels), nil
 }
 
+func (repo *GormCategoryRepository) ListWithCounts() ([]category.CategoryWithCount, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, err
+	}
+
+	type row struct {
+		migration.CategoryModel
+		Count int
+	}
+
+	var rows []row
+	if err := db.Table("categories").
+		Select("categories.*, COUNT(trc.tissue_record_id) AS count").
+		Joins("LEFT JOIN tissue_record_categories trc ON trc.category_id = categories.id").
+		Where("categories.deleted_at IS NULL").
+		Group("categories.id").
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]category.CategoryWithCount, len(rows))
+	for i, r := range rows {
+		result[i] = category.CategoryWithCount{
+			Category: *mapCategoryModelToDomain(&r.CategoryModel),
+			Count:    r.Count,
+		}
+	}
+	return result, nil
+}
+
 func mapCategoryModelToDomain(m *migration.CategoryModel) *category.Category {
 	if m == nil {
 		return nil
