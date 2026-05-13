@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"mcba/tissquest/cmd/api-server-gin/about"
 	"mcba/tissquest/cmd/api-server-gin/categories"
 	"mcba/tissquest/cmd/api-server-gin/collections"
 	"mcba/tissquest/cmd/api-server-gin/index"
@@ -26,6 +27,7 @@ func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 
 	// Setup routes
 	r.GET("/", index.GetIndex)
+	r.GET("/about", about.GetAbout)
 
 	// Collection routes
 	r.GET("/collections", collections.ListCollections)
