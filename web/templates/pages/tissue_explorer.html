@@ -28,11 +28,23 @@
       <button type="submit" class="btn btn-primary">🔍</button>
     </form>
 
-    <div class="flex gap-6">
+    <div class="flex flex-col sm:flex-row gap-6" x-data="{ filtersOpen: false }">
 
       {{/* Filter panel */}}
-      <aside class="w-56 shrink-0 hidden lg:block">
-        <div class="card bg-base-100 shadow border border-base-300 p-4 space-y-4">
+      <aside class="sm:w-56 sm:shrink-0">
+
+        {{/* Mobile toggle — only on small screens */}}
+        <button class="sm:hidden w-full flex items-center justify-between
+                        btn btn-ghost btn-sm border border-base-300 bg-base-100 mb-2"
+                @click="filtersOpen = !filtersOpen">
+          <span class="font-semibold text-sm">Filtros</span>
+          <span x-text="filtersOpen ? '▲' : '▼'" class="text-xs"></span>
+        </button>
+
+        {{/* Panel body */}}
+        <div class="card bg-base-100 shadow border border-base-300 p-4 space-y-4
+                    hidden sm:block"
+             :class="{ '!block': filtersOpen }">
           <h2 class="font-semibold text-sm uppercase tracking-wide text-base-content/60">Filtros</h2>
 
           {{if .FilterTree}}
