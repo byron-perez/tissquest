@@ -1,0 +1,93 @@
+{{define "metacategory-form"}}
+<div class="card bg-base-100 shadow rounded-box p-6 mb-4">
+  <h2 class="text-xl font-bold mb-4">
+    {{if .Metacategory}}Edit Metacategory{{else}}New Metacategory{{end}}
+  </h2>
+
+  <form
+    {{if .Metacategory}}
+      hx-put="/metacategories/{{.Metacategory.ID}}"
+    {{else}}
+      hx-post="/metacategories"
+    {{end}}
+    hx-target="#metacategory-form-container"
+    hx-swap="innerHTML"
+    class="space-y-4">
+
+    {{/* Name */}}
+    <div class="form-control">
+      <label class="label" for="metacategory-name">
+        <span class="label-text">Name <span class="text-error">*</span></span>
+      </label>
+      <input
+        id="metacategory-name"
+        type="text"
+        name="name"
+        value="{{if .Metacategory}}{{.Metacategory.Name}}{{end}}"
+        placeholder="Metacategory name (e.g., 'método histológico', 'taxa', 'tinción')"
+        class="input input-bordered w-full {{if index .Errors "name"}}input-error{{end}}"
+        required />
+      {{if index .Errors "name"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "name"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    {{/* Description */}}
+    <div class="form-control">
+      <label class="label" for="metacategory-description">
+        <span class="label-text">Description</span>
+      </label>
+      <textarea
+        id="metacategory-description"
+        name="description"
+        placeholder="Optional description of this metacategory level"
+        class="textarea textarea-bordered w-full"
+        rows="3">{{if .Metacategory}}{{.Metacategory.Description}}{{end}}</textarea>
+    </div>
+
+    {{/* Parent Metacategory */}}
+    <div class="form-control">
+      <label class="label" for="metacategory-parent">
+        <span class="label-text">Parent Metacategory</span>
+      </label>
+      <select
+        id="metacategory-parent"
+        name="parent_id"
+        class="select select-bordered w-full {{if index .Errors "parent_id"}}select-error{{end}}">
+        <option value="">None (Root level)</option>
+        {{range .ParentOptions}}
+          <option value="{{.ID}}"
+            {{if and $.Metacategory (eq $.Metacategory.ParentID .ID)}}selected{{end}}>
+            {{.Name}}
+          </option>
+        {{end}}
+      </select>
+      {{if index .Errors "parent_id"}}
+      <label class="label">
+        <span class="label-text-alt text-error">{{index .Errors "parent_id"}}</span>
+      </label>
+      {{end}}
+    </div>
+
+    <div class="form-control">
+      <p class="text-sm text-base-content/60 mb-4">
+        💡 <strong>Tip:</strong> Create a hierarchy by setting parent metacategories.
+        For example: método histológico → tinción → tinción h&e
+      </p>
+    </div>
+
+    <div class="flex gap-2 justify-end">
+      <button type="button"
+              class="btn btn-ghost btn-sm"
+              {{if eq .CancelURL ""}}disabled{{else}}hx-get="{{.CancelURL}}" hx-target="{{.CancelTarget}}" hx-swap="{{.CancelSwap}}"{{end}}>
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary btn-sm">
+        {{if .Metacategory}}Update{{else}}Create{{end}} Metacategory
+      </button>
+    </div>
+  </form>
+</div>
+{{end}}

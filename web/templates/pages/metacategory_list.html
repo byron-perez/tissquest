@@ -1,0 +1,71 @@
+{{define "content"}}
+<div class="min-h-screen bg-base-200">
+  <div class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+
+    {{template "main-menu" .}}
+
+    {{template "breadcrumb" .}}
+
+    <div class="flex items-center justify-between">
+      <h1 class="text-3xl font-bold">Metacategories</h1>
+      <button class="btn btn-primary btn-sm"
+              hx-get="/metacategories/new"
+              hx-target="#metacategory-form-container"
+              hx-swap="innerHTML">
+        New Metacategory
+      </button>
+    </div>
+
+    <div id="metacategory-form-container"></div>
+
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full bg-base-100 shadow rounded-box">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Parent</th>
+            <th>Children</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .MetacategoryRows}}
+          <tr id="metacategory-row-{{.ID}}">
+            <td class="font-medium">{{.Name}}</td>
+            <td class="text-base-content/70 max-w-xs truncate">{{.ShortDescription}}</td>
+            <td class="text-base-content/70">{{.ParentName}}</td>
+            <td>
+              <span class="badge badge-info">{{.ChildCount}}</span>
+            </td>
+            <td class="text-right">
+              <div class="inline-flex gap-2 items-center">
+                <button class="btn btn-ghost btn-sm"
+                        hx-get="/metacategories/{{.ID}}/edit"
+                        hx-target="#metacategory-row-{{.ID}}"
+                        hx-swap="outerHTML">
+                  Edit
+                </button>
+                <span id="metacategory-row-{{.ID}}-delete">
+                  <button class="btn btn-error btn-sm btn-outline"
+                          hx-get="/metacategories/{{.ID}}/confirm-delete"
+                          hx-target="#metacategory-row-{{.ID}}-delete"
+                          hx-swap="outerHTML">
+                    Delete
+                  </button>
+                </span>
+              </div>
+            </td>
+          </tr>
+          {{else}}
+          <tr>
+            <td colspan="5" class="text-center text-base-content/50 py-8">No metacategories found.</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+{{end}}

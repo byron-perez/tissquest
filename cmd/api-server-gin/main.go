@@ -6,6 +6,7 @@ import (
 	"mcba/tissquest/cmd/api-server-gin/categories"
 	"mcba/tissquest/cmd/api-server-gin/collections"
 	"mcba/tissquest/cmd/api-server-gin/index"
+	"mcba/tissquest/cmd/api-server-gin/metacategories"
 	"mcba/tissquest/cmd/api-server-gin/slides"
 	"mcba/tissquest/cmd/api-server-gin/taxa"
 	"mcba/tissquest/cmd/api-server-gin/tissue_records"
@@ -107,6 +108,19 @@ func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 	r.DELETE("/taxa/:id", taxa.DeleteTaxon)
 	r.GET("/taxa/:id/confirm-delete", taxa.ConfirmDeleteTaxon)
 	r.GET("/taxa/:id/confirm-delete-cancel", taxa.ConfirmDeleteTaxonCancel)
+
+	// Metacategory routes
+	r.GET("/metacategories", metacategories.ListMetacategories)
+	r.GET("/metacategories/new", metacategories.NewMetacategoryForm)
+	r.GET("/metacategories/new-form-cancel", metacategories.NewMetacategoryFormCancel)
+	r.POST("/metacategories", metacategories.CreateMetacategory)
+	r.GET("/metacategories/:id/edit", metacategories.EditMetacategoryForm)
+	r.GET("/metacategories/:id/edit-cancel", metacategories.EditMetacategoryFormCancel)
+	r.PUT("/metacategories/:id", metacategories.UpdateMetacategory)
+	r.DELETE("/metacategories/:id", metacategories.DeleteMetacategory)
+	r.GET("/metacategories/:id/confirm-delete", metacategories.DeleteMetacategoryForm)
+	r.GET("/metacategories/:id/confirm-delete-cancel", metacategories.DeleteMetacategoryFormCancel)
+	r.GET("/metacategories/:id/row", metacategories.GetMetacategoryRow)
 
 	// Category routes
 	r.GET("/categories", categories.ListCategories)

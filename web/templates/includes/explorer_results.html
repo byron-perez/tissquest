@@ -13,18 +13,26 @@
     {{range .TissueRecords}}
     <div class="card bg-base-100 shadow border border-base-300 hover:-translate-y-0.5 transition-transform">
       {{if .FeaturedImageURL}}
-      <figure class="h-36 overflow-hidden">
-        <img src="{{.FeaturedImageURL}}"
-             alt="{{.Name}}"
-             loading="lazy"
-             class="w-full h-full object-cover" />
-      </figure>
+      <a href="/tissue_records/{{.ID}}/workspace" class="block">
+        <figure class="h-36 overflow-hidden">
+          <img src="{{.FeaturedImageURL}}"
+               alt="{{.Name}}"
+               loading="lazy"
+               class="w-full h-full object-cover" />
+        </figure>
+      </a>
       {{else}}
-      <div class="h-36 bg-base-200 flex items-center justify-center text-3xl text-base-content/30">🧫</div>
+      <a href="/tissue_records/{{.ID}}/workspace" class="block">
+        <div class="h-36 bg-base-200 flex items-center justify-center text-3xl text-base-content/30">🧫</div>
+      </a>
       {{end}}
 
       <div class="card-body p-4 gap-2">
-        <h3 class="font-semibold text-sm leading-snug">{{.Name}}</h3>
+        <h3 class="font-semibold text-sm leading-snug">
+          <a href="/tissue_records/{{.ID}}/workspace" class="block hover:text-primary">
+            {{.Name}}
+          </a>
+        </h3>
         <div class="flex flex-wrap gap-1">
           {{if .Taxon}}
           <span class="badge badge-outline badge-xs">{{.Taxon.Name}}</span>

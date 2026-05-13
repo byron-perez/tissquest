@@ -10,6 +10,7 @@ type RepositoryInterface interface {
 	FindByType(categoryType CategoryType) ([]Category, error)
 	FindByParent(parentID uint) ([]Category, error)
 	FindRootCategories() ([]Category, error)
+	FindByMetacategory(metacategoryID uint) ([]Category, error)
 	// ListWithCounts returns all categories with the number of tissue records
 	// directly associated with each one (not including descendants).
 	ListWithCounts() ([]CategoryWithCount, error)
