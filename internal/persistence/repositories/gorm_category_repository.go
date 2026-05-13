@@ -25,10 +25,11 @@ func (repo *GormCategoryRepository) Save(c *category.Category) uint {
 	}
 
 	categoryModel := migration.CategoryModel{
-		Name:        c.Name,
-		Type:        string(c.Type),
-		Description: c.Description,
-		ParentID:    c.ParentID,
+		Name:           c.Name,
+		Type:           string(c.Type),
+		Description:    c.Description,
+		MetacategoryID: c.MetacategoryID,
+		ParentID:       c.ParentID,
 	}
 
 	db.Create(&categoryModel)
@@ -56,10 +57,11 @@ func (repo *GormCategoryRepository) Update(id uint, c *category.Category) error 
 	}
 
 	return db.Model(&migration.CategoryModel{}).Where("id = ?", id).Updates(migration.CategoryModel{
-		Name:        c.Name,
-		Type:        string(c.Type),
-		Description: c.Description,
-		ParentID:    c.ParentID,
+		Name:           c.Name,
+		Type:           string(c.Type),
+		Description:    c.Description,
+		MetacategoryID: c.MetacategoryID,
+		ParentID:       c.ParentID,
 	}).Error
 }
 
@@ -132,6 +134,20 @@ func (repo *GormCategoryRepository) FindRootCategories() ([]category.Category, e
 	return mapCategoryModelsToDomain(categoryModels), nil
 }
 
+func (repo *GormCategoryRepository) FindByMetacategory(metacategoryID uint) ([]category.Category, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, err
+	}
+
+	var categoryModels []migration.CategoryModel
+	if err := db.Where("metacategory_id = ?", metacategoryID).Find(&categoryModels).Error; err != nil {
+		return nil, err
+	}
+
+	return mapCategoryModelsToDomain(categoryModels), nil
+}
+
 func mapCategoryModelToDomain(m *migration.CategoryModel) *category.Category {
 	if m == nil {
 		return nil
@@ -147,6 +163,7 @@ func mapCategoryModelToDomain(m *migration.CategoryModel) *category.Category {
 		Name:            m.Name,
 		Type:            category.CategoryType(m.Type),
 		Description:     m.Description,
+		MetacategoryID:  m.MetacategoryID,
 		ParentID:        m.ParentID,
 		TissueRecordIDs: ids,
 		CreatedAt:       m.CreatedAt,

@@ -3,6 +3,7 @@ package repositories
 import (
 	"mcba/tissquest/internal/core/category"
 	"mcba/tissquest/internal/core/collection"
+	"mcba/tissquest/internal/core/metacategory"
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/taxon"
 	"mcba/tissquest/internal/core/tissuerecord"
@@ -22,6 +23,10 @@ func NewTaxonRepository() taxon.RepositoryInterface {
 
 func NewCategoryRepository() category.RepositoryInterface {
 	return NewGormCategoryRepository()
+}
+
+func NewMetacategoryRepository() metacategory.RepositoryInterface {
+	return NewGormMetacategoryRepository()
 }
 
 func NewSlideRepository() slide.RepositoryInterface {

@@ -13,6 +13,7 @@ import (
 	"mcba/tissquest/internal/persistence/repositories"
 	"mcba/tissquest/internal/services"
 )
+
 const pageSize = 20
 
 var (
@@ -68,7 +69,7 @@ func ListTissueRecordsHTML(c *gin.Context) {
 		return
 	}
 
-	totalPages := int((total + int64(pageSize) - 1) / int64(pageSize))
+	totalPages := (int(total) + pageSize - 1) / pageSize
 	if totalPages < 1 {
 		totalPages = 1
 	}

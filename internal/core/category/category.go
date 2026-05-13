@@ -20,6 +20,7 @@ type Category struct {
 	Name            string       `json:"name"`
 	Type            CategoryType `json:"type"`
 	Description     string       `json:"description"`
+	MetacategoryID  *uint        `json:"metacategory_id,omitempty"`
 	ParentID        *uint        `json:"parent_id,omitempty"`
 	TissueRecordIDs []uint       `json:"tissue_record_ids"`
 	CreatedAt       time.Time    `json:"created_at"`
@@ -27,16 +28,16 @@ type Category struct {
 }
 
 var (
-	ErrEmptyName        = errors.New("category name cannot be empty")
-	ErrInvalidType      = errors.New("invalid category type")
-	ErrCircularParent   = errors.New("circular parent reference not allowed")
+	ErrEmptyName      = errors.New("category name cannot be empty")
+	ErrInvalidType    = errors.New("invalid category type")
+	ErrCircularParent = errors.New("circular parent reference not allowed")
 )
 
 func (c *Category) Validate() error {
 	if c.Name == "" {
 		return ErrEmptyName
 	}
-	
+
 	validTypes := []CategoryType{CategoryOrgan, CategorySpecies, CategoryTissue, CategoryStain, CategoryCustom}
 	valid := false
 	for _, t := range validTypes {
@@ -48,11 +49,11 @@ func (c *Category) Validate() error {
 	if !valid {
 		return ErrInvalidType
 	}
-	
+
 	if c.ParentID != nil && *c.ParentID == c.ID {
 		return ErrCircularParent
 	}
-	
+
 	return nil
 }
 

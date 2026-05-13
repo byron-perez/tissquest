@@ -81,6 +81,7 @@ func RunMigration() {
 
 	if err = db.AutoMigrate(
 		&TaxonModel{},
+		&MetacategoryModel{},
 		&CategoryModel{},
 		&CollectionModel{},
 		&CollectionSectionModel{},

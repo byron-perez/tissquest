@@ -1,0 +1,28 @@
+{{define "metacategory-row"}}
+<tr id="metacategory-row-{{.Row.ID}}">
+  <td class="font-medium">{{.Row.Name}}</td>
+  <td class="text-base-content/70 max-w-xs truncate">{{.Row.ShortDescription}}</td>
+  <td class="text-base-content/70">{{.Row.ParentName}}</td>
+  <td>
+    <span class="badge badge-info">{{.Row.ChildCount}}</span>
+  </td>
+  <td class="text-right">
+    <div class="inline-flex gap-2 items-center">
+      <button class="btn btn-ghost btn-sm"
+              hx-get="/metacategories/{{.Row.ID}}/edit"
+              hx-target="#metacategory-row-{{.Row.ID}}"
+              hx-swap="outerHTML">
+        Edit
+      </button>
+      <span id="metacategory-row-{{.Row.ID}}-delete">
+        <button class="btn btn-error btn-sm btn-outline"
+                hx-get="/metacategories/{{.Row.ID}}/confirm-delete"
+                hx-target="#metacategory-row-{{.Row.ID}}-delete"
+                hx-swap="outerHTML">
+          Delete
+        </button>
+      </span>
+    </div>
+  </td>
+</tr>
+{{end}}
