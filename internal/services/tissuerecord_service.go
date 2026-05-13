@@ -33,6 +33,10 @@ func (s *TissueRecordService) List(page, limit int) ([]tissuerecord.TissueRecord
 	return s.repo.List(page, limit)
 }
 
+func (s *TissueRecordService) Search(q string, categoryIDs []uint, page, limit int) ([]tissuerecord.TissueRecord, int64, error) {
+	return s.repo.Search(q, categoryIDs, page, limit)
+}
+
 func (s *TissueRecordService) AddCategory(trID, catID uint) error {
 	return s.repo.AddCategory(trID, catID)
 }

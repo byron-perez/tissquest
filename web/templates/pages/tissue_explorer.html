@@ -1,0 +1,110 @@
+{{define "content"}}
+<div class="min-h-screen bg-base-200">
+  {{template "main-menu" .}}
+
+  <div class="max-w-7xl mx-auto px-4 py-6">
+    {{template "breadcrumb" .}}
+
+    <h1 class="text-2xl font-bold mb-4">TissExplorer</h1>
+
+    {{/* Search bar */}}
+    <form id="explorer-form"
+          hx-get="/tissue_records"
+          hx-target="#explorer-results"
+          hx-swap="outerHTML"
+          hx-push-url="true"
+          class="flex gap-2 mb-6">
+      <input type="hidden" name="categories" id="active-categories" value="{{.CategoryIDs}}" />
+      <input type="text"
+             name="q"
+             value="{{.Query}}"
+             placeholder="Buscar tejidos, taxones, tinciones…"
+             class="input input-bordered flex-1"
+             hx-trigger="keyup changed delay:400ms"
+             hx-get="/tissue_records"
+             hx-target="#explorer-results"
+             hx-swap="outerHTML"
+             hx-include="#explorer-form" />
+      <button type="submit" class="btn btn-primary">🔍</button>
+    </form>
+
+    <div class="flex gap-6">
+
+      {{/* Filter panel */}}
+      <aside class="w-56 shrink-0 hidden lg:block">
+        <div class="card bg-base-100 shadow border border-base-300 p-4 space-y-4">
+          <h2 class="font-semibold text-sm uppercase tracking-wide text-base-content/60">Filtros</h2>
+
+          {{if .FilterTree}}
+          {{range .FilterTree}}
+          <div>
+            <p class="font-medium text-sm mb-1 flex items-center justify-between">
+              <span>{{.Name}}</span>
+              <span class="badge badge-ghost badge-xs">{{.Count}}</span>
+            </p>
+            {{if .Children}}
+            <ul class="space-y-0.5 pl-2">
+              {{range .Children}}
+              <li>
+                <label class="flex items-center gap-2 cursor-pointer text-sm py-1 hover:text-primary group">
+                  <input type="checkbox"
+                         class="category-filter"
+                         value="{{.ID}}"
+                         {{if .Active}}checked{{end}}
+                         hx-trigger="change"
+                         hx-get="/tissue_records"
+                         hx-target="#explorer-results"
+                         hx-swap="outerHTML"
+                         hx-include="#explorer-form" />
+                  <span class="flex-1">{{.Name}}</span>
+                  <span class="text-base-content/40 text-xs">{{.Count}}</span>
+                </label>
+              </li>
+              {{end}}
+            </ul>
+            {{else}}
+            <label class="flex items-center gap-2 cursor-pointer text-sm py-1 hover:text-primary pl-2">
+              <input type="checkbox"
+                     class="category-filter"
+                     value="{{.ID}}"
+                     {{if .Active}}checked{{end}}
+                     hx-trigger="change"
+                     hx-get="/tissue_records"
+                     hx-target="#explorer-results"
+                     hx-swap="outerHTML"
+                     hx-include="#explorer-form" />
+              <span class="flex-1">{{.Name}}</span>
+              <span class="text-base-content/40 text-xs">{{.Count}}</span>
+            </label>
+            {{end}}
+          </div>
+          {{end}}
+          {{else}}
+          <p class="text-xs text-base-content/40">No hay categorías disponibles aún.</p>
+          {{end}}
+        </div>
+      </aside>
+
+      {{/* Results */}}
+      <main class="flex-1 min-w-0">
+        {{template "explorer-results" .}}
+      </main>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// Update #active-categories before HTMX reads the form,
+// so the correct checkbox state is always included in the request.
+document.body.addEventListener("htmx:configRequest", function (e) {
+  const checked = Array.from(document.querySelectorAll(".category-filter:checked"))
+    .map(el => el.value);
+  const input = document.getElementById("active-categories");
+  if (input) {
+    input.value = checked.join(",");
+    e.detail.parameters["categories"] = input.value;
+  }
+});
+</script>
+{{end}}

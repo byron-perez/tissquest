@@ -61,7 +61,7 @@ func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 	r.POST("/collections/:id/sections/:sid/tissue_records", collections.CreateTissueRecordAndAssign)
 
 	// Tissue record routes
-	r.GET("/tissue_records", tissue_records.ListTissueRecordsHTML)
+	r.GET("/tissue_records", tissue_records.ExplorerPage)
 	r.GET("/tissue_records/search", tissue_records.SearchTissueRecords)
 	r.GET("/tissue_records/new", tissue_records.NewTissueRecordForm)
 	r.GET("/tissue_records/new-form-cancel", tissue_records.NewTissueRecordFormCancel)

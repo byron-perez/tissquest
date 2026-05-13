@@ -1,1 +1,36 @@
-/* Custom overrides — Tailwind + DaisyUI handles the rest */
+/* ── Theme tokens ─────────────────────────────────────────
+   Single source of truth for the visual theme.
+   Change values here to retheme the entire application.
+   Colors use oklch(lightness chroma hue).
+   ──────────────────────────────────────────────────────── */
+:root, [data-theme] {
+  /* Brand colors */
+  --color-primary:           oklch(0.70 0.14 180); /* teal */
+  --color-primary-content:   oklch(1 0 0);
+  --color-secondary:         oklch(0.95 0.05 170);
+  --color-secondary-content: oklch(0.30 0.08 170);
+
+  /* Typography */
+  --font-sans:    'Inter', system-ui, ui-sans-serif, sans-serif;
+  --font-heading: var(--font-sans); /* swap to a display font here */
+}
+
+body {
+  font-family: var(--font-sans);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* ── Utilities ────────────────────────────────────────── */
+[x-cloak] { display: none !important; }
+
+/* ── Explorer filter checkboxes ──────────────────────── */
+.category-filter {
+  accent-color: var(--color-primary);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}

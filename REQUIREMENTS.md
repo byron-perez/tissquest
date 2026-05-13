@@ -63,6 +63,20 @@ Provide an accessible, web-based platform for students and enthusiasts to study 
      - Breadcrumb navigation (Home > Atlases > [Atlas Name])
      - Educational notes and context for the atlas
 
+5. **Library Desk Home Page**
+   - The entry point of the platform must function as a discovery interface, not a marketing page
+   - A prominent search bar allows students to find tissue records by name, taxon, or staining technique
+   - Two primary navigation paths are presented with equal weight: Collections and Tissue Browser
+   - A curated selection of randomly chosen tiled slides invites students to open the Virtual Microscope directly from the home page
+   - The home page must refresh its slide selection on each visit to surface different specimens over time
+
+6. **Image Tiling Pipeline**
+   - Content authors must be able to prepare a slide for interactive viewing without leaving the platform
+   - A single-slide tiling action must be available from the slide management interface
+   - A batch tiling operation must be available as a command-line tool for processing multiple slides at once
+   - The batch operation must automatically identify all slides that have a source image but have not yet been prepared for interactive viewing
+   - Both operations must update the slide record upon completion so the interactive viewer becomes available immediately
+
 ### API Requirements
 - RESTful API for data operations
 - JSON responses for programmatic access
@@ -92,14 +106,18 @@ Provide an accessible, web-based platform for students and enthusiasts to study 
 
 ### Primary User Scenarios
 1. **Student Learning**
-   - Browse plant tissue atlases
-   - View detailed microscopy images
+   - Arrive at the home page and search for a tissue by name or taxon
+   - Discover specimens through the randomly featured slides on the home page
+   - Browse plant tissue collections
+   - Open the Virtual Microscope directly from the home page or from a tissue record
+   - View detailed microscopy images at different magnification levels
    - Read educational notes and classifications
    - Compare different tissue types
    - **Navigate atlas structure**: Explore tissue records organized by taxonomic categories within an atlas
 
 2. **Content Management**
    - Add new tissue samples and images
+   - Prepare slides for interactive viewing using the tiling action on the slide card or the batch pipeline tool
    - Organize content into logical atlases
    - Update metadata as needed
 
@@ -195,7 +213,67 @@ Replace the static image gallery with an interactive viewer that emulates the ex
 
 ---
 
-## Future Expansion (Post-July Delivery)
+## TissExplorer — Tissue Search and Discovery
+
+> The TissExplorer is the primary discovery interface of the platform. It allows any student to find tissue records through free-text search, hierarchical category filters, or a combination of both — without needing to know the exact name of a specimen in advance.
+> The interaction model is inspired by faceted search in scientific databases (e.g., RCSB PDB) and product catalogues: the user narrows a large collection down to a relevant subset through progressive filtering, while the results update to reflect the current selection at all times.
+
+### Goal
+Give students and researchers a single, unified entry point to discover tissue records across the entire library — by name, taxon, staining technique, organ system, or any combination of categories — without requiring prior knowledge of the catalogue structure.
+
+### Key Properties
+1. **Unified Entry Point**: A single search bar handles all discovery. Students do not need to know which collection a specimen belongs to before finding it.
+2. **Faceted Filtering**: Category filters narrow results progressively. Filters from different dimensions (e.g., taxon + staining + organ) can be combined freely.
+3. **Hierarchical Organisation**: Categories are presented as a navigable tree, reflecting the natural hierarchy of biological classification and anatomical systems.
+4. **Visual-First Results**: Results are presented as an image-led grid. A specimen's slide thumbnail is the primary identifier, not its database ID.
+5. **Semantic Readiness**: The search architecture must not preclude future integration of vector-based semantic search as the content library grows.
+
+### Functional Requirements
+
+#### FR-TE-1: Unified Search Bar
+- The system must perform text-based similarity matching against Tissue Record titles and scientific names.
+- The search must return results as the user types or upon explicit submission.
+- An empty search with no filters active must display the full catalogue, paginated.
+- The architecture must allow future integration of vector-based semantic search without requiring a redesign of the results interface.
+
+#### FR-TE-2: Hierarchical Faceted Filtering
+- Filters must be presented as a nested category tree reflecting biological and anatomical hierarchies (e.g., Kingdom → Phylum → Class, or Organ System → Organ → Tissue Type).
+- Each node in the tree must display the count of Tissue Records that belong to that branch.
+- Counts must update dynamically as other filters are applied, so students always see how many results remain reachable.
+- A student must be able to select nodes from different branches simultaneously (e.g., "Fungi" and "H&E staining" active at the same time).
+- Selecting a parent node must include all descendant records in the result set.
+
+#### FR-TE-3: Results Grid
+- Results must be displayed as a grid of cards, each showing:
+  - A representative slide thumbnail, or a placeholder if no image is available.
+  - The Tissue Record name and scientific name.
+  - The primary category tags (taxon, organ, staining).
+  - The number of associated slides.
+- Each card must link directly to the Tissue Record workspace.
+- If a tiled slide is available, the card must offer a direct path to the Virtual Microscope viewer.
+
+#### FR-TE-4: Result Count and Feedback
+- The interface must always display the total number of records matching the current search and filter combination.
+- When no results are found, the system must display a clear message and suggest broadening the search.
+
+### Non-Functional Requirements
+
+#### NFR-TE-1: Responsiveness
+- Filter changes and search input must produce updated results within 1 second for a catalogue of up to 500 records.
+
+#### NFR-TE-2: Usability
+- A student with no prior knowledge of the catalogue must be able to find a specimen using only the category tree, without typing any text.
+- The filter tree must remain usable on mobile screen sizes.
+
+### Acceptance Criteria
+- A student can find a tissue record by typing part of its name or scientific name.
+- A student can filter results by selecting a taxon node and see only records belonging to that taxon.
+- Selecting filters from two different category dimensions (e.g., a taxon and a staining type) returns only records that satisfy both.
+- Each category node displays the correct record count, and the count updates when other filters are applied.
+- A result card with a tiled slide shows a direct link to the Virtual Microscope.
+- The interface displays a meaningful message when no records match the current query.
+
+---
 - Animal tissues
 - Fungal tissues
 - Protozoan samples

@@ -1,0 +1,81 @@
+{{define "explorer-results"}}
+<div id="explorer-results">
+  <p class="text-sm text-base-content/50 mb-4">
+    {{if .Query}}
+      {{.Total}} resultado(s) para "<strong>{{.Query}}</strong>"
+    {{else}}
+      {{.Total}} registro(s) de tejidos
+    {{end}}
+  </p>
+
+  {{if .TissueRecords}}
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {{range .TissueRecords}}
+    <div class="card bg-base-100 shadow border border-base-300 hover:-translate-y-0.5 transition-transform">
+      {{if .FeaturedImageURL}}
+      <a href="/tissue_records/{{.ID}}/workspace" class="block">
+        <figure class="h-36 overflow-hidden">
+          <img src="{{.FeaturedImageURL}}"
+               alt="{{.Name}}"
+               loading="lazy"
+               class="w-full h-full object-cover" />
+        </figure>
+      </a>
+      {{else}}
+      <a href="/tissue_records/{{.ID}}/workspace" class="block">
+        <div class="h-36 bg-base-200 flex items-center justify-center text-3xl text-base-content/30">🧫</div>
+      </a>
+      {{end}}
+
+      <div class="card-body p-4 gap-2">
+        <h3 class="font-semibold text-sm leading-snug">
+          <a href="/tissue_records/{{.ID}}/workspace" class="block hover:text-primary">
+            {{.Name}}
+          </a>
+        </h3>
+        <div class="flex flex-wrap gap-1">
+          {{if .Taxon}}
+          <span class="badge badge-outline badge-xs">{{.Taxon.Name}}</span>
+          {{end}}
+          <span class="badge badge-ghost badge-xs">{{len .Slides}} diapositiva(s)</span>
+        </div>
+        <div class="card-actions justify-end mt-1 gap-1">
+          {{range .Slides}}
+            {{if .IsTiled}}
+            <a href="/slides/{{.ID}}/viewer" class="btn btn-primary btn-xs">🔬 Ver</a>
+            {{end}}
+          {{end}}
+          <a href="/tissue_records/{{.ID}}/workspace" class="btn btn-ghost btn-xs">Abrir</a>
+        </div>
+      </div>
+    </div>
+    {{end}}
+  </div>
+
+  {{if gt .TotalPages 1}}
+  <div class="flex justify-center gap-2 mt-6">
+    {{if gt .Page 1}}
+    <button class="btn btn-sm btn-ghost"
+            hx-get="/tissue_records?q={{.Query}}&categories={{.CategoryIDs}}&page={{.PrevPage}}"
+            hx-target="#explorer-results"
+            hx-swap="outerHTML">← Anterior</button>
+    {{end}}
+    <span class="btn btn-sm btn-disabled">Página {{.Page}} de {{.TotalPages}}</span>
+    {{if lt .Page .TotalPages}}
+    <button class="btn btn-sm btn-ghost"
+            hx-get="/tissue_records?q={{.Query}}&categories={{.CategoryIDs}}&page={{.NextPage}}"
+            hx-target="#explorer-results"
+            hx-swap="outerHTML">Siguiente →</button>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{else}}
+  <div class="text-center py-16 text-base-content/40">
+    <p class="text-4xl mb-3">🔍</p>
+    <p class="text-lg font-medium">Sin resultados</p>
+    <p class="text-sm mt-1">Intenta con otro término o elimina algunos filtros.</p>
+  </div>
+  {{end}}
+</div>
+{{end}}

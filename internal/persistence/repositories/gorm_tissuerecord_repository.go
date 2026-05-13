@@ -169,6 +169,101 @@ func mapToTissueRecord(m migration.TissueRecordModel) tissuerecord.TissueRecord 
 	return tr
 }
 
+func (repo *GormTissueRecordRepository) Search(q string, categoryIDs []uint, page, limit int) ([]tissuerecord.TissueRecord, int64, error) {
+	db, err := repo.getDB()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	base := db.Model(&migration.TissueRecordModel{}).
+		Joins("LEFT JOIN taxa ON taxa.id = tissue_records.taxon_id")
+
+	if q != "" {
+		pattern := "%" + q + "%"
+		base = base.Where("tissue_records.name ILIKE ? OR taxa.name ILIKE ?", pattern, pattern)
+	}
+
+	if len(categoryIDs) > 0 {
+		base = base.
+			Joins("JOIN tissue_record_categories ON tissue_record_categories.tissue_record_id = tissue_records.id").
+			Where("tissue_record_categories.category_id IN ?", categoryIDs)
+	}
+
+	var total int64
+	if err := base.Distinct("tissue_records.id").Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var models []migration.TissueRecordModel
+	offset := (page - 1) * limit
+	if err := base.
+		Distinct("tissue_records.*").
+		Preload("Slides.Preparation").
+		Preload("Taxon").
+		Offset(offset).Limit(limit).
+		Find(&models).Error; err != nil {
+		return nil, 0, err
+	}
+
+	if len(models) == 0 {
+		return nil, total, nil
+	}
+
+	// Collect all slide IDs across all tissue records in one pass
+	var allSlideIDs []uint
+	for _, m := range models {
+		for _, s := range m.Slides {
+			allSlideIDs = append(allSlideIDs, s.ID)
+		}
+	}
+
+	// Fetch all image variants for those slides in a single query
+	variantMap := make(map[uint]map[string]string) // slideID → size → url
+	if len(allSlideIDs) > 0 {
+		var variants []migration.SlideImageVariantModel
+		db.Where("slide_id IN ?", allSlideIDs).Find(&variants)
+		for _, v := range variants {
+			if variantMap[v.SlideID] == nil {
+				variantMap[v.SlideID] = make(map[string]string)
+			}
+			variantMap[v.SlideID][v.Size] = v.Url
+		}
+	}
+
+	records := make([]tissuerecord.TissueRecord, len(models))
+	for i, m := range models {
+		tr := mapToTissueRecord(m)
+		// Resolve the best available thumbnail across all slides
+		for _, s := range m.Slides {
+			sizes := variantMap[s.ID]
+			url := resolveVariantURL(sizes)
+			if url != "" {
+				tr.FeaturedImageURL = url
+				break
+			}
+		}
+		records[i] = tr
+	}
+	return records, total, nil
+}
+
+// resolveVariantURL picks the best available URL: thumb → original → empty.
+func resolveVariantURL(sizes map[string]string) string {
+	if sizes == nil {
+		return ""
+	}
+	if url := sizes[string(slide.ImageSizeThumb)]; url != "" {
+		return url
+	}
+	if url := sizes[string(slide.ImageSizePreview)]; url != "" {
+		return url
+	}
+	if url := sizes[string(slide.ImageSizeOriginal)]; url != "" {
+		return url
+	}
+	return ""
+}
+
 func (repo *GormTissueRecordRepository) AddCategory(trID, catID uint) error {
 	db, err := repo.getDB()
 	if err != nil {
