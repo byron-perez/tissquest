@@ -19,6 +19,7 @@
         <li><a href="/">Inicio</a></li>
         <li><a href="/collections">Colecciones</a></li>
         <li><a href="/tissue_records">Tejidos</a></li>
+        <li><a href="/tissue_records/manage">Tiss Rec</a></li>
         <li><a href="/about">Acerca de</a></li>
         <li class="menu-title mt-1"><span>Administración</span></li>
         <li><a href="/metacategories">Metacategorías</a></li>
@@ -46,6 +47,10 @@
       <li>
         <a href="/tissue_records" class="px-3 py-1.5 rounded hover:bg-primary-content/10
                                           transition-colors">Tejidos</a>
+      </li>
+      <li>
+        <a href="/tissue_records/manage" class="px-3 py-1.5 rounded hover:bg-primary-content/10
+                                          transition-colors">Tiss Rec</a>
       </li>
       <li>
         <a href="/about" class="px-3 py-1.5 rounded hover:bg-primary-content/10
@@ -77,8 +82,18 @@
     </ul>
   </div>
 
-  {{/* Right side — search shortcut */}}
-  <div class="navbar-end">
+  {{/* Right side — new item + search shortcut */}}
+  <div class="navbar-end flex items-center gap-2">
+    <!-- New Tissue Record (HTMX) - visible on small+ screens -->
+    <button
+      class="btn btn-primary btn-sm hidden sm:inline-flex"
+      title="Nuevo registro de tejido"
+      hx-get="/tissue_records/new"
+      hx-target="#tr-form-container"
+      hx-swap="innerHTML">
+      + Nuevo
+    </button>
+
     <a href="/tissue_records"
        class="btn btn-ghost btn-sm btn-square text-primary-content"
        title="Buscar tejidos">
