@@ -128,7 +128,7 @@ func (r *GormCollectionRepository) CreateSection(s *collection.Section) (uint, e
 		return 0, err
 	}
 	var count int64
-	q := db.Model(&migration.CollectionSectionModel{}).Where("collection_id = ?", s.CollectionID)
+	var q *gorm.DB
 	if s.ParentID != nil {
 		q = db.Model(&migration.CollectionSectionModel{}).Where("parent_id = ?", *s.ParentID)
 	} else {

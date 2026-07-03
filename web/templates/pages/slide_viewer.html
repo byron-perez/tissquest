@@ -1,16 +1,68 @@
 {{define "head"}}
+<script src="/static/js/annotation-store.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/openseadragon@4/build/openseadragon/openseadragon.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/usnistgov/OpenSeadragonScalebar@master/openseadragon-scalebar.js"></script>
+<!-- Annotorious OpenSeadragon plugin -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@annotorious/openseadragon@latest/dist/annotorious-openseadragon.css">
+<script src="https://cdn.jsdelivr.net/npm/@annotorious/openseadragon@latest/dist/annotorious-openseadragon.js"></script>
 <style>
   #microscope-viewer {
     width: 100%;
-    height: calc(100dvh - 56px); /* full height minus the top bar */
+    height: calc(100dvh - 56px);
     background: #111;
   }
   .objective-btn.active {
     background-color: oklch(0.70 0.14 180);
     color: white;
     border-color: oklch(0.70 0.14 180);
+  }
+  /* Annotation toolbar */
+  #anno-toolbar {
+    position: absolute;
+    bottom: 48px;
+    left: 10px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  #anno-toolbar button {
+    background: rgba(0,0,0,0.6);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  #anno-toolbar button:hover  { background: rgba(0,0,0,0.85); }
+  #anno-toolbar button.active { background: oklch(0.70 0.14 180); border-color: transparent; }
+  /* Error banner */
+  #anno-error-banner {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    background: #b91c1c;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #anno-error-banner button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 12px;
   }
 </style>
 {{end}}
@@ -20,9 +72,7 @@
 <div class="h-14 bg-base-100 border-b border-base-300 flex items-center justify-between px-4 gap-4">
   <div class="flex items-center gap-3 min-w-0">
     <a href="/tissue_records/{{.Slide.TissueRecordID}}/workspace"
-       class="btn btn-ghost btn-sm btn-square" title="Back">
-      ←
-    </a>
+       class="btn btn-ghost btn-sm btn-square" title="Back">←</a>
     <span class="font-semibold truncate">{{.Slide.Name}}</span>
     {{if .Slide.Preparation.Staining}}
     <span class="badge badge-outline badge-sm hidden sm:inline-flex">{{.Slide.Preparation.Staining}}</span>
@@ -35,35 +85,79 @@
     {{range .Objectives}}
     <button class="btn btn-outline btn-sm objective-btn"
             data-objective="{{.}}"
-            aria-label="{{.}}× objective">
-      {{.}}×
-    </button>
+            aria-label="{{.}}× objective">{{.}}×</button>
     {{end}}
   </div>
   {{end}}
 
-  <div class="flex items-center gap-2 text-sm text-base-content/60 shrink-0">
-    <span class="hidden sm:inline">{{.Slide.BaseMagnification}}× captured</span>
-    {{if .Slide.MicronsPerPixel}}
-    <span class="hidden sm:inline">· {{.Slide.MicronsPerPixel}} µm/px</span>
+  <!-- Right: metadata + Save button -->
+  <div class="flex items-center gap-2 shrink-0">
+    <span class="hidden sm:inline text-sm text-base-content/60">
+      {{.Slide.BaseMagnification}}× captured
+      {{if .Slide.MicronsPerPixel}}· {{.Slide.MicronsPerPixel}} µm/px{{end}}
+    </span>
+    {{if .Slide.IsTiled}}
+    <button id="btn-save-annotations"
+            class="btn btn-sm btn-primary shrink-0"
+            title="Guardar anotaciones">
+      💾 Guardar
+    </button>
     {{end}}
   </div>
 </div>
 
 <!-- Viewer area -->
 {{if .Slide.IsTiled}}
-<div id="microscope-viewer"
-     role="img"
-     aria-label="Virtual microscope viewer: {{.Slide.Name}}">
+<div style="position:relative;">
+  <div id="microscope-viewer"
+       role="img"
+       aria-label="Virtual microscope viewer: {{.Slide.Name}}">
+  </div>
+
+  <!-- Error banner (hidden by default) -->
+  <div id="anno-error-banner" style="display:none">
+    <span id="anno-error-msg"></span>
+    <button onclick="document.getElementById('anno-error-banner').style.display='none'">✕</button>
+  </div>
+
+  <!-- Annotation toolbar -->
+  <div id="anno-toolbar">
+    <button id="btn-annotate"  title="Dibujar anotación">✏️ Anotar</button>
+    <button id="btn-anno-off"  title="Modo navegación" class="active">🔍 Navegar</button>
+    <button id="btn-delete-annotation" title="Eliminar anotación" style="display:none">🗑️ Eliminar</button>
+  </div>
 </div>
 
 <script>
 (function () {
-  const dziURL = "{{.DziMetadata.DziURL}}";
+  const slideID = {{.Slide.ID}};
+  const dziURL  = "{{.DziMetadata.DziURL}}";
   const baseMag = {{.DziMetadata.BaseMagnification}};
   const mpp     = parseFloat("{{.DziMetadata.MicronsPerPixelJS}}") || 0;
   const homeVP  = {{.DziMetadata.HomeViewportJSON | js}};
 
+  // ── AnnotationStore ──────────────────────────────────────
+  // store is declared in outer scope so all handlers can access it
+  let store = createAnnotationStore([]);
+
+  // ── Helpers ──────────────────────────────────────────────
+  function showError(msg) {
+    document.getElementById("anno-error-msg").textContent = msg;
+    document.getElementById("anno-error-banner").style.display = "flex";
+  }
+
+  function flashSaveBtn(text, durationMs) {
+    const btn = document.getElementById("btn-save-annotations");
+    const original = btn.textContent;
+    btn.textContent = text;
+    btn.disabled = true;
+    setTimeout(function () {
+      btn.textContent = original;
+      btn.disabled = false;
+    }, durationMs);
+  }
+
+  // ── OpenSeadragon ────────────────────────────────────────
   const viewer = OpenSeadragon({
     id:                    "microscope-viewer",
     tileSources:           dziURL,
@@ -78,7 +172,6 @@
   });
 
   viewer.addHandler("open", function () {
-    // Scale bar — attach once on open
     if (typeof viewer.scalebar === "function") {
       viewer.scalebar({
         type:            OpenSeadragon.ScalebarType.MICROSCOPY,
@@ -96,10 +189,8 @@
     }
   });
 
-  // Go home after the first resize event — this is when OSD has
-  // actually measured the container and can center correctly.
   viewer.addHandler("resize", function onResize() {
-    viewer.removeHandler("resize", onResize); // fire once only
+    viewer.removeHandler("resize", onResize);
     if (homeVP) {
       viewer.viewport.panTo(new OpenSeadragon.Point(homeVP.x, homeVP.y), true);
       viewer.viewport.zoomTo(homeVP.zoom, null, true);
@@ -108,34 +199,159 @@
     }
   });
 
-  // Objective lens switcher
-  // Zoom levels are multiples of the fit-to-screen baseline.
-  // We map: 4× → 1× (fit), 10× → 2.5×, 40× → 10× relative to fit.
+  // ── Objective lens switcher ──────────────────────────────
   const objectiveZoom = { 4: 1.0, 10: 2.5, 40: 10.0 };
-
   const objectives = document.querySelectorAll(".objective-btn");
   objectives.forEach(function (btn) {
     btn.addEventListener("click", function () {
-      const mag   = parseInt(btn.dataset.objective, 10);
-      const zoom  = objectiveZoom[mag] || (mag / baseMag);
+      const zoom = objectiveZoom[parseInt(btn.dataset.objective, 10)] || 1.0;
       viewer.viewport.zoomTo(zoom);
       viewer.viewport.panTo(viewer.viewport.getCenter(), false);
       objectives.forEach(function (b) { b.classList.remove("active"); });
       btn.classList.add("active");
     });
   });
-
-  // Keep active button in sync on manual zoom
   viewer.addHandler("zoom", function (e) {
     let closest = null, minDiff = Infinity;
     objectives.forEach(function (btn) {
-      const mag  = parseInt(btn.dataset.objective, 10);
-      const zoom = objectiveZoom[mag] || (mag / baseMag);
-      const diff = Math.abs(e.zoom - zoom);
+      const diff = Math.abs(e.zoom - (objectiveZoom[parseInt(btn.dataset.objective, 10)] || 1.0));
       if (diff < minDiff) { minDiff = diff; closest = btn; }
     });
     objectives.forEach(function (b) { b.classList.remove("active"); });
     if (closest && minDiff < 1.0) { closest.classList.add("active"); }
+  });
+
+  // ── Annotorious ──────────────────────────────────────────
+  const anno = AnnotoriousOSD.createOSDAnnotator(viewer, {
+    drawingEnabled: false,
+  });
+
+  // Task 5.1 — Load annotations, initialise store, handle failure
+  fetch("/api/slides/" + slideID + "/annotations")
+    .then(function (r) { return r.json(); })
+    .then(function (annotations) {
+      const loaded = Array.isArray(annotations) ? annotations : [];
+      store = createAnnotationStore(loaded);
+      anno.setAnnotations(store.getAll());
+    })
+    .catch(function () {
+      // Req 5.3 — load failure: keep viewer usable, store starts empty
+      store = createAnnotationStore([]);
+      showError("No se pudieron cargar las anotaciones. El visor sigue disponible.");
+    });
+
+  // Task 5.2 — Replace per-event API calls with store method calls
+  anno.on("createAnnotation", function (annotation) {
+    store.add(annotation);
+  });
+
+  anno.on("updateAnnotation", function (annotation) {
+    store.update(annotation);
+  });
+
+  anno.on("deleteAnnotation", function (annotation) {
+    store.deletePending(annotation.id);
+  });
+
+  // ── Task 6.2 — batchSave ─────────────────────────────────
+  async function batchSave() {
+    if (store.isEmpty()) {
+      flashSaveBtn("Sin cambios", 1500);
+      return;
+    }
+
+    // Disable within 200 ms (NFR-AS-5)
+    const btn = document.getElementById("btn-save-annotations");
+    btn.textContent = "Guardando…";
+    btn.disabled = true;
+
+    try {
+      const diff = store.getDiff();
+      const resp = await fetch("/api/slides/" + slideID + "/annotations/batch", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({
+          created:     diff.created,
+          updated:     diff.updated,
+          deleted_ids: diff.deletedIds,
+        }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json().catch(function () { return {}; });
+        throw new Error(data.error || "Error " + resp.status);
+      }
+
+      const serverAnnotations = await resp.json();
+      store.commitDiff(serverAnnotations);
+      anno.setAnnotations(store.getAll());
+
+      // Success flash
+      btn.textContent = "✓ Guardado";
+      btn.disabled = false;
+      setTimeout(function () {
+        btn.textContent = "💾 Guardar";
+      }, 1500);
+
+    } catch (err) {
+      // Req 3.5 — preserve diff, show error
+      btn.textContent = "💾 Guardar";
+      btn.disabled = false;
+      showError("Error al guardar: " + err.message);
+    }
+  }
+
+  document.getElementById("btn-save-annotations")
+    .addEventListener("click", batchSave);
+
+  // ── Task 7.2 — Delete button wiring ─────────────────────
+  let selectedAnnotationId = null;
+  const btnDelete = document.getElementById("btn-delete-annotation");
+
+  anno.on("clickAnnotation", function (annotation) {
+    selectedAnnotationId = annotation.id;
+    btnDelete.style.display = "block";
+  });
+
+  // Hide delete button when clicking outside an annotation
+  document.getElementById("microscope-viewer")
+    .addEventListener("click", function (e) {
+      // Only hide if the click was not on an annotation SVG element
+      if (!e.target.closest("svg")) {
+        selectedAnnotationId = null;
+        btnDelete.style.display = "none";
+      }
+    });
+
+  btnDelete.addEventListener("click", function () {
+    if (!selectedAnnotationId) return;
+    const id = selectedAnnotationId;
+    if (store.isPending(id)) {
+      store.deletePending(id);
+    } else {
+      store.deletePersisted(id);
+    }
+    anno.removeAnnotation(id);
+    selectedAnnotationId = null;
+    btnDelete.style.display = "none";
+  });
+
+  // ── Toolbar: draw / navigate toggle ─────────────────────
+  const btnAnnotate = document.getElementById("btn-annotate");
+  const btnOff      = document.getElementById("btn-anno-off");
+
+  btnAnnotate.addEventListener("click", function () {
+    anno.setDrawingEnabled(true);
+    viewer.setMouseNavEnabled(false);
+    btnAnnotate.classList.add("active");
+    btnOff.classList.remove("active");
+  });
+
+  btnOff.addEventListener("click", function () {
+    anno.setDrawingEnabled(false);
+    viewer.setMouseNavEnabled(true);
+    btnOff.classList.add("active");
+    btnAnnotate.classList.remove("active");
   });
 })();
 </script>

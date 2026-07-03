@@ -402,6 +402,9 @@ func TestProperty10_AssignmentRemovalResequences(t *testing.T) {
 		if sec == nil {
 			rt.Fatalf("section not found")
 		}
+		if sec.Assignments == nil {
+			rt.Fatalf("section not found")
+		}
 		if len(sec.Assignments) != n-1 {
 			rt.Fatalf("expected %d assignments, got %d", n-1, len(sec.Assignments))
 		}

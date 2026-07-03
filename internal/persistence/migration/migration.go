@@ -90,6 +90,7 @@ func RunMigration() {
 		&PreparationModel{},
 		&SlideModel{},
 		&SlideImageVariantModel{},
+		&AnnotationModel{},
 	); err != nil {
 		panic(fmt.Sprintf("database migration failed: %v", err))
 	}
