@@ -6,8 +6,9 @@ import (
 	"mcba/tissquest/internal/core/slide"
 	"mcba/tissquest/internal/core/tissuerecord"
 	"mcba/tissquest/internal/persistence/migration"
-
 	"gorm.io/gorm"
+	"sort"
+	"strings"
 )
 
 type GormTissueRecordRepository struct {
@@ -232,16 +233,39 @@ func (repo *GormTissueRecordRepository) Search(q string, categoryIDs []uint, pag
 
 	records := make([]tissuerecord.TissueRecord, len(models))
 	for i, m := range models {
-		tr := mapToTissueRecord(m)
-		// Resolve the best available thumbnail across all slides
-		for _, s := range m.Slides {
-			sizes := variantMap[s.ID]
-			url := resolveVariantURL(sizes)
-			if url != "" {
-				tr.FeaturedImageURL = url
-				break
-			}
+tr := mapToTissueRecord(m)
+	// Resolve the best available thumbnail across all slides
+	// 1. Sort slides by ID ascending so the result is deterministic.
+	var slideIDs []uint
+	for _, s := range m.Slides {
+		slideIDs = append(slideIDs, s.ID)
+	}
+	sort.Slice(slideIDs, func(i, j int) bool { return slideIDs[i] < slideIDs[j] })
+
+	// 2. For each slide (in ID order) try thumb → preview → original.
+	//    Ignore URLs that point to the legacy dead AWS bucket.
+	deadHost := "tissdb.s3.sa-east-1.amazonaws.com"
+	for _, id := range slideIDs {
+		sizes := variantMap[id]
+		if sizes == nil {
+			continue
 		}
+		for _, size := range []slide.ImageSize{slide.ImageSizeThumb, slide.ImageSizePreview, slide.ImageSizeOriginal} {
+		url, ok := sizes[string(size)]
+			if !ok || url == "" {
+				continue
+			}
+			// Skip known‑dead legacy AWS host.
+			if strings.Contains(url, deadHost) {
+				continue
+			}
+			tr.FeaturedImageURL = url
+			break
+		}
+		if tr.FeaturedImageURL != "" {
+			break
+		}
+	}
 		records[i] = tr
 	}
 	return records, total, nil
