@@ -22,20 +22,10 @@
              class="w-full h-full object-cover" />
       </figure>
       {{else}}
-      <div class="h-40 bg-base-200 flex flex-col items-center justify-center gap-2 text-base-content/40">
-        <span class="text-4xl">🔬</span>
-        <label class="btn btn-xs btn-outline cursor-pointer">
-          Upload image
-          <input type="file"
-                 name="image"
-                 accept="image/*"
-                 class="hidden"
-                 hx-post="/slides/{{.ID}}/image"
-                 hx-target="#slide-gallery"
-                 hx-swap="innerHTML"
-                 hx-trigger="change"
-                 hx-encoding="multipart/form-data" />
-        </label>
+      <div class="h-40 bg-base-200 flex flex-col items-center justify-center gap-2 px-4 text-center text-base-content/50">
+        <span class="text-3xl">🔬</span>
+        <p class="text-xs">Sin imagen. Ejecuta el pipeline local:</p>
+        <code class="text-[10px] leading-tight bg-base-300 rounded px-2 py-1 break-all">go run ./cmd/tile-pipeline -slide {{.ID}} -source /ruta/imagen</code>
       </div>
       {{end}}
       <div class="card-body p-4">
@@ -53,16 +43,6 @@
              title="Open virtual microscope">
             🔬 View
           </a>
-          {{else if .ImageUrl}}
-          <button class="btn btn-ghost btn-xs"
-                  hx-post="/slides/{{.ID}}/tile"
-                  hx-target="#slide-gallery"
-                  hx-swap="innerHTML"
-                  hx-indicator="#tile-spinner-{{.ID}}"
-                  title="Process for virtual microscope">
-            <span id="tile-spinner-{{.ID}}" class="htmx-indicator loading loading-spinner loading-xs"></span>
-            🧩 Tile
-          </button>
           {{end}}
           <button class="btn btn-ghost btn-xs"
                   hx-get="/slides/{{.ID}}/edit"

@@ -73,7 +73,7 @@ func wsCategoryService() *services.CategoryService {
 }
 
 func wsSlideService() *services.SlideService {
-	return services.NewSlideService(nil, repositories.NewSlideRepository())
+	return services.NewSlideService(repositories.NewSlideRepository())
 }
 
 // subtractCategories returns all categories not present in associated.

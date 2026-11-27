@@ -15,7 +15,9 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	migration.RunMigration()
+	if err := migration.RunMigration(); err != nil {
+		log.Fatal(err)
+	}
 	m.Run()
 }
 

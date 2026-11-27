@@ -1,0 +1,8 @@
+.git
+.gitignore
+.env
+.env.*
+tmp
+*.db
+*.zip
+docs

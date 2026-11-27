@@ -22,8 +22,10 @@ type RepositoryInterface interface {
 	GetByID(id uint) (*Slide, error)
 	Update(id uint, sl *Slide) error
 	// SetImageVariant stores a URL for a specific size variant of a slide's image.
-	// Called by the Lambda callback endpoint after processing.
+	// Called by the tiling CLI after processing.
 	SetImageVariant(slideID uint, size ImageSize, url string) error
+	// SetImageKey marks a slide as having processed media.
+	SetImageKey(slideID uint, imageKey string) error
 	// SetDziMetadata persists the tiled-image fields after the pipeline runs.
 	SetDziMetadata(slideID uint, dziURL string, baseMagnification int, micronsPerPixel float64) error
 	// GetPendingTiling returns all slides that have a source image but no DZI yet.

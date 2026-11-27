@@ -1,107 +1,90 @@
-// Package tiling handles the image-to-DZI conversion and S3 upload.
-// It is intentionally isolated from the rest of the app so it can be
-// tested or replaced without touching the service or handler layers.
 package tiling
 
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"mime"
 	"os"
 	"os/exec"
 	"path/filepath"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	persistencestorage "mcba/tissquest/internal/persistence/storage"
+	corestorage "mcba/tissquest/internal/core/storage"
 )
 
-// Params holds everything Run needs to do its job.
 type Params struct {
-	SlideID           uint
-	BaseMagnification int
-	MicronsPerPixel   float64
-	S3                *persistencestorage.S3Storage
-	Region            string
-	Bucket            string
-	// LocalSource is an optional path to a local image file.
-	// When set, the pipeline skips the S3 download and uses this file directly.
-	// The file is also uploaded to slides/original/<id> in S3 for record-keeping.
+	SlideID     uint
+	Store       corestorage.MediaStore
 	LocalSource string
+	JPEGQuality int
+	TileSize    int
+	UseRGB      bool
 }
 
-// Run tiles the source image with vips, uploads the result to S3,
-// and returns the public URL of the .dzi descriptor.
-func Run(p Params) (dziURL string, err error) {
-	// 1. Resolve source image — local file or download from S3
-	var srcPath string
-	var cleanup func()
+type Result struct {
+	DziURL string
+	Bytes  int64
+	Tiles  int
+}
 
-	if p.LocalSource != "" {
-		srcPath = p.LocalSource
-		cleanup = func() {} // caller owns the file, we don't delete it
-
-		// Also upload the local file as the canonical original in S3
-		originalKey := fmt.Sprintf("slides/original/%d%s", p.SlideID, filepath.Ext(p.LocalSource))
-		ct := mime.TypeByExtension(filepath.Ext(p.LocalSource))
-		if ct == "" {
-			ct = "image/jpeg"
-		}
-		log.Printf("uploading source image to s3://%s/%s", p.Bucket, originalKey)
-		if err := uploadFile(p.S3, p.Bucket, p.LocalSource, originalKey, ct); err != nil {
-			return "", fmt.Errorf("upload source image: %w", err)
-		}
-	} else {
-		srcKey := fmt.Sprintf("slides/original/%d.png", p.SlideID)
-		log.Printf("downloading source image from s3://%s/%s", p.Bucket, srcKey)
-		srcPath, cleanup, err = downloadFromS3(p.S3, p.Bucket, srcKey)
-		if err != nil {
-			return "", fmt.Errorf("download source image: %w", err)
-		}
+func Run(p Params) (Result, error) {
+	if p.Store == nil {
+		return Result{}, fmt.Errorf("storage is required")
 	}
-	defer cleanup()
+	if p.LocalSource == "" {
+		return Result{}, fmt.Errorf("local source image is required")
+	}
+	if p.JPEGQuality <= 0 {
+		p.JPEGQuality = 75
+	}
 
-	// 2. Run vips dzsave in a temp directory
 	workDir, err := os.MkdirTemp("", fmt.Sprintf("tissquest-tile-%d-*", p.SlideID))
 	if err != nil {
-		return "", fmt.Errorf("create work dir: %w", err)
+		return Result{}, fmt.Errorf("create work dir: %w", err)
 	}
 	defer os.RemoveAll(workDir)
 
 	outputBase := filepath.Join(workDir, "output")
-	if err := runVips(srcPath, outputBase); err != nil {
-		return "", fmt.Errorf("vips dzsave: %w", err)
+	if err := runVips(p.LocalSource, outputBase, p.JPEGQuality, p.TileSize, p.UseRGB); err != nil {
+		return Result{}, fmt.Errorf("vips dzsave: %w", err)
 	}
 
-	// 3. Upload .dzi descriptor and all tiles to S3
+	ctx := context.Background()
+	if err := p.Store.DeletePrefix(ctx, fmt.Sprintf("slides/%d/", p.SlideID)); err != nil {
+		return Result{}, fmt.Errorf("delete old tiles: %w", err)
+	}
+
 	dziKey := fmt.Sprintf("slides/%d/dzi/output.dzi", p.SlideID)
 	tilesPrefix := fmt.Sprintf("slides/%d/dzi/output_files", p.SlideID)
 
-	log.Printf("uploading .dzi to s3://%s/%s", p.Bucket, dziKey)
-	if err := uploadFile(p.S3, p.Bucket, outputBase+".dzi", dziKey, "application/xml"); err != nil {
-		return "", fmt.Errorf("upload .dzi: %w", err)
+	dziBytes, err := uploadFile(ctx, p.Store, outputBase+".dzi", dziKey, "application/xml")
+	if err != nil {
+		return Result{}, fmt.Errorf("upload .dzi: %w", err)
 	}
 
-	tilesDir := outputBase + "_files"
-	log.Printf("uploading tiles from %s to s3://%s/%s/", tilesDir, p.Bucket, tilesPrefix)
-	if err := uploadDir(p.S3, p.Bucket, tilesDir, tilesPrefix); err != nil {
-		return "", fmt.Errorf("upload tiles: %w", err)
+	tilesBytes, tiles, err := uploadDir(ctx, p.Store, outputBase+"_files", tilesPrefix)
+	if err != nil {
+		return Result{}, fmt.Errorf("upload tiles: %w", err)
 	}
 
-	dziURL = fmt.Sprintf("https://%s.s3.%s.amazonaws.com/%s", p.Bucket, p.Region, dziKey)
-	return dziURL, nil
+	return Result{
+		DziURL: p.Store.PublicURL(dziKey),
+		Bytes:  dziBytes + tilesBytes,
+		Tiles:  tiles,
+	}, nil
 }
 
-// runVips shells out to vips dzsave. outputBase must be a full path without extension.
-func runVips(srcPath, outputBase string) error {
+func runVips(srcPath, outputBase string, quality int, tileSize int, useRGB bool) error {
+	effectiveSrc := srcPath
+	if useRGB {
+		effectiveSrc = srcPath + "[rgb]"
+	}
 	cmd := exec.Command("vips", "dzsave",
-		srcPath,
+		effectiveSrc,
 		outputBase,
-		"--tile-size", "256",
+		"--tile-size", fmt.Sprintf("%d", tileSize),
 		"--overlap", "1",
-		"--suffix", ".jpg[Q=85]",
+		"--suffix", fmt.Sprintf(".jpg[Q=%d]", quality),
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -109,55 +92,55 @@ func runVips(srcPath, outputBase string) error {
 	return cmd.Run()
 }
 
-// downloadFromS3 fetches a key into a local temp file.
-// Returns the local path and a cleanup function to delete it.
-func downloadFromS3(store *persistencestorage.S3Storage, bucket, key string) (path string, cleanup func(), err error) {
-	client := store.Client()
-	out, err := client.GetObject(context.Background(), &s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	})
+func uploadFile(ctx context.Context, store corestorage.MediaStore, localPath, key, contentType string) (int64, error) {
+	f, err := os.Open(localPath)
 	if err != nil {
-		return "", nil, fmt.Errorf("GetObject %s: %w", key, err)
+		return 0, err
 	}
-	defer out.Body.Close()
+	defer f.Close()
 
-	tmp, err := os.CreateTemp("", "tissquest-src-*.png")
+	info, err := f.Stat()
 	if err != nil {
-		return "", nil, err
+		return 0, err
 	}
-	if _, err := io.Copy(tmp, out.Body); err != nil {
-		tmp.Close()
-		os.Remove(tmp.Name())
-		return "", nil, err
+
+	if _, err := store.Upload(ctx, key, contentType, f, info.Size()); err != nil {
+		return 0, err
 	}
-	tmp.Close()
-	return tmp.Name(), func() { os.Remove(tmp.Name()) }, nil
+	return info.Size(), nil
 }
 
-// uploadFile uploads a single local file to S3 under the given key.
-func uploadFile(store *persistencestorage.S3Storage, bucket, localPath, s3Key, contentType string) error {
-	data, err := os.ReadFile(localPath)
-	if err != nil {
-		return err
-	}
-	_, err = store.Upload(s3Key, contentType, data)
-	return err
-}
+func uploadDir(ctx context.Context, store corestorage.MediaStore, localDir, prefix string) (int64, int, error) {
+	var total int64
+	var count int
 
-// uploadDir walks localDir recursively and uploads every file to S3,
-// preserving the relative path structure under s3Prefix.
-func uploadDir(store *persistencestorage.S3Storage, bucket, localDir, s3Prefix string) error {
-	return filepath.Walk(localDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
+	err := filepath.Walk(localDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
 			return err
 		}
-		rel, _ := filepath.Rel(localDir, path)
-		key := s3Prefix + "/" + filepath.ToSlash(rel)
-		ct := mime.TypeByExtension(filepath.Ext(path))
-		if ct == "" {
-			ct = "application/octet-stream"
+		if info.IsDir() {
+			return nil
 		}
-		return uploadFile(store, bucket, path, key, ct)
+
+		rel, err := filepath.Rel(localDir, path)
+		if err != nil {
+			return err
+		}
+
+		key := prefix + "/" + filepath.ToSlash(rel)
+		contentType := mime.TypeByExtension(filepath.Ext(path))
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+
+		size, err := uploadFile(ctx, store, path, key, contentType)
+		if err != nil {
+			return err
+		}
+		total += size
+		count++
+		return nil
 	})
+
+	return total, count, err
 }

@@ -3,19 +3,15 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	persistencedb "mcba/tissquest/internal/persistence/db"
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	_ = godotenv.Load()
 
-	db, err := openDB()
+	db, err := persistencedb.Get()
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
@@ -33,16 +29,4 @@ func main() {
 	}
 
 	fmt.Println("All tables dropped successfully.")
-}
-
-func openDB() (*gorm.DB, error) {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
-		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_USER"),
-		os.Getenv("DATABASE_PASSWORD"),
-		os.Getenv("DATABASE_NAME"),
-		os.Getenv("DATABASE_PORT"),
-	)
-	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
 }

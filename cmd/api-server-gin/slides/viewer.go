@@ -50,7 +50,7 @@ func ViewSlide(c *gin.Context) {
 		return
 	}
 
-	svc := services.NewSlideService(nil, repositories.NewSlideRepository())
+	svc := services.NewSlideService(repositories.NewSlideRepository())
 	sl, err := svc.GetByID(uint(id))
 	if err != nil {
 		shared.RenderError(c, http.StatusNotFound, "slide not found")

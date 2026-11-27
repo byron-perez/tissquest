@@ -1,143 +1,188 @@
-// tile-pipeline converts slide source images into Deep Zoom Image (DZI) tile sets,
-// stores them in S3, and updates the slide records with the DZI URLs.
+// tile-pipeline generates slide image variants and Deep Zoom Image tiles,
+// uploads them to the configured S3-compatible store, and updates the slide record.
 //
-// Single mode (one slide):
-//
-//	tile-pipeline -slide <id> -magnification <int> -microns-per-pixel <float>
-//	tile-pipeline -slide <id> -magnification <int> -microns-per-pixel <float> -source /path/to/image.jpg
-//
-// Batch mode (all slides with an image but no DZI):
-//
-//	tile-pipeline -batch [-magnification <int>] [-microns-per-pixel <float>]
-//
-// Prerequisites:
-//   - libvips must be installed (pacman -S libvips / apt install libvips-tools / brew install vips)
-//   - .env file present in the working directory
+//	tile-pipeline -slide <id> -source /path/to/image
+//	tile-pipeline -slide <id> -source /path/to/image -magnification 40 -microns-per-pixel 0.25
+//	tile-pipeline -slide <id> -delete-media
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 	"mcba/tissquest/cmd/tile-pipeline/tiling"
-	"mcba/tissquest/internal/persistence/migration"
+	"mcba/tissquest/internal/core/slide"
+	"mcba/tissquest/internal/media"
 	"mcba/tissquest/internal/persistence/repositories"
 	persistencestorage "mcba/tissquest/internal/persistence/storage"
 	"mcba/tissquest/internal/services"
 )
 
 func main() {
-	slideID    := flag.Uint("slide", 0, "ID of the slide to tile (single mode)")
-	batch      := flag.Bool("batch", false, "Tile all slides that have an image but no DZI yet")
-	baseMag    := flag.Int("magnification", 40, "Base magnification used at capture, e.g. 40")
-	mpp        := flag.Float64("microns-per-pixel", 0.25, "Spatial calibration: µm per pixel")
-	localSource := flag.String("source", "", "Path to a local image file (single mode only)")
+	slideID := flag.Uint("slide", 0, "ID of the slide to process")
+	baseMag := flag.Int("magnification", 0, "Base magnification; defaults to the slide value")
+	mpp := flag.Float64("microns-per-pixel", 0, "Microns per pixel; defaults to the slide value")
+	localSource := flag.String("source", "", "Path to a local image file")
+	quality := flag.Int("jpeg-quality", 75, "JPEG quality for DZI tiles")
+	deleteMedia := flag.Bool("delete-media", false, "Delete stored media for the slide")
+	tileSize := flag.Int("tile-size", 512, "Tile size for DZI (pixels)")
+	useRGB := flag.Bool("rgb", true, "Use [rgb] loader option for WSI (default true)")
 	flag.Parse()
 
-	if !*batch && *slideID == 0 {
-		fmt.Fprintln(os.Stderr, "error: provide -slide <id> for single mode or -batch for batch mode")
+	if *slideID == 0 {
+		fmt.Fprintln(os.Stderr, "error: provide -slide <id>")
 		flag.Usage()
 		os.Exit(1)
 	}
 
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("could not load .env file")
-	}
+	_ = godotenv.Load()
 
-	migration.RunMigration()
-
-	s3, err := persistencestorage.NewS3Storage(
-		os.Getenv("AWS_REGION"),
-		os.Getenv("S3_BUCKET"),
-		os.Getenv("AWS_ACCESS_KEY_ID"),
-		os.Getenv("AWS_SECRET_ACCESS_KEY"),
-	)
+	store, err := persistencestorage.NewS3StorageFromEnv()
 	if err != nil {
-		log.Fatalf("S3 init failed: %v", err)
+		log.Fatalf("storage init failed: %v", err)
 	}
 
-	svc := services.NewSlideService(s3, repositories.NewSlideRepository())
-
-	if *batch {
-		runBatch(svc, s3, *baseMag, *mpp)
-	} else {
-		runSingle(svc, s3, *slideID, *baseMag, *mpp, *localSource)
-	}
-}
-
-func runSingle(svc *services.SlideService, s3 *persistencestorage.S3Storage, slideID uint, baseMag int, mpp float64, localSource string) {
-	dziURL, err := tiling.Run(tiling.Params{
-		SlideID:           slideID,
-		BaseMagnification: baseMag,
-		MicronsPerPixel:   mpp,
-		S3:                s3,
-		Region:            os.Getenv("AWS_REGION"),
-		Bucket:            os.Getenv("S3_BUCKET"),
-		LocalSource:       localSource,
-	})
-	if err != nil {
-		log.Fatalf("tiling failed: %v", err)
-	}
-	if err := svc.SetDziMetadata(slideID, dziURL, baseMag, mpp); err != nil {
-		log.Fatalf("failed to update slide record: %v", err)
-	}
-	fmt.Printf("✓ slide %d tiled\n  dzi_url: %s\n", slideID, dziURL)
-}
-
-func runBatch(svc *services.SlideService, s3 *persistencestorage.S3Storage, baseMag int, mpp float64) {
-	repo := repositories.NewSlideRepository()
-	pending, err := repo.GetPendingTiling()
-	if err != nil {
-		log.Fatalf("failed to query pending slides: %v", err)
-	}
-
-	if len(pending) == 0 {
-		fmt.Println("✓ no slides pending tiling")
+	if *deleteMedia {
+		if err := deleteSlideMedia(uint(*slideID), store); err != nil {
+			log.Fatalf("delete media failed: %v", err)
+		}
+		fmt.Printf("deleted media for slide %d\n", *slideID)
 		return
 	}
 
-	fmt.Printf("found %d slide(s) pending tiling\n\n", len(pending))
-
-	ok, failed := 0, 0
-	for _, sl := range pending {
-		// Use the slide's own magnification if set, otherwise fall back to the flag value
-		mag := sl.Magnification
-		if mag == 0 {
-			mag = baseMag
-		}
-		slideMpp := sl.MicronsPerPixel
-		if slideMpp == 0 {
-			slideMpp = mpp
-		}
-
-		fmt.Printf("→ slide %d (%s, %d×)... ", sl.ID, sl.Name, mag)
-		dziURL, err := tiling.Run(tiling.Params{
-			SlideID:           sl.ID,
-			BaseMagnification: mag,
-			MicronsPerPixel:   slideMpp,
-			S3:                s3,
-			Region:            os.Getenv("AWS_REGION"),
-			Bucket:            os.Getenv("S3_BUCKET"),
-		})
-		if err != nil {
-			fmt.Printf("FAILED: %v\n", err)
-			failed++
-			continue
-		}
-		if err := svc.SetDziMetadata(sl.ID, dziURL, mag, slideMpp); err != nil {
-			fmt.Printf("FAILED (db update): %v\n", err)
-			failed++
-			continue
-		}
-		fmt.Println("✓")
-		ok++
-	}
-
-	fmt.Printf("\nbatch complete: %d tiled, %d failed\n", ok, failed)
-	if failed > 0 {
+	if *localSource == "" {
+		fmt.Fprintln(os.Stderr, "error: -source is required")
+		flag.Usage()
 		os.Exit(1)
 	}
+	if *quality < 1 || *quality > 100 {
+		log.Fatalf("invalid -jpeg-quality %d: must be between 1 and 100", *quality)
+	}
+
+	svc := services.NewSlideService(repositories.NewSlideRepository())
+	sl, err := svc.GetByID(uint(*slideID))
+	if err != nil {
+		log.Fatalf("slide %d not found: %v", *slideID, err)
+	}
+
+	mag := *baseMag
+	if mag == 0 {
+		mag = sl.Magnification
+	}
+	if mag == 0 {
+		mag = 40
+	}
+
+	slideMPP := *mpp
+	if slideMPP == 0 {
+		slideMPP = sl.MicronsPerPixel
+	}
+	if slideMPP == 0 {
+		slideMPP = 0.25
+	}
+
+	if err := runSingle(svc, store, uint(*slideID), mag, slideMPP, *localSource, *quality, *tileSize, *useRGB); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runSingle(svc *services.SlideService, store *persistencestorage.S3Storage, slideID uint, baseMag int, mpp float64, source string, quality int, tileSize int, useRGB bool) error {
+	workDir, err := os.MkdirTemp("", fmt.Sprintf("tissquest-variants-%d-*", slideID))
+	if err != nil {
+		return fmt.Errorf("create temp dir: %w", err)
+	}
+	defer os.RemoveAll(workDir)
+
+	thumbPath := filepath.Join(workDir, "thumb.jpg")
+	previewPath := filepath.Join(workDir, "preview.jpg")
+
+	if err := media.Thumbnail(source, thumbPath, 300, 200, 80); err != nil {
+		return fmt.Errorf("generate thumbnail: %w", err)
+	}
+	if err := media.Thumbnail(source, previewPath, 800, 600, 85); err != nil {
+		return fmt.Errorf("generate preview: %w", err)
+	}
+
+	ctx := context.Background()
+	thumbURL, thumbBytes, err := uploadFile(ctx, store, thumbPath, fmt.Sprintf("slides/thumb/%d.jpg", slideID), "image/jpeg")
+	if err != nil {
+		return fmt.Errorf("upload thumbnail: %w", err)
+	}
+
+	previewURL, previewBytes, err := uploadFile(ctx, store, previewPath, fmt.Sprintf("slides/preview/%d.jpg", slideID), "image/jpeg")
+	if err != nil {
+		return fmt.Errorf("upload preview: %w", err)
+	}
+
+	if err := svc.SetImageVariant(slideID, slide.ImageSizeThumb, thumbURL); err != nil {
+		return fmt.Errorf("save thumbnail variant: %w", err)
+	}
+	if err := svc.SetImageVariant(slideID, slide.ImageSizePreview, previewURL); err != nil {
+		return fmt.Errorf("save preview variant: %w", err)
+	}
+
+	result, err := tiling.Run(tiling.Params{
+		SlideID:     slideID,
+		Store:       store,
+		LocalSource: source,
+		JPEGQuality: quality,
+		TileSize:    tileSize,
+		UseRGB:      useRGB,
+	})
+	if err != nil {
+		return fmt.Errorf("tiling failed: %w", err)
+	}
+
+	if err := svc.SetDziMetadata(slideID, result.DziURL, baseMag, mpp); err != nil {
+		return fmt.Errorf("save DZI metadata: %w", err)
+	}
+	if err := svc.SetImageKey(slideID, fmt.Sprintf("slides/%d", slideID)); err != nil {
+		return fmt.Errorf("save image key: %w", err)
+	}
+
+	fmt.Printf("slide %d processed\n", slideID)
+	fmt.Printf("  thumbnail: %s (%d bytes)\n", thumbURL, thumbBytes)
+	fmt.Printf("  preview:   %s (%d bytes)\n", previewURL, previewBytes)
+	fmt.Printf("  dzi:       %s\n", result.DziURL)
+	fmt.Printf("  tiles:     %d (%d bytes)\n", result.Tiles, result.Bytes)
+	fmt.Printf("  total:     %d bytes\n", thumbBytes+previewBytes+result.Bytes)
+	return nil
+}
+
+func uploadFile(ctx context.Context, store *persistencestorage.S3Storage, localPath, key, contentType string) (string, int64, error) {
+	f, err := os.Open(localPath)
+	if err != nil {
+		return "", 0, err
+	}
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return "", 0, err
+	}
+
+	url, err := store.Upload(ctx, key, contentType, f, info.Size())
+	if err != nil {
+		return "", 0, err
+	}
+	return url, info.Size(), nil
+}
+
+func deleteSlideMedia(slideID uint, store *persistencestorage.S3Storage) error {
+	ctx := context.Background()
+	keys := []string{
+		fmt.Sprintf("slides/thumb/%d.jpg", slideID),
+		fmt.Sprintf("slides/preview/%d.jpg", slideID),
+	}
+	for _, key := range keys {
+		if err := store.Delete(ctx, key); err != nil {
+			return err
+		}
+	}
+	return store.DeletePrefix(ctx, fmt.Sprintf("slides/%d/", slideID))
 }

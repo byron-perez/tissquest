@@ -10,7 +10,7 @@ import (
 )
 
 func GetIndex(c *gin.Context) {
-	slideSvc := services.NewSlideService(nil, repositories.NewSlideRepository())
+	slideSvc := services.NewSlideService(repositories.NewSlideRepository())
 	randomSlides, _ := slideSvc.GetRandomTiledDisplaySlides(3)
 
 	data := gin.H{

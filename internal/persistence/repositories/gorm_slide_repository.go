@@ -129,7 +129,7 @@ func (repo *GormSlideRepository) Update(id uint, sl *slide.Slide) error {
 }
 
 // SetImageVariant stores or updates the URL for a specific size variant.
-// This is called by the Lambda callback — the domain never touches this.
+// This is called by the tiling CLI — the domain never touches this.
 func (repo *GormSlideRepository) SetImageVariant(slideID uint, size slide.ImageSize, url string) error {
 	db, err := repo.getDB()
 	if err != nil {
@@ -143,6 +143,14 @@ func (repo *GormSlideRepository) SetImageVariant(slideID uint, size slide.ImageS
 	return db.Where(migration.SlideImageVariantModel{SlideID: slideID, Size: string(size)}).
 		Assign(migration.SlideImageVariantModel{Url: url}).
 		FirstOrCreate(&variant).Error
+}
+
+func (repo *GormSlideRepository) SetImageKey(slideID uint, imageKey string) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	return db.Model(&migration.SlideModel{}).Where("id = ?", slideID).Update("image_key", imageKey).Error
 }
 
 // SetDziMetadata persists the virtual microscope fields after the tiling pipeline runs.

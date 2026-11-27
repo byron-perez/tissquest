@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net/http"
+	"os"
+
 	"mcba/tissquest/cmd/api-server-gin/about"
 	"mcba/tissquest/cmd/api-server-gin/categories"
 	"mcba/tissquest/cmd/api-server-gin/collections"
@@ -12,15 +14,17 @@ import (
 	"mcba/tissquest/cmd/api-server-gin/taxa"
 	"mcba/tissquest/cmd/api-server-gin/tissue_records"
 	"mcba/tissquest/internal/persistence/migration"
-	persistencestorage "mcba/tissquest/internal/persistence/storage"
-	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
-func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
+func setupRouter() *gin.Engine {
 	r := gin.Default()
+
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
 
 	// Serve static files
 	r.Static("/static", "./web/static")
@@ -94,12 +98,9 @@ func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 	r.DELETE("/slides/:id", slides.DeleteSlide)
 	r.GET("/slides/:id/confirm-delete", slides.ConfirmDeleteSlide)
 	r.GET("/slides/:id/confirm-delete-cancel", slides.ConfirmDeleteSlideCancel)
-	r.POST("/slides/:id/image", slides.UploadSlideImage(s3))
-	r.PATCH("/slides/:id/images/:size", slides.SetImageVariant)
 	r.GET("/api/slides/:id/dzi", slides.GetDziMetadata)
 	r.PATCH("/api/slides/:id/home-viewport", slides.SetHomeViewport)
 	r.GET("/slides/:id/viewer", slides.ViewSlide)
-	r.POST("/slides/:id/tile", slides.TileSlide(s3))
 	r.GET("/api/slides/:id/annotations", slides.ListAnnotations)
 	r.POST("/api/slides/:id/annotations", slides.CreateAnnotation)
 	r.PUT("/api/slides/:id/annotations/:annotationID", slides.UpdateAnnotation)
@@ -143,35 +144,31 @@ func setupRouter(s3 *persistencestorage.S3Storage) (*gin.Engine, error) {
 	r.GET("/categories/:id/confirm-delete", categories.ConfirmDeleteCategory)
 	r.GET("/categories/:id/confirm-delete-cancel", categories.ConfirmDeleteCategoryCancel)
 
-	return r, nil
+	return r
 }
 
-const port = ":8080"
-
-func logStartupInfo() {
-	cwd, _ := os.Getwd()
-
-	dbType := os.Getenv("DB_TYPE")
-	dbInfo := os.Getenv("DB_PATH")
-	if dbType == "postgres" {
-		dbInfo = fmt.Sprintf("%s@%s:%s/%s",
-			os.Getenv("DATABASE_USER"),
-			os.Getenv("DATABASE_HOST"),
-			os.Getenv("DATABASE_PORT"),
-			os.Getenv("DATABASE_NAME"),
-		)
+func serverPort() string {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
+	return ":" + port
+}
+
+func logStartupInfo(port string) {
+	cwd, _ := os.Getwd()
 
 	log.Println("---------------------------------------")
 	log.Println("  TissQuest API Server")
 	log.Println("---------------------------------------")
 	log.Printf("  Port     : %s", port)
 	log.Printf("  Mode     : %s", gin.Mode())
-	log.Printf("  DB type  : %s", dbType)
-	log.Printf("  DB       : %s", dbInfo)
+	log.Printf("  DB host  : %s", os.Getenv("DATABASE_HOST"))
+	log.Printf("  DB name  : %s", os.Getenv("DATABASE_NAME"))
 	log.Printf("  Workdir  : %s", cwd)
 	log.Println("  Routes   :")
 	log.Println("    GET    /")
+	log.Println("    GET    /healthz")
 	log.Println("    --- Collections ---")
 	log.Println("    GET    /collections")
 	log.Println("    GET    /collections/new")
@@ -205,26 +202,20 @@ func logStartupInfo() {
 
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("No .env file found; using environment variables")
 	}
 
-	migration.RunMigration()
-
-	s3, err := persistencestorage.NewS3Storage(
-		os.Getenv("AWS_REGION"),
-		os.Getenv("S3_BUCKET"),
-		os.Getenv("AWS_ACCESS_KEY_ID"),
-		os.Getenv("AWS_SECRET_ACCESS_KEY"),
-	)
-	if err != nil {
-		log.Fatalf("Failed to initialize S3 storage: %v", err)
+	if os.Getenv("RUN_MIGRATIONS") == "true" {
+		if err := migration.RunMigration(); err != nil {
+			log.Fatalf("Database migration failed: %v", err)
+		}
 	}
 
-	r, err := setupRouter(s3)
-	if err != nil {
-		log.Fatalf("Failed to set up router: %v", err)
-	}
+	r := setupRouter()
+	port := serverPort()
 
-	logStartupInfo()
-	r.Run(port)
+	logStartupInfo(port)
+	if err := r.Run(port); err != nil {
+		log.Fatalf("Server failed: %v", err)
+	}
 }

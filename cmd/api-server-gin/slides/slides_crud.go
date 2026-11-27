@@ -36,7 +36,7 @@ var (
 )
 
 func slideService() *services.SlideService {
-	return services.NewSlideService(nil, repositories.NewSlideRepository())
+	return services.NewSlideService(repositories.NewSlideRepository())
 }
 
 func renderGallery(c *gin.Context, tissueRecordID uint) {

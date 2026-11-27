@@ -2,69 +2,20 @@ package migration
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"sync"
-	"time"
 
-	"gorm.io/driver/postgres"
+	persistencedb "mcba/tissquest/internal/persistence/db"
+
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 type Tabler interface {
 	TableName() string
 }
 
-var (
-	migrationDB   *gorm.DB
-	migrationOnce sync.Once
-)
-
-func openDB() (*gorm.DB, error) {
-	var initErr error
-	migrationOnce.Do(func() {
-		dsn := fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
-			os.Getenv("DATABASE_HOST"),
-			os.Getenv("DATABASE_USER"),
-			os.Getenv("DATABASE_PASSWORD"),
-			os.Getenv("DATABASE_NAME"),
-			os.Getenv("DATABASE_PORT"),
-		)
-		// Raise slow-query threshold so AutoMigrate's catalog introspection
-		// doesn't flood logs with false positives on Aurora Free Tier.
-		migrationLogger := logger.New(
-			log.New(os.Stdout, "\r\n", log.LstdFlags),
-			logger.Config{
-				SlowThreshold:             500 * time.Millisecond,
-				LogLevel:                  logger.Warn,
-				IgnoreRecordNotFoundError: true,
-				Colorful:                  false,
-			},
-		)
-		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: migrationLogger})
-		if err != nil {
-			initErr = err
-			return
-		}
-		sqlDB, err := db.DB()
-		if err != nil {
-			initErr = err
-			return
-		}
-		sqlDB.SetMaxOpenConns(5)
-		sqlDB.SetMaxIdleConns(2)
-		sqlDB.SetConnMaxLifetime(30 * time.Minute)
-		migrationDB = db
-	})
-	return migrationDB, initErr
-}
-
-func RunMigration() {
-	db, err := openDB()
+func RunMigration() error {
+	db, err := persistencedb.Get()
 	if err != nil {
-		panic(fmt.Sprintf("failed to connect to PostgreSQL database: %v", err))
+		return fmt.Errorf("failed to connect to PostgreSQL database: %w", err)
 	}
 	fmt.Println("Connected to PostgreSQL database")
 
@@ -73,13 +24,13 @@ func RunMigration() {
 	if !db.Migrator().HasTable("collections") {
 		if db.Migrator().HasTable("atlases") {
 			if err := db.Migrator().DropTable("atlases"); err != nil {
-				panic(fmt.Sprintf("failed to drop atlases table: %v", err))
+				return fmt.Errorf("failed to drop atlases table: %w", err)
 			}
 			fmt.Println("Dropped legacy atlases table")
 		}
 	}
 
-	if err = db.AutoMigrate(
+	if err := db.AutoMigrate(
 		&TaxonModel{},
 		&MetacategoryModel{},
 		&CategoryModel{},
@@ -92,22 +43,23 @@ func RunMigration() {
 		&SlideImageVariantModel{},
 		&AnnotationModel{},
 	); err != nil {
-		panic(fmt.Sprintf("database migration failed: %v", err))
+		return fmt.Errorf("database migration failed: %w", err)
 	}
 
 	if err := seedDefaultCategories(db); err != nil {
-		panic(fmt.Sprintf("failed to seed categories: %v", err))
+		return fmt.Errorf("failed to seed categories: %w", err)
 	}
 
 	if err := seedTaxa(db); err != nil {
-		panic(fmt.Sprintf("failed to seed taxa: %v", err))
+		return fmt.Errorf("failed to seed taxa: %w", err)
 	}
 
 	if err := seedSampleTissueRecords(db); err != nil {
-		panic(fmt.Sprintf("failed to seed tissue records: %v", err))
+		return fmt.Errorf("failed to seed tissue records: %w", err)
 	}
 
 	fmt.Println("Database migration completed successfully")
+	return nil
 }
 
 func seedTaxa(db *gorm.DB) error {

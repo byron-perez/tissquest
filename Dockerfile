@@ -3,45 +3,31 @@
 ############################
 FROM golang:alpine AS builder
 
-# Install git.
-# Git is required for fetching the dependencies.
-RUN apk update && apk add --no-cache 'git=~2'
+RUN apk add --no-cache git
 
-# add c compiler kit
-RUN apk add build-base
-
-# Install dependencies
 ENV GO111MODULE=on
+ENV CGO_ENABLED=0
 WORKDIR /app
 COPY . .
 
-# Fetch dependencies using modules
 RUN go mod download
 
-# Build the binary.
-RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o ./main ./cmd/api-server-gin/
+RUN go build -trimpath -ldflags="-s -w" -o ./main ./cmd/api-server-gin/
 
 ############################
 # STEP 2 build a small image
 ############################
 FROM alpine:3
 
-# Install libvips for the tiling pipeline (vips dzsave)
-RUN apk add --no-cache vips-tools
+RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
-# Copy our static executable.
 COPY --from=builder /app/main .
-
-# Copy assets
 COPY --from=builder /app/web/ ./web/
-# insecure!
-COPY --from=builder /app/.env.example ./.env
 
 ENV PORT=8080
 ENV GIN_MODE=release
 
 EXPOSE 8080
-# Run the Go Gin binary.
 ENTRYPOINT ["./main"]
