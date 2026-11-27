@@ -60,3 +60,8 @@ func (s *SlideService) GetRandomTiledDisplaySlides(limit int) ([]slide.DisplaySl
 func (s *SlideService) SetDziMetadata(slideID uint, dziURL string, baseMagnification int, micronsPerPixel float64) error {
 	return s.slideRepo.SetDziMetadata(slideID, dziURL, baseMagnification, micronsPerPixel)
 }
+
+// SetSourceMetadata stores provenance fields for a slide (source URL, title, author, license, notes).
+func (s *SlideService) SetSourceMetadata(slideID uint, sourceURL string, sourceTitle string, sourceAuthor string, sourceLicense string, sourceNotes string) error {
+	return s.slideRepo.SetSourceMetadata(slideID, sourceURL, sourceTitle, sourceAuthor, sourceLicense, sourceNotes)
+}

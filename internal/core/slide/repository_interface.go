@@ -28,6 +28,8 @@ type RepositoryInterface interface {
 	SetImageKey(slideID uint, imageKey string) error
 	// SetDziMetadata persists the tiled-image fields after the pipeline runs.
 	SetDziMetadata(slideID uint, dziURL string, baseMagnification int, micronsPerPixel float64) error
+	// SetSourceMetadata stores provenance fields for a slide (source URL, title, author, license, notes).
+	SetSourceMetadata(slideID uint, sourceURL string, sourceTitle string, sourceAuthor string, sourceLicense string, sourceNotes string) error
 	// GetPendingTiling returns all slides that have a source image but no DZI yet.
 	GetPendingTiling() ([]Slide, error)
 	// GetRandomTiledDisplaySlides returns up to limit slides that have a DZI, in random order.

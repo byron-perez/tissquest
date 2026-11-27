@@ -38,6 +38,13 @@ type Slide struct {
 	ImageKey       string // logical image identity, e.g. "slides/6"
 	Magnification  int
 
+	// Source attribution fields — populated when a web image is downloaded.
+	SourceURL         string // direct URL of the source image
+	SourceTitle       string // title / description of the source
+	SourceAuthor      string // author / uploader
+	SourceLicense     string // licence name, e.g. "CC BY 4.0"
+	SourceNotes       string // free‑form notes (cropping, scale, etc.)
+
 	// Virtual microscope fields — all optional.
 	DziURL            string            // S3 URL to the .dzi descriptor; empty = not tiled yet
 	BaseMagnification int               // objective used at capture (4, 10, 40, 100)

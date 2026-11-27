@@ -32,6 +32,11 @@ func main() {
 	deleteMedia := flag.Bool("delete-media", false, "Delete stored media for the slide")
 	tileSize := flag.Int("tile-size", 512, "Tile size for DZI (pixels)")
 	useRGB := flag.Bool("rgb", true, "Use [rgb] loader option for WSI (default true)")
+	sourceURL := flag.String("source-url", "", "URL of the source image (for provenance)")
+	sourceTitle := flag.String("source-title", "", "Title / description of the source")
+	sourceAuthor := flag.String("source-author", "", "Author / uploader")
+	sourceLicense := flag.String("source-license", "", "License name, e.g. CC BY 4.0")
+	sourceNotes := flag.String("source-notes", "", "Free‑form notes (cropping, scale, etc.)")
 	flag.Parse()
 
 	if *slideID == 0 {
@@ -86,12 +91,12 @@ func main() {
 		slideMPP = 0.25
 	}
 
-	if err := runSingle(svc, store, uint(*slideID), mag, slideMPP, *localSource, *quality, *tileSize, *useRGB); err != nil {
+	if err := runSingle(svc, store, uint(*slideID), mag, slideMPP, *localSource, *quality, *tileSize, *useRGB, *sourceURL, *sourceTitle, *sourceAuthor, *sourceLicense, *sourceNotes); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func runSingle(svc *services.SlideService, store *persistencestorage.S3Storage, slideID uint, baseMag int, mpp float64, source string, quality int, tileSize int, useRGB bool) error {
+func runSingle(svc *services.SlideService, store *persistencestorage.S3Storage, slideID uint, baseMag int, mpp float64, source string, quality int, tileSize int, useRGB bool, sourceURL string, sourceTitle string, sourceAuthor string, sourceLicense string, sourceNotes string) error {
 	workDir, err := os.MkdirTemp("", fmt.Sprintf("tissquest-variants-%d-*", slideID))
 	if err != nil {
 		return fmt.Errorf("create temp dir: %w", err)
@@ -143,6 +148,9 @@ func runSingle(svc *services.SlideService, store *persistencestorage.S3Storage, 
 	}
 	if err := svc.SetImageKey(slideID, fmt.Sprintf("slides/%d", slideID)); err != nil {
 		return fmt.Errorf("save image key: %w", err)
+	}
+	if err := svc.SetSourceMetadata(slideID, sourceURL, sourceTitle, sourceAuthor, sourceLicense, sourceNotes); err != nil {
+		return fmt.Errorf("save source metadata: %w", err)
 	}
 
 	fmt.Printf("slide %d processed\n", slideID)

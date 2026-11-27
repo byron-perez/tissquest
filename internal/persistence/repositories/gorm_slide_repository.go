@@ -43,6 +43,11 @@ func toSlideModel(sl *slide.Slide) migration.SlideModel {
 		ImageKey:          sl.ImageKey,
 		TissueRecordID:    sl.TissueRecordID,
 		Magnification:     sl.Magnification,
+		SourceURL:         sl.SourceURL,
+		SourceTitle:       sl.SourceTitle,
+		SourceAuthor:      sl.SourceAuthor,
+		SourceLicense:     sl.SourceLicense,
+		SourceNotes:       sl.SourceNotes,
 		DziURL:            sl.DziURL,
 		BaseMagnification: sl.BaseMagnification,
 		MicronsPerPixel:   sl.MicronsPerPixel,
@@ -64,6 +69,11 @@ func fromSlideModel(m migration.SlideModel) slide.Slide {
 		Name:              m.Name,
 		ImageKey:          m.ImageKey,
 		Magnification:     m.Magnification,
+		SourceURL:         m.SourceURL,
+		SourceTitle:       m.SourceTitle,
+		SourceAuthor:      m.SourceAuthor,
+		SourceLicense:     m.SourceLicense,
+		SourceNotes:       m.SourceNotes,
 		DziURL:            m.DziURL,
 		BaseMagnification: m.BaseMagnification,
 		MicronsPerPixel:   m.MicronsPerPixel,
@@ -125,6 +135,11 @@ func (repo *GormSlideRepository) Update(id uint, sl *slide.Slide) error {
 		"tissue_record_id": sl.TissueRecordID,
 		"magnification":    sl.Magnification,
 		"home_viewport":    encodeHomeViewport(sl.HomeViewport),
+		"source_url":       sl.SourceURL,
+		"source_title":     sl.SourceTitle,
+		"source_author":    sl.SourceAuthor,
+		"source_license":   sl.SourceLicense,
+		"source_notes":     sl.SourceNotes,
 	}).Error
 }
 
@@ -163,6 +178,21 @@ func (repo *GormSlideRepository) SetDziMetadata(slideID uint, dziURL string, bas
 		"dzi_url":            dziURL,
 		"base_magnification": baseMagnification,
 		"microns_per_pixel":  micronsPerPixel,
+	}).Error
+}
+
+// SetSourceMetadata stores provenance fields for a slide (source URL, title, author, license, notes).
+func (repo *GormSlideRepository) SetSourceMetadata(slideID uint, sourceURL string, sourceTitle string, sourceAuthor string, sourceLicense string, sourceNotes string) error {
+	db, err := repo.getDB()
+	if err != nil {
+		return err
+	}
+	return db.Model(&migration.SlideModel{}).Where("id = ?", slideID).Updates(map[string]any{
+		"source_url":       sourceURL,
+		"source_title":     sourceTitle,
+		"source_author":    sourceAuthor,
+		"source_license":   sourceLicense,
+		"source_notes":     sourceNotes,
 	}).Error
 }
 
